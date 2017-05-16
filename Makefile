@@ -26,6 +26,8 @@ M_NAME := test
 M_OBJS := \
 	test/nop_tests.o \
 	test/encoding_tests.o \
+	test/serializer_tests.o \
+	test/utility_tests.o \
 
 include build/host-executable.mk
 
