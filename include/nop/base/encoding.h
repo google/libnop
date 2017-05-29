@@ -96,7 +96,7 @@ struct EncodingIO {
 };
 
 //
-// char encoding formats:
+// bool encoding formats:
 //
 // +-------+
 // | FALSE |

@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <nop/base/array.h>
+#include <nop/base/map.h>
 #include <nop/base/pair.h>
 #include <nop/base/serializer.h>
 #include <nop/base/string.h>
@@ -64,6 +66,21 @@ std::vector<std::uint8_t> Compose(Args&&... args) {
   Append(&vector, std::forward<Args>(args)...);
   return vector;
 }
+
+#if 0
+template <typename MapType, typename Writer>
+void InsertKeyValue(writer* writer, std::size_t size) {
+  MapType map;
+  for (std::size_t i = 0; i < size; i++) {
+    map.emplace(i, i);
+  }
+  for (const auto& element : map) {
+
+    Serialize(element.first, writer);
+    Serialize(element.second, writer);
+  }
+}
+#endif
 
 }  // anonymous namespace
 
@@ -230,6 +247,116 @@ TEST(Deserializer, Vector) {
   }
 }
 
+TEST(Serializer, Array) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter> serializer{&writer};
+  Status<void> status;
+
+  {
+    std::array<std::uint8_t, 4> value = {{1, 2, 3, 4}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Binary, 4, 1, 2, 3, 4);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    std::array<int, 4> value = {{1, 2, 3, 4}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Binary, 4, Integer<int>(1),
+                       Integer<int>(2), Integer<int>(3), Integer<int>(4));
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    std::array<std::int64_t, 4> value = {{1, 2, 3, 4}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Binary, 4, Integer<std::int64_t>(1),
+                       Integer<std::int64_t>(2), Integer<std::int64_t>(3),
+                       Integer<std::int64_t>(4));
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    std::array<std::string, 4> value = {{"abc", "def", "123", "456"}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Array, 4, EncodingByte::String, 3, "abc",
+                       EncodingByte::String, 3, "def", EncodingByte::String, 3,
+                       "123", EncodingByte::String, 3, "456");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, Array) {
+  TestReader reader;
+  Deserializer<TestReader> deserializer{&reader};
+  Status<void> status;
+
+  {
+    reader.Set(Compose(EncodingByte::Binary, 4, 1, 2, 3, 4));
+
+    std::array<std::uint8_t, 4> value;
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    std::array<std::uint8_t, 4> expected = {{1, 2, 3, 4}};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    reader.Set(Compose(EncodingByte::Binary, 4, Integer<int>(1),
+                       Integer<int>(2), Integer<int>(3), Integer<int>(4)));
+
+    std::array<int, 4> value;
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    std::array<int, 4> expected = {{1, 2, 3, 4}};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    reader.Set(Compose(EncodingByte::Binary, 4, Integer<std::uint64_t>(1),
+                       Integer<std::uint64_t>(2), Integer<std::uint64_t>(3),
+                       Integer<std::uint64_t>(4)));
+
+    std::array<std::uint64_t, 4> value;
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    std::array<std::uint64_t, 4> expected = {{1, 2, 3, 4}};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    reader.Set(Compose(EncodingByte::Array, 4, EncodingByte::String, 3, "abc",
+                       EncodingByte::String, 3, "def", EncodingByte::String, 3,
+                       "123", EncodingByte::String, 3, "456"));
+
+    std::array<std::string, 4> value;
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    std::array<std::string, 4> expected = {{"abc", "def", "123", "456"}};
+    EXPECT_EQ(expected, value);
+  }
+}
 TEST(Serializer, uint8_t) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
@@ -398,3 +525,81 @@ TEST(Deserializer, Pair) {
   }
 }
 
+TEST(Serializer, Map) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter> serializer{&writer};
+  Status<void> status;
+
+  {
+    std::map<int, std::string> value = {{{0, "abc"}, {1, "123"}}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Map, 2, 0, EncodingByte::String, 3, "abc",
+                       1, EncodingByte::String, 3, "123");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, Map) {
+  TestReader reader;
+  Deserializer<TestReader> deserializer{&reader};
+  Status<void> status;
+
+  {
+    std::map<int, std::string> value;
+
+    reader.Set(Compose(EncodingByte::Map, 2, 0, EncodingByte::String, 3, "abc",
+                       1, EncodingByte::String, 3, "123"));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    std::map<int, std::string> expected = {{{0, "abc"}, {1, "123"}}};
+    EXPECT_EQ(expected, value);
+  }
+}
+
+TEST(Serializer, UnorderedMap) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter> serializer{&writer};
+  Status<void> status;
+
+  {
+    std::unordered_map<int, std::string> value = {{{0, "abc"}, {1, "123"}}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Map, 2);
+
+    for (const auto& element : value) {
+      Append(&expected, element.first, EncodingByte::String,
+             element.second.size(), element.second);
+    }
+
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, UnorderedMap) {
+  TestReader reader;
+  Deserializer<TestReader> deserializer{&reader};
+  Status<void> status;
+
+  {
+    std::unordered_map<int, std::string> value;
+
+    reader.Set(Compose(EncodingByte::Map, 2, 0, EncodingByte::String, 3, "abc",
+                       1, EncodingByte::String, 3, "123"));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    std::unordered_map<int, std::string> expected = {{{0, "abc"}, {1, "123"}}};
+    EXPECT_EQ(expected, value);
+  }
+}
