@@ -32,6 +32,20 @@ template <typename... Types>
 using EnableIfNotIntegral =
     typename std::enable_if<!IsIntegral<Types...>::value>::type;
 
+// Utility type for SFINAE expression evaluation.
+template <typename... Ts>
+using Void = void;
+
+// Utility to deduce the template type from a derived type.
+template <template <typename...> class TT, typename... Ts>
+std::true_type DeduceTemplateType(const TT<Ts...>*);
+template <template <typename...> class TT>
+std::false_type DeduceTemplateType(...);
+
+// Utility determining whether template type TT<...> is a base of type T.
+template <template <typename...> class TT, typename T>
+using IsTemplateBaseOf = decltype(DeduceTemplateType<TT>(std::declval<T*>()));
+
 }  // namespace nop
 
 #endif  // LIBNOP_INCLUDE_NOP_BASE_UTILITY_H_

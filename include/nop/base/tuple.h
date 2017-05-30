@@ -45,7 +45,7 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
     if (!status)
       return status;
     else
-      return WriteElements(value, writer);
+      return WriteElements(value, writer, Index<sizeof...(Types)>{});
   }
 
   template <typename Reader>
@@ -58,7 +58,7 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
     else if (size != sizeof...(Types))
       return ErrorStatus(EIO);
     else
-      return ReadElements(value, reader);
+      return ReadElements(value, reader, Index<sizeof...(Types)>{});
   }
 
  private:
@@ -79,7 +79,7 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
   // Recursively writes tuple elements to the writer.
-  template <typename Writer, std::size_t index>
+  template <std::size_t index, typename Writer>
   static Status<void> WriteElements(const Type& value, Writer* writer,
                                     Index<index>) {
     auto status = WriteElements(value, writer, Index<index - 1>{});
@@ -88,11 +88,6 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
 
     return Encoding<ElementType<index - 1>>::Write(std::get<index - 1>(value),
                                                    writer);
-  }
-
-  template <typename Writer>
-  static Status<void> WriteElements(const Type& value, Writer* writer) {
-    return WriteElements(value, writer, Index<sizeof...(Types)>{});
   }
 
   template <typename Reader>
@@ -108,11 +103,6 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
 
     return Encoding<ElementType<index - 1>>::Read(&std::get<index - 1>(*value),
                                                   reader);
-  }
-
-  template <typename Reader>
-  static Status<void> ReadElements(Type* value, Reader* reader) {
-    return ReadElements(value, reader, Index<sizeof...(Types)>{});
   }
 };
 

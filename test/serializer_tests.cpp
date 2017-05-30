@@ -5,6 +5,7 @@
 
 #include <nop/base/array.h>
 #include <nop/base/map.h>
+#include <nop/base/members.h>
 #include <nop/base/pair.h>
 #include <nop/base/serializer.h>
 #include <nop/base/string.h>
@@ -81,6 +82,17 @@ void InsertKeyValue(writer* writer, std::size_t size) {
   }
 }
 #endif
+
+struct TestA {
+  int a;
+  std::string b;
+
+  bool operator==(const TestA& other) const {
+    return a == other.a && b == other.b;
+  }
+
+  NOP_MEMBERS(TestA, a, b);
+};
 
 }  // anonymous namespace
 
@@ -600,6 +612,43 @@ TEST(Deserializer, UnorderedMap) {
     ASSERT_TRUE(status.ok());
 
     std::unordered_map<int, std::string> expected = {{{0, "abc"}, {1, "123"}}};
+    EXPECT_EQ(expected, value);
+  }
+}
+
+TEST(Serializer, Members) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter> serializer{&writer};
+  Status<void> status;
+
+  {
+    TestA value = {10, "foo"};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected =
+        Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, Members) {
+  TestReader reader;
+  Deserializer<TestReader> deserializer{&reader};
+  Status<void> status;
+
+  {
+    TestA value;
+
+    reader.Set(
+        Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo"));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    TestA expected{10, "foo"};
     EXPECT_EQ(expected, value);
   }
 }
