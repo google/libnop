@@ -92,6 +92,7 @@ struct TestA {
     return a == other.a && b == other.b;
   }
 
+ private:
   NOP_MEMBERS(TestA, a, b);
 };
 
@@ -744,25 +745,26 @@ TEST(Serializer, Members) {
   Status<void> status;
 
   {
-    TestA value = {10, "foo"};
+    TestA value{10, "foo"};
 
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
 
     expected =
-        Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo");
+        Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3, "foo");
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
 
   {
-    TestB value = {{10, "foo"}, EnumA::C};
+    TestB value{{10, "foo"}, EnumA::C};
 
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
 
-    expected = Compose(EncodingByte::Array, 2, EncodingByte::Array, 2, 10,
-                       EncodingByte::String, 3, "foo", EncodingByte::U8, 128);
+    expected =
+        Compose(EncodingByte::Structure, 2, EncodingByte::Structure, 2, 10,
+                EncodingByte::String, 3, "foo", EncodingByte::U8, 128);
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -776,8 +778,8 @@ TEST(Deserializer, Members) {
   {
     TestA value;
 
-    reader.Set(
-        Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo"));
+    reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3,
+                       "foo"));
     status = deserializer.Read(&value);
     ASSERT_TRUE(status.ok());
 
@@ -788,8 +790,9 @@ TEST(Deserializer, Members) {
   {
     TestB value;
 
-    reader.Set(Compose(EncodingByte::Array, 2, EncodingByte::Array, 2, 10,
-                       EncodingByte::String, 3, "foo", EncodingByte::U8, 128));
+    reader.Set(Compose(EncodingByte::Structure, 2, EncodingByte::Structure, 2,
+                       10, EncodingByte::String, 3, "foo", EncodingByte::U8,
+                       128));
     status = deserializer.Read(&value);
     ASSERT_TRUE(status.ok());
 

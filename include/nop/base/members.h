@@ -79,17 +79,17 @@ using EnableIfNotHasMemberList =
 //
 // struct/class T encoding format:
 //
-// +-----+---------+-----//-----+
-// | ARY | INT64:N | N ELEMENTS |
-// +-----+---------+-----//-----+
+// +-----+---------+-----//----+
+// | STC | INT64:N | N MEMBERS |
+// +-----+---------+-----//----+
 //
-// Elements are expected to be valid encodings of type T.
+// Members are expected to be valid encodings of the member type.
 //
 
 template <typename T>
 struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   static constexpr EncodingByte Prefix(const T& value) {
-    return EncodingByte::Array;
+    return EncodingByte::Structure;
   }
 
   static constexpr std::size_t Size(const T& value) {
@@ -98,7 +98,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
   static constexpr bool Match(EncodingByte prefix) {
-    return prefix == EncodingByte::Array;
+    return prefix == EncodingByte::Structure;
   }
 
   template <typename Writer>

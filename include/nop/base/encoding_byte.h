@@ -36,7 +36,10 @@ enum class EncodingByte : std::uint8_t {
 
   // Reserved types.
   ReservedMin = 0x8a,
-  ReservedMax = 0xb9,
+  ReservedMax = 0xb8,
+
+  // Structure types.
+  Structure = 0xb9,
 
   // Array types.
   Array = 0xba,
