@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <nop/base/array.h>
+#include <nop/base/enum.h>
 #include <nop/base/map.h>
 #include <nop/base/members.h>
 #include <nop/base/pair.h>
@@ -92,6 +93,25 @@ struct TestA {
   }
 
   NOP_MEMBERS(TestA, a, b);
+};
+
+enum class EnumA : std::uint8_t {
+  A = 1,
+  B = 127,
+  C = 128,
+  D = 255,
+};
+
+struct TestB {
+  TestA a;
+  EnumA b;
+
+  bool operator==(const TestB& other) const {
+    return a == other.a && b == other.b;
+  }
+
+ private:
+  NOP_MEMBERS(TestB, a, b);
 };
 
 }  // anonymous namespace
@@ -616,6 +636,107 @@ TEST(Deserializer, UnorderedMap) {
   }
 }
 
+TEST(Serializer, Enum) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter> serializer{&writer};
+  Status<void> status;
+
+  {
+    EnumA value = EnumA::A;
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(1);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    EnumA value = EnumA::B;
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(127);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    EnumA value = EnumA::C;
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::U8, 128);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    EnumA value = EnumA::D;
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::U8, 255);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, Enum) {
+  TestReader reader;
+  Deserializer<TestReader> deserializer{&reader};
+  Status<void> status;
+
+  {
+    EnumA value;
+
+    reader.Set(Compose(1));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    EnumA expected = EnumA::A;
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    EnumA value;
+
+    reader.Set(Compose(127));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    EnumA expected = EnumA::B;
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    EnumA value;
+
+    reader.Set(Compose(EncodingByte::U8, 128));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    EnumA expected = EnumA::C;
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    EnumA value;
+
+    reader.Set(Compose(EncodingByte::U8, 255));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    EnumA expected = EnumA::D;
+    EXPECT_EQ(expected, value);
+  }
+}
+
 TEST(Serializer, Members) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
@@ -630,6 +751,18 @@ TEST(Serializer, Members) {
 
     expected =
         Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    TestB value = {{10, "foo"}, EnumA::C};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Array, 2, EncodingByte::Array, 2, 10,
+                       EncodingByte::String, 3, "foo", EncodingByte::U8, 128);
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -649,6 +782,18 @@ TEST(Deserializer, Members) {
     ASSERT_TRUE(status.ok());
 
     TestA expected{10, "foo"};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    TestB value;
+
+    reader.Set(Compose(EncodingByte::Array, 2, EncodingByte::Array, 2, 10,
+                       EncodingByte::String, 3, "foo", EncodingByte::U8, 128));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    TestB expected{{10, "foo"}, EnumA::C};
     EXPECT_EQ(expected, value);
   }
 }
