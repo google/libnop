@@ -83,7 +83,7 @@ using EnableIfNotHasMemberList =
 // | STC | INT64:N | N MEMBERS |
 // +-----+---------+-----//----+
 //
-// Members are expected to be valid encodings of the member type.
+// Members are expected to be valid encodings of their member type.
 //
 
 template <typename T>

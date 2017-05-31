@@ -115,6 +115,10 @@ struct TestB {
   NOP_MEMBERS(TestB, a, b);
 };
 
+struct TestC {
+  NOP_MEMBERS(TestC);
+};
+
 }  // anonymous namespace
 
 #if 0
@@ -768,6 +772,17 @@ TEST(Serializer, Members) {
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
+
+  {
+    TestC value;
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Structure, 0);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
 }
 
 TEST(Deserializer, Members) {
@@ -798,5 +813,13 @@ TEST(Deserializer, Members) {
 
     TestB expected{{10, "foo"}, EnumA::C};
     EXPECT_EQ(expected, value);
+  }
+
+  {
+    TestC value;
+
+    reader.Set(Compose(EncodingByte::Structure, 0));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
   }
 }
