@@ -12,6 +12,7 @@
 #include <nop/base/string.h>
 #include <nop/base/tuple.h>
 #include <nop/base/utility.h>
+#include <nop/base/variant.h>
 #include <nop/base/vector.h>
 
 #include "test_reader.h"
@@ -25,6 +26,7 @@ using nop::Serializer;
 using nop::Status;
 using nop::TestReader;
 using nop::TestWriter;
+using nop::Variant;
 
 namespace {
 
@@ -821,5 +823,46 @@ TEST(Deserializer, Members) {
     reader.Set(Compose(EncodingByte::Structure, 0));
     status = deserializer.Read(&value);
     ASSERT_TRUE(status.ok());
+  }
+}
+
+TEST(Serializer, Variant) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter> serializer{&writer};
+  Status<void> status;
+
+  {
+    Variant<int, std::string> value_a{10};
+    Variant<int, std::string> value_b{"foo"};
+
+    ASSERT_TRUE(serializer.Write(value_a));
+    ASSERT_TRUE(serializer.Write(value_b));
+
+    expected = Compose(EncodingByte::Variant, 0, 10, EncodingByte::Variant, 1,
+                       EncodingByte::String, 3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, Variant) {
+  TestReader reader;
+  Deserializer<TestReader> deserializer{&reader};
+  Status<void> status;
+
+  {
+    Variant<int, std::string> value_a;
+    Variant<int, std::string> value_b;
+
+    reader.Set(Compose(EncodingByte::Variant, 0, 10, EncodingByte::Variant, 1,
+                       EncodingByte::String, 3, "foo"));
+    ASSERT_TRUE(deserializer.Read(&value_a));
+    ASSERT_TRUE(deserializer.Read(&value_b));
+
+    ASSERT_TRUE(value_a.is<int>());
+    EXPECT_EQ(10, std::get<int>(value_a));
+    ASSERT_TRUE(value_b.is<std::string>());
+    EXPECT_EQ("foo", std::get<std::string>(value_b));
   }
 }

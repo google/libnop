@@ -87,7 +87,7 @@ class Variant {
   // Handles assignment from the empty type. This overload supports assignment
   // in visitors using generic lambdas.
   Variant& operator=(EmptyVariant) {
-    Assign(EmptyVariant{});
+    Destruct();
     return *this;
   }
 
@@ -199,7 +199,10 @@ class Variant {
   void Construct(EmptyVariant) {}
 
   // Destroys the active element of the Variant.
-  void Destruct() { value_.Destruct(index_); }
+  void Destruct() {
+    value_.Destruct(index_);
+    index_ = kEmptyIndex;
+  }
 
   // Assigns the Variant when non-empty and the current type matches the target
   // type, otherwise destroys the current value and constructs a element of the
@@ -220,8 +223,6 @@ class Variant {
       Construct(std::forward<T>(value));
     }
   }
-  // Handles assignment from an empty Variant.
-  void Assign(EmptyVariant) { Destruct(); }
 };
 
 // Utility type to extract/convert values from a variant. This class simplifies
