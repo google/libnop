@@ -29,6 +29,7 @@ M_OBJS := \
 	test/serializer_tests.o \
 	test/utility_tests.o \
 	test/variant_tests.o \
+	test/handle_tests.o \
 
 include build/host-executable.mk
 
