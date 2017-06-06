@@ -5,6 +5,7 @@
 
 #include <nop/base/array.h>
 #include <nop/base/enum.h>
+#include <nop/base/handle.h>
 #include <nop/base/map.h>
 #include <nop/base/members.h>
 #include <nop/base/pair.h>
@@ -18,10 +19,12 @@
 #include "test_reader.h"
 #include "test_writer.h"
 
+using nop::DefaultHandlePolicy;
 using nop::Deserializer;
 using nop::EnableIfIntegral;
 using nop::Encoding;
 using nop::EncodingByte;
+using nop::Handle;
 using nop::Serializer;
 using nop::Status;
 using nop::TestReader;
@@ -864,5 +867,91 @@ TEST(Deserializer, Variant) {
     EXPECT_EQ(10, std::get<int>(value_a));
     ASSERT_TRUE(value_b.is<std::string>());
     EXPECT_EQ("foo", std::get<std::string>(value_b));
+  }
+}
+
+TEST(Serializer, Handle) {
+  std::vector<std::uint8_t> expected;
+  std::vector<int> expected_handles;
+  TestWriter writer;
+  Serializer<TestWriter> serializer{&writer};
+  Status<void> status;
+
+  using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
+  using IntHandle = Handle<IntHandlePolicy>;
+  const auto handle_type = IntHandlePolicy::HandleType();
+
+  {
+    IntHandle handle{1};
+    EXPECT_TRUE(handle);
+
+    ASSERT_TRUE(serializer.Write(handle));
+
+    expected = Compose(EncodingByte::Handle, handle_type, 0);
+    expected_handles = {handle.get()};
+    EXPECT_EQ(expected, writer.data());
+    EXPECT_EQ(expected_handles, writer.handles());
+    writer.clear();
+  }
+
+  {
+    IntHandle handle_a{1};
+    IntHandle handle_b{2};
+    IntHandle handle_c;
+    EXPECT_TRUE(handle_a);
+    EXPECT_TRUE(handle_b);
+    EXPECT_FALSE(handle_c);
+
+    ASSERT_TRUE(serializer.Write(handle_a));
+    ASSERT_TRUE(serializer.Write(handle_b));
+    ASSERT_TRUE(serializer.Write(handle_c));
+
+    expected =
+        Compose(EncodingByte::Handle, handle_type, 0, EncodingByte::Handle,
+                handle_type, 1, EncodingByte::Handle, handle_type, -1);
+    expected_handles = {handle_a.get(), handle_b.get()};
+    EXPECT_EQ(expected, writer.data());
+    EXPECT_EQ(expected_handles, writer.handles());
+  }
+}
+
+TEST(Deserializer, Handle) {
+  TestReader reader;
+  Deserializer<TestReader> deserializer{&reader};
+  Status<void> status;
+
+  using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
+  using IntHandle = Handle<IntHandlePolicy>;
+  const auto handle_type = IntHandlePolicy::HandleType();
+
+  {
+    IntHandle handle;
+
+    reader.Set(Compose(EncodingByte::Handle, handle_type, 0));
+    reader.SetHandles({1});
+    ASSERT_TRUE(deserializer.Read(&handle));
+
+    EXPECT_TRUE(handle);
+    EXPECT_EQ(1, handle.get());
+  }
+
+  {
+    IntHandle handle_a;
+    IntHandle handle_b;
+    IntHandle handle_c;
+
+    reader.Set(Compose(EncodingByte::Handle, handle_type, 0,
+                       EncodingByte::Handle, handle_type, 1,
+                       EncodingByte::Handle, handle_type, -1));
+    reader.SetHandles({1, 2});
+    ASSERT_TRUE(deserializer.Read(&handle_a));
+    ASSERT_TRUE(deserializer.Read(&handle_b));
+    ASSERT_TRUE(deserializer.Read(&handle_c));
+
+    EXPECT_TRUE(handle_a);
+    EXPECT_EQ(1, handle_a.get());
+    EXPECT_TRUE(handle_b);
+    EXPECT_EQ(2, handle_b.get());
+    EXPECT_FALSE(handle_c);
   }
 }

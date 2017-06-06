@@ -8,6 +8,7 @@
 
 #include <nop/base/encoding.h>
 #include <nop/base/utility.h>
+#include <nop/types/file_handle.h>
 
 namespace nop {
 
@@ -91,12 +92,28 @@ class TestWriter {
     return {};
   }
 
-  void clear() { data_.clear(); }
+  template <typename HandleType>
+  Status<HandleReference> PushHandle(const HandleType& handle) {
+    if (handle) {
+      HandleReference handle_reference = handles_.size();
+      handles_.push_back(handle.get());
+      return {handle_reference};
+    } else {
+      return {kEmptyHandleReference};
+    }
+  }
+
+  void clear() {
+    data_.clear();
+    handles_.clear();
+  }
 
   const std::vector<uint8_t>& data() const { return data_; }
+  const std::vector<int>& handles() const { return handles_; }
 
  private:
   std::vector<std::uint8_t> data_;
+  std::vector<int> handles_;
 
   TestWriter(const TestWriter&) = delete;
   void operator=(const TestWriter&) = delete;

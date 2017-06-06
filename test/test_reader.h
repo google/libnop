@@ -136,13 +136,26 @@ class TestReader {
     return {};
   }
 
+  template <typename HandleType>
+  Status<HandleType> GetHandle(HandleReference handle_reference) {
+    if (handle_reference < 0)
+      return {HandleType{}};
+    else if (handle_reference < handles_.size())
+      return {HandleType{handles_[handle_reference]}};
+    else
+      return ErrorStatus(EINVAL);
+  }
+
   void Set(std::vector<std::uint8_t> data) {
     data_ = std::move(data);
     index_ = 0;
   }
 
+  void SetHandles(std::vector<int> handles) { handles_ = std::move(handles); }
+
  private:
   std::vector<std::uint8_t> data_;
+  std::vector<int> handles_;
   std::size_t index_{0};
 
   TestReader(const TestReader&) = delete;

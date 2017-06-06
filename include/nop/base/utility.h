@@ -32,6 +32,10 @@ template <typename... Types>
 using EnableIfNotIntegral =
     typename std::enable_if<!IsIntegral<Types...>::value>::type;
 
+template <typename T, typename U>
+using EnableIfConvertible =
+    typename std::enable_if<std::is_convertible<T, U>::value>::type;
+
 // Utility type for SFINAE expression evaluation.
 template <typename... Ts>
 using Void = void;
