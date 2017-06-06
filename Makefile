@@ -10,10 +10,6 @@ HOST_CFLAGS := -g -O2 -Wall -I/opt/local/include -Iinclude
 HOST_CXXFLAGS := -std=c++14
 HOST_LDFLAGS := -L/opt/local/lib -lgtest -lgtest_main
 
-ifeq ($(HOST_OS),Darwin)
-HOST_LDFLAGS += -lpthread -framework CoreFoundation -framework IOKit -framework Carbon
-endif
-
 OUT := out
 OUT_HOST_OBJ := $(OUT)/host-obj
 
