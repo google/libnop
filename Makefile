@@ -6,9 +6,13 @@ TOOLCHAIN ?=
 
 HOST_OS := $(shell uname -s)
 
-HOST_CFLAGS := -g -O2 -Wall -I/opt/local/include -Iinclude
+GTEST_INSTALL ?= /opt/local
+GTEST_LIB ?= $(GTEST_INSTALL)/lib
+GTEST_INCLUDE ?= $(GTEST_INSTALL)/include
+
+HOST_CFLAGS := -g -O2 -Wall -I$(GTEST_INCLUDE) -Iinclude
 HOST_CXXFLAGS := -std=c++14
-HOST_LDFLAGS := -L/opt/local/lib -lgtest -lgtest_main
+HOST_LDFLAGS := -L$(GTEST_LIB) -lgtest -lgtest_main
 
 OUT := out
 OUT_HOST_OBJ := $(OUT)/host-obj
