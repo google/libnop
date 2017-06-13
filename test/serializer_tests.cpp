@@ -76,21 +76,6 @@ std::vector<std::uint8_t> Compose(Args&&... args) {
   return vector;
 }
 
-#if 0
-template <typename MapType, typename Writer>
-void InsertKeyValue(writer* writer, std::size_t size) {
-  MapType map;
-  for (std::size_t i = 0; i < size; i++) {
-    map.emplace(i, i);
-  }
-  for (const auto& element : map) {
-
-    Serialize(element.first, writer);
-    Serialize(element.second, writer);
-  }
-}
-#endif
-
 struct TestA {
   int a;
   std::string b;
