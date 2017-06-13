@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 
 #include <nop/base/members.h>
@@ -9,22 +10,35 @@
 using nop::EnableIfHasMemberList;
 using nop::EnableIfNotHasMemberList;
 using nop::HasMemberList;
+using nop::HasExternalMemberList;
 using nop::IsIntegral;
 
 namespace {
 
-struct TestWithMemberList {
+struct TestMemberList {
   int a;
   std::string b;
 
  private:
-  NOP_MEMBERS(TestWithMemberList, a, b);
+  NOP_MEMBERS(TestMemberList, a, b);
 };
 
 struct TestNoMemberList {
   int a;
   std::string b;
 };
+
+struct TestExternalMemberList {
+  int a;
+  std::string b;
+};
+NOP_EXTERNAL_MEMBERS(TestExternalMemberList, a, b);
+
+struct TestExternalMemberList2 {
+  float a;
+  uint64_t b;
+};
+NOP_EXTERNAL_MEMBERS(TestExternalMemberList2, a, b);
 
 template <typename T>
 EnableIfHasMemberList<T, bool> CheckHasMemberList(const T& value) {
@@ -39,10 +53,14 @@ EnableIfNotHasMemberList<T, bool> CheckHasMemberList(const T& value) {
 }  // anonymous namespace
 
 TEST(Utility, HasMemberList) {
-  EXPECT_TRUE(HasMemberList<TestWithMemberList>::value);
+  EXPECT_TRUE(HasMemberList<TestMemberList>::value);
+  EXPECT_TRUE(HasMemberList<TestExternalMemberList>::value);
+  EXPECT_TRUE(HasMemberList<TestExternalMemberList2>::value);
   EXPECT_FALSE(HasMemberList<TestNoMemberList>::value);
 
-  EXPECT_TRUE(CheckHasMemberList(TestWithMemberList{10, "foo"}));
+  EXPECT_TRUE(CheckHasMemberList(TestMemberList{10, "foo"}));
+  EXPECT_TRUE(CheckHasMemberList(TestExternalMemberList{10, "foo"}));
+  EXPECT_TRUE(CheckHasMemberList(TestExternalMemberList2{10, 20u}));
   EXPECT_FALSE(CheckHasMemberList(TestNoMemberList{10, "foo"}));
 }
 

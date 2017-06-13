@@ -41,25 +41,68 @@ struct MemberList {
   using At = typename std::tuple_element<Index, Members>::type;
 };
 
+// Utility to retrieve a traits type that defines a MemberList for type T using
+// ADL. The macro NOP_EXTERNAL_MEMBERS defines the appropriate traits type and a
+// defintion of NOP__GetExternalMemberTraits that this utility finds using ADL.
+template <typename T>
+using ExternalMemberTraits =
+    decltype(NOP__GetExternalMemberTraits(std::declval<T*>()));
+
 // Determines whether type T has a nested type named NOP__MEMBERS of
 // template type MemberList.
 template <typename, typename = void>
-struct HasMemberList : std::false_type {};
+struct HasInternalMemberList : std::false_type {};
 template <typename T>
-struct HasMemberList<T, Void<typename T::NOP__MEMBERS>>
+struct HasInternalMemberList<T, Void<typename T::NOP__MEMBERS>>
     : std::integral_constant<
           bool, IsTemplateBaseOf<MemberList, typename T::NOP__MEMBERS>::value> {
 };
 
-// Enable if type T has a nested type called NOP__MEMBERS of type
-// MemberList<...>.
+// Determines whether type T has a properly defined traits type that can be
+// discovered by ExternalMemberTraits above.
+template <typename, typename = void>
+struct HasExternalMemberList : std::false_type {};
+template <typename T>
+struct HasExternalMemberList<T,
+                             Void<typename ExternalMemberTraits<T>::MemberList>>
+    : std::integral_constant<
+          bool, IsTemplateBaseOf<MemberList, typename ExternalMemberTraits<
+                                                 T>::MemberList>::value> {};
+
+// Determines whether a type has either an internal or external MemberList as
+// defined by the predicates above.
+template <typename T>
+struct HasMemberList
+    : std::integral_constant<bool,
+                             HasInternalMemberList<T>::value ||
+                                 HasExternalMemberList<T>::value> {};
+
+// Enable utilities for member list predicates.
+template <typename T, typename ReturnType = void>
+using EnableIfHasInternalMemberList =
+    typename std::enable_if<HasInternalMemberList<T>::value, ReturnType>::type;
+template <typename T, typename ReturnType = void>
+using EnableIfHasExternalMemberList =
+    typename std::enable_if<HasExternalMemberList<T>::value, ReturnType>::type;
 template <typename T, typename ReturnType = void>
 using EnableIfHasMemberList =
     typename std::enable_if<HasMemberList<T>::value, ReturnType>::type;
-
 template <typename T, typename ReturnType = void>
 using EnableIfNotHasMemberList =
     typename std::enable_if<!HasMemberList<T>::value, ReturnType>::type;
+
+// Traits type that retrieves the internal or external MemberList associated
+// with type T.
+template <typename T, typename = void>
+struct MemberListTraits;
+template <typename T>
+struct MemberListTraits<T, EnableIfHasInternalMemberList<T>> {
+  using MemberList = typename T::NOP__MEMBERS;
+};
+template <typename T>
+struct MemberListTraits<T, EnableIfHasExternalMemberList<T>> {
+  using MemberList = typename ExternalMemberTraits<T>::MemberList;
+};
 
 // Utility macro to define a MemberPointer type from a type and member name.
 #define NOP_MEMBER_POINTER(type, member) \
@@ -69,12 +112,43 @@ using EnableIfNotHasMemberList =
 #define NOP_MEMBER_LIST(type, ... /*members*/) \
   NOP_FOR_EACH_BINARY_LIST(NOP_MEMBER_POINTER, type, __VA_ARGS__)
 
-#define NOP_MEMBERS(type, ... /*members*/) \
-  template <typename, typename>            \
-  friend struct ::nop::Encoding;           \
-  template <typename, typename>            \
-  friend struct ::nop::HasMemberList;      \
+// Defines the set of members belonging to a type that should be
+// serialized/deserialized. This macro should be called once within the
+// struct/class definition, preferrably in the private section for classes with
+// private data.
+#define NOP_MEMBERS(type, ... /*members*/)    \
+  template <typename, typename>               \
+  friend struct ::nop::Encoding;              \
+  template <typename, typename>               \
+  friend struct ::nop::HasInternalMemberList; \
+  template <typename, typename>               \
+  friend struct ::nop::MemberListTraits;      \
   using NOP__MEMBERS = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>
+
+// Defines the set of members belonging to a type that should be
+// serialized/deserialized without changing the type itself. This is useful for
+// making external library types with public data serializable.
+#define NOP_EXTERNAL_MEMBERS(type, ... /*members*/)                           \
+  template <typename>                                                         \
+  struct NOP__MEMBER_TRAITS;                                                  \
+  template <>                                                                 \
+  struct NOP__MEMBER_TRAITS<type> {                                           \
+    using MemberList = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>; \
+  };                                                                          \
+  NOP__MEMBER_TRAITS<type> __attribute__((used))                              \
+      NOP__GetExternalMemberTraits(type*)
+
+#define NOP_TEMPLATE_EXTERNAL_MEMBERS(type, ... /*members*/)          \
+  template <typename>                                                 \
+  struct NOP__MEMBER_TRAITS;                                          \
+  template <typename... Ts>                                           \
+  struct NOP__MEMBER_TRAITS<type<Ts...>> {                            \
+    using MemberList =                                                \
+        ::nop::MemberList<NOP_MEMBER_LIST(type<Ts...>, __VA_ARGS__)>; \
+  };                                                                  \
+  template <typename... Ts>                                           \
+  NOP__MEMBER_TRAITS<type<Ts...>> __attribute__((used))               \
+      NOP__GetExternalMemberTraits(type<Ts...>*)
 
 //
 // struct/class T encoding format:
@@ -125,10 +199,11 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
  private:
-  enum : std::size_t { Count = T::NOP__MEMBERS::Count };
+  enum : std::size_t { Count = MemberListTraits<T>::MemberList::Count };
 
   template <std::size_t Index>
-  using PointerAt = typename T::NOP__MEMBERS::template At<Index>;
+  using PointerAt =
+      typename MemberListTraits<T>::MemberList::template At<Index>;
 
   static constexpr std::size_t Size(const T& value, Index<0>) { return 0; }
 

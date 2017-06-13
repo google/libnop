@@ -124,6 +124,54 @@ struct TestC {
   NOP_MEMBERS(TestC);
 };
 
+struct TestD {
+  int a;
+  EnumA b;
+  std::string c;
+
+  bool operator==(const TestD& other) const {
+    return a == other.a && b == other.b && c == other.c;
+  }
+};
+
+NOP_EXTERNAL_MEMBERS(TestD, a, b, c);
+
+template <typename T>
+struct TestE {
+  T a;
+  std::vector<T> b;
+
+  bool operator==(const TestE& other) const {
+    return a == other.a && b == other.b;
+  }
+};
+
+NOP_TEMPLATE_EXTERNAL_MEMBERS(TestE, a, b);
+
+template <typename T, typename U>
+struct TestF {
+  T a;
+  U b;
+
+  bool operator==(const TestF& other) const {
+    return a == other.a && b == other.b;
+  }
+};
+
+NOP_TEMPLATE_EXTERNAL_MEMBERS(TestF, a, b);
+
+struct TestG {
+  int a;
+  TestF<int, std::string> b;
+
+  bool operator==(const TestG& other) const {
+    return a == other.a && b == other.b;
+  }
+
+ private:
+  NOP_MEMBERS(TestG, a, b);
+};
+
 }  // anonymous namespace
 
 #if 0
@@ -788,6 +836,57 @@ TEST(Serializer, Members) {
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
+
+  {
+    TestD value{10, EnumA::A, "foo"};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Structure, 3, 10, 1, EncodingByte::String,
+                       3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    TestE<int> value_a{10, {1, 2, 3}};
+    TestE<std::string> value_b{"foo", {"bar", "baz", "fuz"}};
+
+    ASSERT_TRUE(serializer.Write(value_a));
+    ASSERT_TRUE(serializer.Write(value_b));
+
+    expected =
+        Compose(EncodingByte::Structure, 2, 10, EncodingByte::Binary, 3,
+                Integer<int>(1), Integer<int>(2), Integer<int>(3),
+                EncodingByte::Structure, 2, EncodingByte::String, 3, "foo",
+                EncodingByte::Array, 3, EncodingByte::String, 3, "bar",
+                EncodingByte::String, 3, "baz", EncodingByte::String, 3, "fuz");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    TestF<int, std::string> value{10, "foo"};
+
+    ASSERT_TRUE(serializer.Write(value));
+
+    expected =
+        Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    TestG value{10, {20, "foo"}};
+
+    ASSERT_TRUE(serializer.Write(value));
+
+    expected = Compose(EncodingByte::Structure, 2, 10, EncodingByte::Structure,
+                       2, 20, EncodingByte::String, 3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
 }
 
 TEST(Deserializer, Members) {
@@ -826,6 +925,58 @@ TEST(Deserializer, Members) {
     reader.Set(Compose(EncodingByte::Structure, 0));
     status = deserializer.Read(&value);
     ASSERT_TRUE(status.ok());
+  }
+
+  {
+    TestD value;
+
+    reader.Set(Compose(EncodingByte::Structure, 3, 10, 1, EncodingByte::String,
+                       3, "foo"));
+    ASSERT_TRUE(deserializer.Read(&value));
+
+    TestD expected{10, EnumA::A, "foo"};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    TestE<int> value_a;
+    TestE<std::string> value_b;
+
+    reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::Binary, 3,
+                       Integer<int>(1), Integer<int>(2), Integer<int>(3),
+                       EncodingByte::Structure, 2, EncodingByte::String, 3,
+                       "foo", EncodingByte::Array, 3, EncodingByte::String, 3,
+                       "bar", EncodingByte::String, 3, "baz",
+                       EncodingByte::String, 3, "fuz"));
+    ASSERT_TRUE(deserializer.Read(&value_a));
+    ASSERT_TRUE(deserializer.Read(&value_b));
+
+    TestE<int> expected_a{10, {1, 2, 3}};
+    TestE<std::string> expected_b{"foo", {"bar", "baz", "fuz"}};
+    EXPECT_EQ(expected_a, value_a);
+    EXPECT_EQ(expected_b, value_b);
+  }
+
+  {
+    TestF<int, std::string> value;
+
+    reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3,
+                       "foo"));
+    ASSERT_TRUE(deserializer.Read(&value));
+
+    TestF<int, std::string> expected{10, "foo"};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    TestG value;
+
+    reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::Structure,
+                       2, 20, EncodingByte::String, 3, "foo"));
+    ASSERT_TRUE(deserializer.Read(&value));
+
+    TestG expected{10, {20, "foo"}};
+    EXPECT_EQ(expected, value);
   }
 }
 
