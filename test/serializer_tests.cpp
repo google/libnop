@@ -135,8 +135,7 @@ struct TestD {
     return a == other.a && b == other.b && c == other.c;
   }
 };
-
-NOP_EXTERNAL_MEMBERS(TestD, a, b, c);
+NOP_STRUCTURE(TestD, a, b, c);
 
 template <typename T>
 struct TestE {
@@ -147,8 +146,7 @@ struct TestE {
     return a == other.a && b == other.b;
   }
 };
-
-NOP_TEMPLATE_EXTERNAL_MEMBERS(TestE, a, b);
+NOP_TEMPLATE(TestE, a, b);
 
 template <typename T, typename U>
 struct TestF {
@@ -159,8 +157,7 @@ struct TestF {
     return a == other.a && b == other.b;
   }
 };
-
-NOP_TEMPLATE_EXTERNAL_MEMBERS(TestF, a, b);
+NOP_TEMPLATE(TestF, a, b);
 
 struct TestG {
   int a;

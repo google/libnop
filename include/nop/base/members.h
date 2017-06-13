@@ -42,8 +42,9 @@ struct MemberList {
 };
 
 // Utility to retrieve a traits type that defines a MemberList for type T using
-// ADL. The macro NOP_EXTERNAL_MEMBERS defines the appropriate traits type and a
-// defintion of NOP__GetExternalMemberTraits that this utility finds using ADL.
+// ADL. The macros NOP_STRUCTURE and NOP_TEMPLATE define the appropriate traits
+// type and a defintion of NOP__GetExternalMemberTraits that this utility finds
+// using ADL.
 template <typename T>
 using ExternalMemberTraits =
     decltype(NOP__GetExternalMemberTraits(std::declval<T*>()));
@@ -128,7 +129,7 @@ struct MemberListTraits<T, EnableIfHasExternalMemberList<T>> {
 // Defines the set of members belonging to a type that should be
 // serialized/deserialized without changing the type itself. This is useful for
 // making external library types with public data serializable.
-#define NOP_EXTERNAL_MEMBERS(type, ... /*members*/)                           \
+#define NOP_STRUCTURE(type, ... /*members*/)                                  \
   template <typename>                                                         \
   struct NOP__MEMBER_TRAITS;                                                  \
   template <>                                                                 \
@@ -138,7 +139,8 @@ struct MemberListTraits<T, EnableIfHasExternalMemberList<T>> {
   NOP__MEMBER_TRAITS<type> __attribute__((used))                              \
       NOP__GetExternalMemberTraits(type*)
 
-#define NOP_TEMPLATE_EXTERNAL_MEMBERS(type, ... /*members*/)          \
+// Similar to NOP_STRUCTURE but for template types.
+#define NOP_TEMPLATE(type, ... /*members*/)                           \
   template <typename>                                                 \
   struct NOP__MEMBER_TRAITS;                                          \
   template <typename... Ts>                                           \
