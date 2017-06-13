@@ -98,6 +98,12 @@ struct EncodingIO {
   }
 };
 
+// Forwards reference types to the underlying type encoder.
+template <typename T>
+struct Encoding<T&&> : Encoding<T> {};
+template <typename T>
+struct Encoding<const T&> : Encoding<T> {};
+
 //
 // bool encoding formats:
 //

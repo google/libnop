@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 #include <nop/base/array.h>
@@ -9,6 +10,7 @@
 #include <nop/base/map.h>
 #include <nop/base/members.h>
 #include <nop/base/pair.h>
+#include <nop/base/reference_wrapper.h>
 #include <nop/base/serializer.h>
 #include <nop/base/string.h>
 #include <nop/base/tuple.h>
@@ -1104,5 +1106,43 @@ TEST(Deserializer, Handle) {
     EXPECT_TRUE(handle_b);
     EXPECT_EQ(2, handle_b.get());
     EXPECT_FALSE(handle_c);
+  }
+}
+
+TEST(Serializer, reference_wrapper) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter> serializer{&writer};
+  Status<void> status;
+
+  {
+    TestA value{10, "foo"};
+    auto ref_value = std::ref(value);
+
+    ASSERT_TRUE(serializer.Write(ref_value));
+
+    expected =
+        Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, reference_wrapper) {
+  TestReader reader;
+  Deserializer<TestReader> deserializer{&reader};
+  Status<void> status;
+
+  {
+    TestA value;
+    auto ref_value = std::ref(value);
+
+    reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3,
+                       "foo"));
+    status = deserializer.Read(&ref_value);
+    ASSERT_TRUE(status.ok());
+
+    TestA expected{10, "foo"};
+    EXPECT_EQ(expected, value);
   }
 }
