@@ -17,8 +17,8 @@ TEST(Encoding, bool) {
 TEST(Encoding, char) {
   EXPECT_EQ(EncodingByte::PositiveFixIntMin, Encoding<char>::Prefix(0));
   EXPECT_EQ(EncodingByte::PositiveFixIntMax, Encoding<char>::Prefix(127));
-  EXPECT_EQ(EncodingByte::U8, Encoding<char>::Prefix(128));
-  EXPECT_EQ(EncodingByte::U8, Encoding<char>::Prefix(255));
+  EXPECT_EQ(EncodingByte::U8, Encoding<char>::Prefix(static_cast<char>(128)));
+  EXPECT_EQ(EncodingByte::U8, Encoding<char>::Prefix(static_cast<char>(255)));
   EXPECT_TRUE(Encoding<char>::Match(EncodingByte::PositiveFixIntMin));
   EXPECT_TRUE(Encoding<char>::Match(EncodingByte::PositiveFixIntMax));
   EXPECT_TRUE(Encoding<char>::Match(EncodingByte::U8));
@@ -28,7 +28,8 @@ TEST(Encoding, char) {
 
 TEST(Encoding, uint8_t) {
   EXPECT_EQ(EncodingByte::PositiveFixIntMin, Encoding<std::uint8_t>::Prefix(0));
-  EXPECT_EQ(EncodingByte::PositiveFixIntMax, Encoding<std::uint8_t>::Prefix(127));
+  EXPECT_EQ(EncodingByte::PositiveFixIntMax,
+            Encoding<std::uint8_t>::Prefix(127));
   EXPECT_EQ(EncodingByte::U8, Encoding<std::uint8_t>::Prefix(128));
   EXPECT_EQ(EncodingByte::U8, Encoding<std::uint8_t>::Prefix(255));
   EXPECT_TRUE(Encoding<std::uint8_t>::Match(EncodingByte::PositiveFixIntMin));
