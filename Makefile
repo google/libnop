@@ -31,6 +31,7 @@ M_OBJS := \
 	test/variant_tests.o \
 	test/handle_tests.o \
 	test/thread_local_tests.o \
+	test/enum_flags_tests.o \
 
 include build/host-executable.mk
 
