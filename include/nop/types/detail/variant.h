@@ -20,14 +20,28 @@ using TypeForIndex = std::tuple_element_t<I, std::tuple<Types...>>;
 template <std::size_t I, typename... Types>
 using TypeTagForIndex = TypeTag<TypeForIndex<I, Types...>>;
 
+// Similar to std::is_constructible but evaluates to false for pointer to
+// boolean construction: avoiding this conversion helps prevent subtle bugs in
+// Variants with bool elements.
+template <typename...>
+struct IsConstructible;
+template <typename T, typename U>
+struct IsConstructible<T, U>
+    : std::integral_constant<bool,
+                             std::is_constructible<T, U>::value &&
+                                 !(std::is_same<std::decay_t<T>, bool>::value &&
+                                   std::is_pointer<std::decay_t<U>>::value)> {};
+template <typename T, typename... Args>
+struct IsConstructible<T, Args...> : std::is_constructible<T, Args...> {};
+
 // Enable if T(Args...) is well formed.
 template <typename R, typename T, typename... Args>
 using EnableIfConstructible =
-    typename std::enable_if<std::is_constructible<T, Args...>::value, R>::type;
+    typename std::enable_if<IsConstructible<T, Args...>::value, R>::type;
 // Enable if T(Args...) is not well formed.
 template <typename R, typename T, typename... Args>
 using EnableIfNotConstructible =
-    typename std::enable_if<!std::is_constructible<T, Args...>::value, R>::type;
+    typename std::enable_if<!IsConstructible<T, Args...>::value, R>::type;
 
 // Determines whether T is an element of Types...;
 template <typename... Types>
@@ -36,8 +50,8 @@ template <typename T, typename U>
 struct HasType<T, U> : std::is_same<std::decay_t<T>, std::decay_t<U>> {};
 template <typename T, typename First, typename... Rest>
 struct HasType<T, First, Rest...>
-    : std::integral_constant<bool, HasType<T, First>::value ||
-                                       HasType<T, Rest...>::value> {};
+    : std::integral_constant<
+          bool, HasType<T, First>::value || HasType<T, Rest...>::value> {};
 
 // Defines set operations on a set of Types...
 template <typename... Types>
@@ -49,8 +63,8 @@ struct Set {
   struct IsSubset<T> : HasType<T, Types...> {};
   template <typename First, typename... Rest>
   struct IsSubset<First, Rest...>
-      : std::integral_constant<bool, IsSubset<First>::value &&
-                                         IsSubset<Rest...>::value> {};
+      : std::integral_constant<
+            bool, IsSubset<First>::value && IsSubset<Rest...>::value> {};
 };
 
 // Determines the number of elements of Types... that are constructible from
@@ -59,12 +73,11 @@ template <typename... Types>
 struct ConstructibleCount;
 template <typename From, typename To>
 struct ConstructibleCount<From, To>
-    : std::integral_constant<std::size_t,
-                             std::is_constructible<To, From>::value> {};
+    : std::integral_constant<std::size_t, IsConstructible<To, From>::value> {};
 template <typename From, typename First, typename... Rest>
 struct ConstructibleCount<From, First, Rest...>
     : std::integral_constant<std::size_t,
-                             std::is_constructible<First, From>::value +
+                             IsConstructible<First, From>::value +
                                  ConstructibleCount<From, Rest...>::value> {};
 
 // Enable if T is an element of Types...
@@ -120,6 +133,18 @@ union Union<Type> {
       : first_(std::forward<T>(value)) {
     *index_out = index;
   }
+  Union(const Union& other, std::int32_t index) {
+    if (index == 0)
+      new (&first_) Type(other.first_);
+  }
+  Union(Union&& other, std::int32_t index) {
+    if (index == 0)
+      new (&first_) Type(std::move(other.first_));
+  }
+  Union(const Union&) = delete;
+  Union(Union&&) = delete;
+  void operator=(const Union&) = delete;
+  void operator=(Union&&) = delete;
 
   Type& get(TypeTag<Type>) { return first_; }
   const Type& get(TypeTag<Type>) const { return first_; }
@@ -211,6 +236,22 @@ union Union<First, Rest...> {
   template <typename T, typename U>
   Union(std::int32_t index, std::int32_t* index_out, TypeTag<T>, U&& value)
       : rest_(index + 1, index_out, TypeTag<T>{}, std::forward<U>(value)) {}
+  Union(const Union& other, std::int32_t index) {
+    if (index == 0)
+      new (&first_) First(other.first_);
+    else
+      new (&rest_) Union<Rest...>(other.rest_, index - 1);
+  }
+  Union(Union&& other, std::int32_t index) {
+    if (index == 0)
+      new (&first_) First(std::move(other.first_));
+    else
+      new (&rest_) Union<Rest...>(std::move(other.rest_), index - 1);
+  }
+  Union(const Union&) = delete;
+  Union(Union&&) = delete;
+  void operator=(const Union&) = delete;
+  void operator=(Union&&) = delete;
 
   struct FirstType {};
   struct RestType {};
@@ -341,7 +382,7 @@ union Union<First, Rest...> {
   Union<Rest...> rest_;
 };
 
-} // namespace detail
-} // namespace nop
+}  // namespace detail
+}  // namespace nop
 
 #endif  // LIBNOP_INCLUDE_NOP_TYPES_DETAIL_VARIANT_H_

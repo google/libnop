@@ -1,3 +1,4 @@
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -400,9 +401,22 @@ TEST(Variant, Constructor) {
 
   {
     Variant<int, bool, float> a(true);
+    EXPECT_TRUE(a.is<bool>());
     Variant<int, bool, float> b(a);
+    EXPECT_TRUE(b.is<bool>());
+  }
 
-    ASSERT_TRUE(b.is<bool>());
+  {
+    using ArrayType = std::array<float, 3>;
+    Variant<int, bool, ArrayType> a{ArrayType{{0.0f, 1.0f, 2.0f}}};
+    EXPECT_TRUE(a.is<ArrayType>());
+
+    a = EmptyVariant{};
+    EXPECT_TRUE(a.empty());
+
+    ArrayType array{{3.0f, 2.0f, 1.0f}};
+    a = array;
+    EXPECT_TRUE(a.is<ArrayType>());
   }
 
   {
@@ -1114,6 +1128,30 @@ TEST(Variant, HasType) {
 
   EXPECT_TRUE((HasType<int&, int, float, bool>::value));
   EXPECT_FALSE((HasType<char&, int, float, bool>::value));
+}
+
+TEST(Variant, IsConstructible) {
+  using ArrayType = const float[3];
+  struct ImplicitBool {
+    operator bool() const { return true; }
+  };
+  struct ExplicitBool {
+    explicit operator bool() const { return true; }
+  };
+  struct NonBool {};
+  struct TwoArgs {
+    TwoArgs(int, bool) {}
+  };
+
+  EXPECT_FALSE((nop::detail::IsConstructible<bool, ArrayType>::value));
+  EXPECT_TRUE((nop::detail::IsConstructible<bool, int>::value));
+  EXPECT_TRUE((nop::detail::IsConstructible<bool, ImplicitBool>::value));
+  EXPECT_TRUE((nop::detail::IsConstructible<bool, ExplicitBool>::value));
+  EXPECT_FALSE((nop::detail::IsConstructible<bool, NonBool>::value));
+  EXPECT_TRUE((nop::detail::IsConstructible<TwoArgs, int, bool>::value));
+  EXPECT_TRUE((nop::detail::IsConstructible<TwoArgs, int, int>::value));
+  EXPECT_FALSE((nop::detail::IsConstructible<TwoArgs, int, std::string>::value));
+  EXPECT_FALSE((nop::detail::IsConstructible<TwoArgs, int>::value));
 }
 
 TEST(Variant, Set) {

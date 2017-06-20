@@ -982,6 +982,19 @@ TEST(Serializer, Variant) {
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
+
+  {
+    std::array<Variant<int, std::string>, 2> value{
+        {Variant<int, std::string>(10), Variant<int, std::string>("foo")}};
+
+    ASSERT_TRUE(serializer.Write(value));
+
+    expected =
+        Compose(EncodingByte::Array, 2, EncodingByte::Variant, 0, 10,
+                EncodingByte::Variant, 1, EncodingByte::String, 3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
 }
 
 TEST(Deserializer, Variant) {

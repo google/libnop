@@ -51,6 +51,11 @@ class Variant {
   explicit Variant(EmptyVariant) {}
   ~Variant() { Destruct(); }
 
+  Variant(const Variant& other)
+      : index_{other.index_}, value_{other.value_, other.index_} {}
+  Variant(Variant&& other)
+      : index_{other.index_}, value_{std::move(other.value_), other.index_} {}
+
   // Copy and move construction from Variant types. Each element of OtherTypes
   // must be convertible to an element of Types.
   template <typename... OtherTypes>
@@ -60,6 +65,15 @@ class Variant {
   template <typename... OtherTypes>
   explicit Variant(Variant<OtherTypes...>&& other) {
     other.Visit([this](auto&& value) { Construct(std::move(value)); });
+  }
+
+  Variant& operator=(const Variant& other) {
+    other.Visit([this](const auto& value) { *this = value; });
+    return *this;
+  }
+  Variant& operator=(Variant&& other) {
+    other.Visit([this](auto&& value) { *this = std::move(value); });
+    return *this;
   }
 
   // Construction from non-Variant types.
