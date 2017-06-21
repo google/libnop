@@ -22,6 +22,16 @@ struct IsIntegral<First, Rest...>
     : std::integral_constant<
           bool, IsIntegral<First>::value && IsIntegral<Rest...>::value> {};
 
+// Trait to determine if all types in a parameter pack are arithmetic types.
+template <typename...>
+struct IsArithmetic;
+template <typename T>
+struct IsArithmetic<T> : std::is_arithmetic<T> {};
+template <typename First, typename... Rest>
+struct IsArithmetic<First, Rest...>
+    : std::integral_constant<
+          bool, IsArithmetic<First>::value && IsArithmetic<Rest...>::value> {};
+
 // Enable if every entry of Types is an integral type.
 template <typename... Types>
 using EnableIfIntegral =
@@ -31,6 +41,16 @@ using EnableIfIntegral =
 template <typename... Types>
 using EnableIfNotIntegral =
     typename std::enable_if<!IsIntegral<Types...>::value>::type;
+
+// Enable if every entry of Types is an arithmetic type.
+template <typename... Types>
+using EnableIfArithmetic =
+    typename std::enable_if<IsArithmetic<Types...>::value>::type;
+
+// Enable if every entry of Types is not an arithmetic type.
+template <typename... Types>
+using EnableIfNotArithmetic =
+    typename std::enable_if<!IsArithmetic<Types...>::value>::type;
 
 template <typename T, typename U>
 using EnableIfConvertible =

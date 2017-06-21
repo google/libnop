@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <nop/base/encoding.h>
+#include <nop/base/handle.h>
 #include <nop/base/utility.h>
 
 namespace nop {
@@ -30,95 +31,6 @@ class TestReader {
     } else {
       return ErrorStatus(ENOBUFS);
     }
-  }
-
-  Status<void> Read(std::uint8_t* value) {
-    if (index_ < data_.size()) {
-      *value = static_cast<std::uint8_t>(data_[index_++]);
-      return {};
-    } else {
-      return ErrorStatus(ENOBUFS);
-    }
-  }
-
-  Status<void> Read(std::uint16_t* value) {
-    std::uint8_t low, high;
-
-    auto status = Read(&low);
-    if (!status)
-      return status;
-
-    status = Read(&high);
-    if (!status)
-      return status;
-
-    *value = (static_cast<std::uint16_t>(high) << 8) |
-             static_cast<std::uint16_t>(low);
-    return {};
-  }
-
-  Status<void> Read(std::uint32_t* value) {
-    std::uint16_t low, high;
-
-    auto status = Read(&low);
-    if (!status)
-      return status;
-
-    status = Read(&high);
-    if (!status)
-      return status;
-
-    *value = (static_cast<std::uint32_t>(high) << 16) |
-             static_cast<std::uint32_t>(low);
-    return {};
-  }
-
-  Status<void> Read(std::uint64_t* value) {
-    std::uint32_t low, high;
-
-    auto status = Read(&low);
-    if (!status)
-      return status;
-
-    status = Read(&high);
-    if (!status)
-      return status;
-
-    *value = (static_cast<std::uint64_t>(high) << 32) |
-             static_cast<std::uint64_t>(low);
-    return {};
-  }
-
-  Status<void> Read(std::int8_t* value) {
-    return Read(reinterpret_cast<std::uint8_t*>(value));
-  }
-
-  Status<void> Read(std::int16_t* value) {
-    return Read(reinterpret_cast<std::uint16_t*>(value));
-  }
-
-  Status<void> Read(std::int32_t* value) {
-    return Read(reinterpret_cast<std::uint32_t*>(value));
-  }
-
-  Status<void> Read(std::int64_t* value) {
-    return Read(reinterpret_cast<std::uint64_t*>(value));
-  }
-
-  Status<void> Read(char* value) {
-    return Read(reinterpret_cast<std::uint8_t*>(value));
-  }
-
-  template <typename T, typename U, typename Enabled = EnableIfIntegral<T, U>>
-  Status<void> Read(U* value) {
-    T temp;
-
-    auto status = Read(&temp);
-    if (!status)
-      return status;
-
-    *value = static_cast<U>(temp);
-    return {};
   }
 
   template <typename IterBegin, typename IterEnd>
