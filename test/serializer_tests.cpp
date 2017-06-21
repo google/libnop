@@ -19,14 +19,18 @@
 #include <nop/base/vector.h>
 
 #include "test_reader.h"
+#include "test_utilities.h"
 #include "test_writer.h"
 
+using nop::Append;
+using nop::Compose;
 using nop::DefaultHandlePolicy;
 using nop::Deserializer;
 using nop::EnableIfIntegral;
 using nop::Encoding;
 using nop::EncodingByte;
 using nop::Handle;
+using nop::Integer;
 using nop::Serializer;
 using nop::Status;
 using nop::TestReader;
@@ -34,47 +38,6 @@ using nop::TestWriter;
 using nop::Variant;
 
 namespace {
-
-template <typename I, typename Enabled = EnableIfIntegral<I>>
-std::vector<std::uint8_t> Integer(I integer) {
-  std::vector<uint8_t> vector(sizeof(I));
-  const std::uint8_t* bytes = reinterpret_cast<const std::uint8_t*>(&integer);
-  for (std::size_t i = 0; i < sizeof(I); i++)
-    vector[i] = bytes[i];
-  return vector;
-}
-
-std::vector<std::uint8_t> Item(const std::vector<std::uint8_t>& vector) {
-  return vector;
-}
-
-// Only define Item for one-byte integral type. Larger integral literals must
-// use Integer() explicitly.
-auto Item(std::uint8_t value) { return Integer(value); }
-
-std::vector<std::uint8_t> Item(EncodingByte prefix) {
-  return {static_cast<std::uint8_t>(prefix)};
-}
-
-auto Item(const std::string& string) {
-  return std::vector<std::uint8_t>(string.begin(), string.end());
-}
-
-void Append(std::vector<std::uint8_t>* /*vector*/) {}
-
-template <typename First, typename... Rest>
-void Append(std::vector<std::uint8_t>* vector, First&& first, Rest&&... rest) {
-  auto value = Item(std::forward<First>(first));
-  vector->insert(vector->end(), value.begin(), value.end());
-  Append(vector, std::forward<Rest>(rest)...);
-}
-
-template <typename... Args>
-std::vector<std::uint8_t> Compose(Args&&... args) {
-  std::vector<uint8_t> vector;
-  Append(&vector, std::forward<Args>(args)...);
-  return vector;
-}
 
 struct TestA {
   int a;
