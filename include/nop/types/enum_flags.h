@@ -64,5 +64,15 @@ T& operator^=(T& a, T b) {
   a = a ^ b;
   return a;
 }
+template <typename T, typename Enable = ::nop::EnableIfEnumFlags<T>>
+T operator~(T value) {
+  using U = typename std::underlying_type<T>::type;
+  return static_cast<T>(~static_cast<U>(value));
+}
+template <typename T, typename Enable = ::nop::EnableIfEnumFlags<T>>
+bool operator!(T value) {
+  using U = typename std::underlying_type<T>::type;
+  return !static_cast<U>(value);
+}
 
 #endif  // LIBNOP_INCLUDE_NOP_TYPES_ENUM_FLAGS_H_
