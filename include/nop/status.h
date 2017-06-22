@@ -5,15 +5,21 @@
 #include <memory>
 #include <string>
 
+extern "C" int strerror_r(int error, char* buf, size_t buflen);
+
 namespace nop {
 
 // This is a helper class for constructing Status<T> with an error code.
 struct ErrorStatus {
  public:
-  ErrorStatus(int error) : error_{error} {}
+  explicit ErrorStatus(int error) : error_{error} {}
   int error() const { return error_; }
 
-  static std::string ErrorToString(int error_code);
+  static std::string ErrorToString(int error_code) {
+    char message[1024] = {};
+    strerror_r(error_code, message, sizeof(message));
+    return message;
+  }
 
  private:
   int error_;
@@ -69,7 +75,7 @@ class Status {
 
   // If |other| is in error state, copy the error code to this object.
   // Returns true if error was propagated
-  template<typename U>
+  template <typename U>
   bool PropagateError(const Status<U>& other) {
     if (!other.ok() && !other.empty()) {
       SetError(other.error());
@@ -139,7 +145,7 @@ class Status<void> {
   void SetValue() { error_ = 0; }
   void SetError(int error) { error_ = error; }
 
-  template<typename U>
+  template <typename U>
   bool PropagateError(const Status<U>& other) {
     if (!other.ok() && !other.empty()) {
       SetError(other.error());
@@ -167,4 +173,3 @@ class Status<void> {
 }  // namespace nop
 
 #endif  // LIBNOP_INCLUDE_NOP_STATUS_H_
-
