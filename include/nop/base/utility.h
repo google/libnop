@@ -10,13 +10,15 @@ namespace nop {
 template <std::size_t>
 struct Index {};
 
+// Passthrough type.
+template <typename T>
+using Identity = T;
+
 // Trait to determine if all the types in a parameter pack are integral types.
 template <typename...>
 struct IsIntegral;
-
 template <typename T>
 struct IsIntegral<T> : std::is_integral<T> {};
-
 template <typename First, typename... Rest>
 struct IsIntegral<First, Rest...>
     : std::integral_constant<
