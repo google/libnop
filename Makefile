@@ -10,9 +10,9 @@ GTEST_INSTALL ?= /opt/local
 GTEST_LIB ?= $(GTEST_INSTALL)/lib
 GTEST_INCLUDE ?= $(GTEST_INSTALL)/include
 
-HOST_CFLAGS := -g -O2 -Wall -I$(GTEST_INCLUDE) -Iinclude
+HOST_CFLAGS := -g -O2 -Wall -Iinclude
 HOST_CXXFLAGS := -std=c++14
-HOST_LDFLAGS := -L$(GTEST_LIB) -lgtest -lgtest_main
+HOST_LDFLAGS :=
 
 OUT := out
 OUT_HOST_OBJ := $(OUT)/host-obj
@@ -20,9 +20,9 @@ OUT_HOST_OBJ := $(OUT)/host-obj
 ALL :=
 DEPS :=
 
-include build/rules.mk
-
 M_NAME := test
+M_CFLAGS := -I$(GTEST_INCLUDE)
+M_LDFLAGS := -L$(GTEST_LIB) -lgtest -lgtest_main
 M_OBJS := \
 	test/nop_tests.o \
 	test/encoding_tests.o \
