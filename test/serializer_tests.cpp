@@ -137,7 +137,7 @@ TEST(Serializer, None) {
 TEST(Serializer, bool) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
 
   EXPECT_EQ(1U, serializer.GetSize(true));
   EXPECT_EQ(1U, serializer.GetSize(false));
@@ -159,7 +159,7 @@ TEST(Serializer, bool) {
 
 TEST(Deserializer, bool) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   bool value;
 
   reader.Set(Compose(EncodingByte::True));
@@ -176,7 +176,7 @@ TEST(Deserializer, bool) {
 TEST(Serializer, Vector) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -231,7 +231,7 @@ TEST(Serializer, Vector) {
 
 TEST(Deserializer, Vector) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -287,7 +287,7 @@ TEST(Deserializer, Vector) {
 TEST(Serializer, Array) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -342,7 +342,7 @@ TEST(Serializer, Array) {
 
 TEST(Deserializer, Array) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -397,7 +397,7 @@ TEST(Deserializer, Array) {
 TEST(Serializer, uint8_t) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
   uint8_t value;
 
@@ -437,7 +437,7 @@ TEST(Serializer, uint8_t) {
 TEST(Serializer, String) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -454,7 +454,7 @@ TEST(Serializer, String) {
 
 TEST(Deserializer, String) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   std::string expected;
   std::string value;
   Status<void> status;
@@ -470,7 +470,7 @@ TEST(Deserializer, String) {
 TEST(Serializer, VectorString) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -491,7 +491,7 @@ TEST(Serializer, VectorString) {
 TEST(Serializer, Tuple) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -509,7 +509,7 @@ TEST(Serializer, Tuple) {
 
 TEST(Deserializer, Tuple) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -528,7 +528,7 @@ TEST(Deserializer, Tuple) {
 TEST(Serializer, Pair) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -546,7 +546,7 @@ TEST(Serializer, Pair) {
 
 TEST(Deserializer, Pair) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -565,7 +565,7 @@ TEST(Deserializer, Pair) {
 TEST(Serializer, Map) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -583,7 +583,7 @@ TEST(Serializer, Map) {
 
 TEST(Deserializer, Map) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -602,7 +602,7 @@ TEST(Deserializer, Map) {
 TEST(Serializer, UnorderedMap) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -625,7 +625,7 @@ TEST(Serializer, UnorderedMap) {
 
 TEST(Deserializer, UnorderedMap) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -644,7 +644,7 @@ TEST(Deserializer, UnorderedMap) {
 TEST(Serializer, Enum) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -694,7 +694,7 @@ TEST(Serializer, Enum) {
 
 TEST(Deserializer, Enum) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -745,7 +745,7 @@ TEST(Deserializer, Enum) {
 TEST(Serializer, Members) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -838,7 +838,7 @@ TEST(Serializer, Members) {
 
 TEST(Deserializer, Members) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -930,7 +930,7 @@ TEST(Deserializer, Members) {
 TEST(Serializer, Variant) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -962,7 +962,7 @@ TEST(Serializer, Variant) {
 
 TEST(Deserializer, Variant) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {
@@ -985,7 +985,7 @@ TEST(Serializer, Handle) {
   std::vector<std::uint8_t> expected;
   std::vector<int> expected_handles;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
@@ -1028,7 +1028,7 @@ TEST(Serializer, Handle) {
 
 TEST(Deserializer, Handle) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
@@ -1070,7 +1070,7 @@ TEST(Deserializer, Handle) {
 TEST(Serializer, reference_wrapper) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
 
   {
@@ -1088,7 +1088,7 @@ TEST(Serializer, reference_wrapper) {
 
 TEST(Deserializer, reference_wrapper) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
 
   {

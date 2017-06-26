@@ -68,7 +68,7 @@ TEST(InterfaceTests, Interface) {
 
 TEST(InterfaceTests, Bind) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
 
   auto binding = BindInterface(
       TestInterface::Sum::Bind([](int a, int b) { return a + b; }),
@@ -98,7 +98,7 @@ TEST(InterfaceTests, Bind) {
 TEST(InterfaceTests, Invoke) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
-  Serializer<TestWriter> serializer{&writer};
+  Serializer<TestWriter*> serializer{&writer};
 
   {
     ASSERT_TRUE((TestInterface::Sum::Invoke(&serializer, 10, 20)));
@@ -135,7 +135,7 @@ TEST(InterfaceTests, Invoke) {
 
 TEST(InterfaceTests, Dispatch) {
   TestReader reader;
-  Deserializer<TestReader> deserializer{&reader};
+  Deserializer<TestReader*> deserializer{&reader};
 
   {
     reader.Set(Compose(EncodingByte::Array, 2, 10, 20));
