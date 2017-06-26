@@ -195,7 +195,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
     if (!status)
       return status;
     else if (size != Count)
-      return ErrorStatus(EIO);
+      return ErrorStatus(EPROTO);
     else
       return ReadMembers(value, reader, Index<Count>{});
   }

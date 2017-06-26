@@ -61,7 +61,7 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
     if (!status)
       return status;
     else if (handle_type != Policy::HandleType())
-      return ErrorStatus(EIO);
+      return ErrorStatus(EPROTO);
 
     HandleReference handle_reference;
     status = Encoding<HandleReference>::Read(&handle_reference, reader);

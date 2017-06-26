@@ -95,7 +95,7 @@ struct EncodingIO {
     if (Encoding<T>::Match(prefix))
       return Encoding<T>::ReadPayload(prefix, value, reader);
     else
-      return ErrorStatus(EIO);
+      return ErrorStatus(EPROTO);
   }
 
  protected:

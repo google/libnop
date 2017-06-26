@@ -97,7 +97,7 @@ struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
     if (!status)
       return status;
     else if (type < Type::kEmptyIndex || type >= sizeof...(Ts))
-      return ErrorStatus(EIO);  // EINVAL?
+      return ErrorStatus(EPROTO);
 
     value->Become(type);
 

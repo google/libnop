@@ -74,7 +74,7 @@ struct Encoding<std::array<T, Length>, EnableIfNotIntegral<T>>
     if (!status)
       return status;
     else if (size != Length)
-      return ErrorStatus(EIO);
+      return ErrorStatus(EPROTO);
 
     for (std::uint64_t i = 0; i < Length; i++) {
       status = Encoding<T>::Read(&(*value)[i], reader);
@@ -123,7 +123,7 @@ struct Encoding<std::array<T, Length>, EnableIfIntegral<T>>
     if (!status)
       return status;
     else if (size != Length)
-      return ErrorStatus(EIO);
+      return ErrorStatus(EPROTO);
 
     return reader->ReadRaw(&(*value)[0], &(*value)[Length]);
   }

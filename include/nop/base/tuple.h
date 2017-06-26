@@ -56,7 +56,7 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
     if (!status)
       return status;
     else if (size != sizeof...(Types))
-      return ErrorStatus(EIO);
+      return ErrorStatus(EPROTO);
     else
       return ReadElements(value, reader, Index<sizeof...(Types)>{});
   }

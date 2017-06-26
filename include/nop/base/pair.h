@@ -46,7 +46,7 @@ struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
     if (!status)
       return status;
     else if (size != 2u)
-      return ErrorStatus(EIO);
+      return ErrorStatus(EPROTO);
 
     status = Encoding<T>::Read(&value->first, reader);
     if (!status)
