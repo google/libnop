@@ -4,19 +4,8 @@
 #include <functional>
 #include <vector>
 
-#include <nop/base/array.h>
-#include <nop/base/enum.h>
-#include <nop/base/handle.h>
-#include <nop/base/map.h>
-#include <nop/base/members.h>
-#include <nop/base/pair.h>
-#include <nop/base/reference_wrapper.h>
-#include <nop/base/serializer.h>
-#include <nop/base/string.h>
-#include <nop/base/tuple.h>
 #include <nop/base/utility.h>
-#include <nop/base/variant.h>
-#include <nop/base/vector.h>
+#include <nop/serializer.h>
 
 #include "test_reader.h"
 #include "test_utilities.h"

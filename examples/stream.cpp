@@ -4,12 +4,7 @@
 #include <string>
 #include <vector>
 
-#include <nop/base/encoding.h>
-#include <nop/base/enum.h>
-#include <nop/base/members.h>
-#include <nop/base/serializer.h>
-#include <nop/base/string.h>
-#include <nop/base/vector.h>
+#include <nop/serializer.h>
 #include <nop/utility/stream_reader.h>
 #include <nop/utility/stream_writer.h>
 

@@ -4,13 +4,8 @@
 #include <type_traits>
 #include <vector>
 
-#include <nop/base/members.h>
-#include <nop/base/serializer.h>
-#include <nop/base/string.h>
-#include <nop/base/tuple.h>
-#include <nop/base/variant.h>
-#include <nop/base/vector.h>
 #include <nop/rpc/interface.h>
+#include <nop/serializer.h>
 
 #include "test_reader.h"
 #include "test_utilities.h"
