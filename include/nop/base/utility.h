@@ -72,6 +72,14 @@ std::false_type DeduceTemplateType(...);
 template <template <typename...> class TT, typename T>
 using IsTemplateBaseOf = decltype(DeduceTemplateType<TT>(std::declval<T*>()));
 
+// Logical AND over template parameter pack.
+template <typename... T>
+struct And : std::false_type {};
+template <typename A, typename B>
+struct And<A, B> : std::integral_constant<bool, A::value && B::value> {};
+template <typename A, typename B, typename... Rest>
+struct And<A, B, Rest...> : And<A, And<B, Rest...>> {};
+
 }  // namespace nop
 
 #endif  // LIBNOP_INCLUDE_NOP_BASE_UTILITY_H_
