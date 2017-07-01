@@ -8,6 +8,8 @@
 #include <nop/utility/stream_reader.h>
 #include <nop/utility/stream_writer.h>
 
+#include "stream_utilities.h"
+
 using nop::Deserializer;
 using nop::Serializer;
 using nop::StreamReader;
@@ -70,30 +72,6 @@ struct MessageA {
 
   NOP_MEMBERS(MessageA, a, b, c, d, e, f);
 };
-
-// Printing utilities. These are only used to display data in this example and
-// are not required for libnop operation.
-
-// Prints a std::vector<T> to the given stream. This template will work for any
-// type T that has an operator<< overload.
-template <typename T, typename Allocator>
-std::ostream& operator<<(std::ostream& stream,
-                         const std::vector<T, Allocator>& vector) {
-  stream << "vector{";
-
-  const std::size_t length = vector.size();
-  std::size_t count = 0;
-
-  for (const auto& element : vector) {
-    stream << element;
-    if (count < length - 1)
-      stream << ", ";
-    count++;
-  }
-
-  stream << "}";
-  return stream;
-}
 
 // Prints a struct tm to the given stream.
 std::ostream& operator<<(std::ostream& stream, const std::tm& tm) {
