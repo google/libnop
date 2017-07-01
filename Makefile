@@ -34,12 +34,19 @@ M_OBJS := \
 	test/enum_flags_tests.o \
 	test/sip_hash_tests.o \
 	test/interface_tests.o \
+	test/fungible_tests.o \
 
 include build/host-executable.mk
 
 M_NAME := stream_example
 M_OBJS := \
 	examples/stream.o
+
+include build/host-executable.mk
+
+M_NAME := simple_protocol_example
+M_OBJS := \
+	examples/simple_protocol.o
 
 include build/host-executable.mk
 
