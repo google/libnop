@@ -35,6 +35,7 @@ M_OBJS := \
 	test/sip_hash_tests.o \
 	test/interface_tests.o \
 	test/fungible_tests.o \
+	test/optional_tests.o \
 
 include build/host-executable.mk
 

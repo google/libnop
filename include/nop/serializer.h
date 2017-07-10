@@ -7,6 +7,7 @@
 #include <nop/base/handle.h>
 #include <nop/base/map.h>
 #include <nop/base/members.h>
+#include <nop/base/optional.h>
 #include <nop/base/pair.h>
 #include <nop/base/reference_wrapper.h>
 #include <nop/base/serializer.h>
