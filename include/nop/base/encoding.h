@@ -126,6 +126,11 @@ template <typename T>
 struct Encoding<const T&> : Encoding<T> {};
 
 //
+// Encodings for atrithmetic types. Most encodings depend on these for size and
+// type ids.
+//
+
+//
 // bool encoding formats:
 //
 // +-------+
@@ -834,6 +839,22 @@ struct Encoding<double> : EncodingIO<double> {
     return Read<double>(value, reader);
   }
 };
+
+//
+// std::size_t encoding format depends on the size of std::size_t for the
+// platform. Simply forward to either std::uint32_t or std::uint64_t.
+//
+
+template <typename T>
+struct Encoding<T, typename std::enable_if<
+                       std::is_same<T, std::size_t>::value &&
+                       sizeof(std::size_t) == sizeof(std::uint64_t)>::type>
+    : Encoding<std::uint64_t> {};
+template <typename T>
+struct Encoding<T, typename std::enable_if<
+                       std::is_same<T, std::size_t>::value &&
+                       sizeof(std::size_t) == sizeof(std::uint32_t)>::type>
+    : Encoding<std::uint32_t> {};
 
 }  // namespace nop
 
