@@ -43,6 +43,11 @@ template <typename A, typename B, std::size_t Size>
 struct IsFungible<std::array<A, Size>, std::array<B, Size>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
+// Compares two arrays to see if the element types are fungible.
+template <typename A, typename B, std::size_t Size>
+struct IsFungible<A[Size], B[Size]>
+    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+
 // Compares two std::vectors to see if the element types are fungible.
 template <typename A, typename B, typename AllocatorA, typename AllocatorB>
 struct IsFungible<std::vector<A, AllocatorA>, std::vector<B, AllocatorB>>
@@ -109,6 +114,22 @@ struct IsFungible<std::vector<A, Allocator>, std::array<B, Size>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 template <typename A, typename B, typename Allocator, std::size_t Size>
 struct IsFungible<std::array<A, Size>, std::vector<B, Allocator>>
+    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+
+// Compares array and std::vector to see if the elements types are fungible.
+template <typename A, typename B, typename Allocator, std::size_t Size>
+struct IsFungible<A[Size], std::vector<B, Allocator>>
+    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+template <typename A, typename B, typename Allocator, std::size_t Size>
+struct IsFungible<std::vector<A, Allocator>, B[Size]>
+    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+
+// Compares array and std::array to see if the element types are fungible.
+template <typename A, typename B, std::size_t Size>
+struct IsFungible<A[Size], std::array<B, Size>>
+    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+template <typename A, typename B, std::size_t Size>
+struct IsFungible<std::array<A, Size>, B[Size]>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
 }  // namepsace nop

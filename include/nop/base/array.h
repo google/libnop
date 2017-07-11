@@ -87,6 +87,63 @@ struct Encoding<std::array<T, Length>, EnableIfNotIntegral<T>>
 };
 
 template <typename T, std::size_t Length>
+struct Encoding<T[Length], EnableIfNotIntegral<T>> : EncodingIO<T[Length]> {
+  using Type = T[Length];
+
+  static constexpr EncodingByte Prefix(const Type& value) {
+    return EncodingByte::Array;
+  }
+
+  static constexpr std::size_t Size(const Type& value) {
+    return BaseEncodingSize(Prefix(value)) +
+           Encoding<std::uint64_t>::Size(Length) +
+           std::accumulate(std::begin(value), std::end(value), 0U,
+                           [](const std::size_t& sum, const T& element) {
+                             return sum + Encoding<T>::Size(element);
+                           });
+  }
+
+  static constexpr bool Match(EncodingByte prefix) {
+    return prefix == EncodingByte::Array;
+  }
+
+  template <typename Writer>
+  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+                                   Writer* writer) {
+    auto status = Encoding<std::uint64_t>::Write(Length, writer);
+    if (!status)
+      return status;
+
+    for (std::uint64_t i = 0; i < Length; i++) {
+      status = Encoding<T>::Write(value[i], writer);
+      if (!status)
+        return status;
+    }
+
+    return {};
+  }
+
+  template <typename Reader>
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
+                                  Reader* reader) {
+    std::uint64_t size;
+    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+    if (!status)
+      return status;
+    else if (size != Length)
+      return ErrorStatus(EPROTO);
+
+    for (std::uint64_t i = 0; i < Length; i++) {
+      status = Encoding<T>::Read(&(*value)[i], reader);
+      if (!status)
+        return status;
+    }
+
+    return {};
+  }
+};
+
+template <typename T, std::size_t Length>
 struct Encoding<std::array<T, Length>, EnableIfIntegral<T>>
     : EncodingIO<std::array<T, Length>> {
   using Type = std::array<T, Length>;
@@ -97,8 +154,7 @@ struct Encoding<std::array<T, Length>, EnableIfIntegral<T>>
 
   static constexpr std::size_t Size(const Type& value) {
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(Length) +
-           sizeof(T) * Length;
+           Encoding<std::uint64_t>::Size(Length) + sizeof(T) * Length;
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -113,6 +169,47 @@ struct Encoding<std::array<T, Length>, EnableIfIntegral<T>>
       return status;
 
     return writer->WriteRaw(value.begin(), value.end());
+  }
+
+  template <typename Reader>
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
+                                  Reader* reader) {
+    std::uint64_t size;
+    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+    if (!status)
+      return status;
+    else if (size != Length)
+      return ErrorStatus(EPROTO);
+
+    return reader->ReadRaw(&(*value)[0], &(*value)[Length]);
+  }
+};
+
+template <typename T, std::size_t Length>
+struct Encoding<T[Length], EnableIfIntegral<T>> : EncodingIO<T[Length]> {
+  using Type = T[Length];
+
+  static constexpr EncodingByte Prefix(const Type& value) {
+    return EncodingByte::Binary;
+  }
+
+  static constexpr std::size_t Size(const Type& value) {
+    return BaseEncodingSize(Prefix(value)) +
+           Encoding<std::uint64_t>::Size(Length) + sizeof(T) * Length;
+  }
+
+  static constexpr bool Match(EncodingByte prefix) {
+    return prefix == EncodingByte::Binary;
+  }
+
+  template <typename Writer>
+  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+                                   Writer* writer) {
+    auto status = Encoding<std::uint64_t>::Write(Length, writer);
+    if (!status)
+      return status;
+
+    return writer->WriteRaw(&value[0], &value[Length]);
   }
 
   template <typename Reader>

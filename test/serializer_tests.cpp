@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <vector>
@@ -291,7 +292,30 @@ TEST(Serializer, Array) {
   }
 
   {
+    std::uint8_t value[] = {1, 2, 3, 4};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Binary, 4, 1, 2, 3, 4);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
     std::array<int, 4> value = {{1, 2, 3, 4}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Binary, 4, Integer<int>(1),
+                       Integer<int>(2), Integer<int>(3), Integer<int>(4));
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    int value[] = {1, 2, 3, 4};
 
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
@@ -316,7 +340,33 @@ TEST(Serializer, Array) {
   }
 
   {
+    std::int64_t value[] = {1, 2, 3, 4};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Binary, 4, Integer<std::int64_t>(1),
+                       Integer<std::int64_t>(2), Integer<std::int64_t>(3),
+                       Integer<std::int64_t>(4));
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
     std::array<std::string, 4> value = {{"abc", "def", "123", "456"}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status.ok());
+
+    expected = Compose(EncodingByte::Array, 4, EncodingByte::String, 3, "abc",
+                       EncodingByte::String, 3, "def", EncodingByte::String, 3,
+                       "123", EncodingByte::String, 3, "456");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    std::string value[] = {"abc", "def", "123", "456"};
 
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
@@ -346,6 +396,18 @@ TEST(Deserializer, Array) {
   }
 
   {
+    reader.Set(Compose(EncodingByte::Binary, 4, 1, 2, 3, 4));
+
+    std::uint8_t value[4];
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    const std::uint8_t expected[] = {1, 2, 3, 4};
+    EXPECT_TRUE(std::equal(std::begin(value), std::end(value),
+                           std::begin(expected), std::end(expected)));
+  }
+
+  {
     reader.Set(Compose(EncodingByte::Binary, 4, Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4)));
 
@@ -355,6 +417,19 @@ TEST(Deserializer, Array) {
 
     std::array<int, 4> expected = {{1, 2, 3, 4}};
     EXPECT_EQ(expected, value);
+  }
+
+  {
+    reader.Set(Compose(EncodingByte::Binary, 4, Integer<int>(1),
+                       Integer<int>(2), Integer<int>(3), Integer<int>(4)));
+
+    int value[4];
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    const int expected[] = {1, 2, 3, 4};
+    EXPECT_TRUE(std::equal(std::begin(value), std::end(value),
+                           std::begin(expected), std::end(expected)));
   }
 
   {
@@ -371,6 +446,20 @@ TEST(Deserializer, Array) {
   }
 
   {
+    reader.Set(Compose(EncodingByte::Binary, 4, Integer<std::uint64_t>(1),
+                       Integer<std::uint64_t>(2), Integer<std::uint64_t>(3),
+                       Integer<std::uint64_t>(4)));
+
+    std::uint64_t value[4];
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    const std::uint64_t expected[] = {1, 2, 3, 4};
+    EXPECT_TRUE(std::equal(std::begin(value), std::end(value),
+                           std::begin(expected), std::end(expected)));
+  }
+
+  {
     reader.Set(Compose(EncodingByte::Array, 4, EncodingByte::String, 3, "abc",
                        EncodingByte::String, 3, "def", EncodingByte::String, 3,
                        "123", EncodingByte::String, 3, "456"));
@@ -382,7 +471,22 @@ TEST(Deserializer, Array) {
     std::array<std::string, 4> expected = {{"abc", "def", "123", "456"}};
     EXPECT_EQ(expected, value);
   }
+
+  {
+    reader.Set(Compose(EncodingByte::Array, 4, EncodingByte::String, 3, "abc",
+                       EncodingByte::String, 3, "def", EncodingByte::String, 3,
+                       "123", EncodingByte::String, 3, "456"));
+
+    std::string value[4];
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status.ok());
+
+    const std::string expected[] = {"abc", "def", "123", "456"};
+    EXPECT_TRUE(std::equal(std::begin(value), std::end(value),
+                           std::begin(expected), std::end(expected)));
+  }
 }
+
 TEST(Serializer, uint8_t) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
