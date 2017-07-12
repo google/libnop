@@ -16,10 +16,20 @@ enum class Flags {
 };
 NOP_ENUM_FLAGS(Flags);
 
+struct UserType {
+  enum class Flags {
+    Foo = 0b001,
+    Bar = 0b010,
+    Baz = 0b100,
+  };
+};
+NOP_ENUM_FLAGS(UserType::Flags);
+
 }  // anonymous namespace
 
 TEST(EnumFlags, IsEnumFlags) {
   EXPECT_TRUE(IsEnumFlags<Flags>::value);
+  EXPECT_TRUE(IsEnumFlags<UserType::Flags>::value);
   EXPECT_FALSE(IsEnumFlags<NonFlags>::value);
 }
 
