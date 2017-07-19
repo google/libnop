@@ -16,7 +16,7 @@ namespace nop {
 // | ARY | INT64:N | N ELEMENTS |
 // +-----+---------+-----//-----+
 //
-// Elements are expected to be valid encodings of type T.
+// Elements must be valid encodings of type T.
 //
 // std::array<T, N> encoding format for integral types:
 //
@@ -25,7 +25,7 @@ namespace nop {
 // +-----+---------+-----//-----+
 //
 // Elements are stored as direct little-endian representation of the integral
-// value; each element is sizeof(T) bytes in size.
+// value, each element is sizeof(T) bytes in size.
 //
 
 template <typename T, std::size_t Length>
