@@ -9,11 +9,14 @@
 #include <nop/utility/stream_writer.h>
 
 #include "stream_utilities.h"
+#include "string_to_hex.h"
 
 using nop::Deserializer;
+using nop::Optional;
 using nop::Serializer;
 using nop::StreamReader;
 using nop::StreamWriter;
+using nop::StringToHex;
 
 // Here we describe struct tm from the standard library, which is code we don't
 // own and can't change to include an annotation. The NOP_STRUCTURE() macro
@@ -69,8 +72,9 @@ struct MessageA {
   std::vector<TypeB> d;
   std::tm e;
   EnumA f;
+  Optional<std::string> g;
 
-  NOP_MEMBERS(MessageA, a, b, c, d, e, f);
+  NOP_MEMBERS(MessageA, a, b, c, d, e, f, g);
 };
 
 // Prints a struct tm to the given stream.
@@ -102,10 +106,23 @@ std::ostream& operator<<(std::ostream& stream, const EnumA& value) {
   return stream;
 }
 
+// Prints an Optional<T> type to the given stream.
+template <typename T>
+std::ostream& operator<<(std::ostream& stream, const Optional<T>& value) {
+  stream << "Optional{";
+  if (value)
+    stream << value.get();
+  else
+    stream << "<empty>";
+  stream << "}";
+  return stream;
+}
+
 // Prints a MessageA type to the given stream.
 std::ostream& operator<<(std::ostream& stream, const MessageA& message) {
   stream << "MessageA{" << message.a << ", " << message.b << ", " << message.c
-         << ", " << message.d << ", " << message.e << ", " << message.f << "}";
+         << ", " << message.d << ", " << message.e << ", " << message.f << ", "
+         << message.g << "}";
   return stream;
 }
 
@@ -113,24 +130,6 @@ std::ostream& operator<<(std::ostream& stream, const MessageA& message) {
 std::ostream& operator<<(std::ostream& stream, const TypeB& value) {
   stream << "TypeB{" << value.a() << ", " << value.b() << "}";
   return stream;
-}
-
-// Prints the bytes of a string in hexadecimal.
-std::string StringToHex(const std::string& input) {
-  static const char* const lut = "0123456789ABCDEF";
-  const size_t len = input.length();
-
-  std::string output;
-  output.reserve(2 * len);
-  for (size_t i = 0; i < len; ++i) {
-    const unsigned char c = input[i];
-    output.push_back(lut[c >> 4]);
-    output.push_back(lut[c & 15]);
-    if (i < len - 1)
-      output.push_back(' ');
-  }
-
-  return output;
 }
 
 }  // anonymous namespace
@@ -144,9 +143,13 @@ int main(int /*argc*/, char** /*argv*/) {
   std::tm local_time = *std::localtime(&time);
 
   // Write a MessageA structure to the stream.
-  MessageA message_out{10,         20.f,
-                       "foo",      {{"bar", {1, 2, 3}}, {"baz", {4, 5, 6}}},
-                       local_time, EnumA::Baz};
+  MessageA message_out{10,
+                       20.f,
+                       "foo",
+                       {{"bar", {1, 2, 3}}, {"baz", {4, 5, 6}}},
+                       local_time,
+                       EnumA::Baz,
+                       Optional<std::string>{"bif"}};
   std::cout << "Writing: " << message_out << std::endl << std::endl;
 
   auto status = serializer.Write(message_out);
