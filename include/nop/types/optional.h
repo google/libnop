@@ -40,7 +40,7 @@ class Optional {
   }
 
   Optional& operator=(const T& value) {
-    Assign(std::move(value));
+    Assign(value);
     return *this;
   }
 
