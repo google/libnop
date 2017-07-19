@@ -5,6 +5,7 @@
 #include <tuple>
 #include <utility>
 
+#include <nop/base/encoding.h>
 #include <nop/base/members.h>
 #include <nop/base/tuple.h>
 #include <nop/base/utility.h>
@@ -14,74 +15,158 @@
 
 namespace nop {
 
-template <std::uint64_t Hash_, typename Signature_>
+template <std::uint64_t Hash_, typename Signature>
 struct InterfaceMethod {
+  using Traits = FunctionTraits<Signature>;
+  using Function = typename Traits::Function;
+
+  template <typename T, typename Return = void>
+  using EnableIfCompatible =
+      typename Traits::template EnableIfCompatible<T, Return>;
+
   enum : std::uint64_t { Hash = Hash_ };
 
-  using Traits = FunctionTraits<Signature_>;
-  using Signature = typename Traits::Signature;
-  using Return = typename Traits::Return;
-  using Args = typename Traits::Args;
+  static bool Match(std::uint64_t method_hash) { return method_hash == Hash; }
 
-  template <typename Serializer, typename... Params>
-  static Status<void> Invoke(Serializer* serializer, Params&&... params) {
-    return Helper<Signature>::Invoke(serializer,
-                                     std::forward<Params>(params)...);
+  template <typename Serializer, typename... Args>
+  static Status<void> Invoke(Serializer* serializer, Args&&... args) {
+    return Helper<Signature>::Invoke(serializer, std::forward<Args>(args)...);
   }
 
-  template <typename Deserializer, typename Op>
-  static Status<Return> Dispatch(Deserializer* deserializer, Op&& op) {
-    return Helper<Signature>::Dispatch(deserializer, std::forward<Op>(op));
+  template <typename Deserializer>
+  static Status<typename Traits::Return> GetReturn(Deserializer* deserializer) {
+    return Helper<Signature>::GetReturn(deserializer);
+  }
+
+  template <typename Serializer, typename Deserializer, typename... Args>
+  static Status<typename Traits::Return> InvokeAndReturn(
+      Serializer* serializer, Deserializer* deserializer, Args&&... args) {
+    auto status = Invoke(serializer, std::forward<Args>(args)...);
+    if (!status)
+      return status.error_status();
+
+    return GetReturn(deserializer);
   }
 
   template <typename Op>
-  struct Binding {
-    using Return = typename Traits::Return;
+  struct FunctionBinding {
     Op op;
 
-    static bool Match(std::uint64_t method_hash) { return method_hash == Hash; }
+    static bool Match(std::uint64_t method_hash) {
+      return InterfaceMethod::Match(method_hash);
+    }
 
-    template <typename Deserializer>
-    Status<Return> Dispatch(Deserializer* deserializer) {
-      return InterfaceMethod::Dispatch(deserializer, op);
+    template <typename Deserializer, typename Serializer>
+    Status<void> Dispatch(Deserializer* deserializer, Serializer* serializer) {
+      return Helper<Signature>::Dispatch(deserializer, serializer,
+                                         std::forward<Op>(op));
     }
   };
 
-  template <typename Op>
-  static Binding<Op> Bind(Op&& op) {
-    return Binding<Op>{std::forward<Op>(op)};
+  template <typename Class, typename Op>
+  struct MethodBinding {
+    Class* instance;
+    Op op;
+
+    static bool Match(std::uint64_t method_hash) {
+      return InterfaceMethod::Match(method_hash);
+    }
+
+    template <typename Deserializer, typename Serializer>
+    Status<void> Dispatch(Deserializer* deserializer, Serializer* serializer) {
+      return Helper<Signature>::Dispatch(deserializer, serializer, instance,
+                                         std::forward<Op>(op));
+    }
+  };
+
+  template <typename Op, typename Enable = EnableIfCompatible<Op>>
+  static FunctionBinding<Op> Bind(Op&& op) {
+    return FunctionBinding<Op>{std::forward<Op>(op)};
+  }
+
+  template <typename Class, typename Return, typename... Args,
+            typename Enable = EnableIfCompatible<Return(Args...)>>
+  static MethodBinding<Class, Return (Class::*)(Args...) const> Bind(
+      Class* instance, Return (Class::*op)(Args...) const) {
+    return MethodBinding<Class, Return (Class::*)(Args...) const>{instance, op};
+  }
+
+  template <typename Class, typename Return, typename... Args,
+            typename Enable = EnableIfCompatible<Return(Args...)>>
+  static MethodBinding<Class, Return (Class::*)(Args...)> Bind(
+      Class* instance, Return (Class::*op)(Args...)) {
+    return MethodBinding<Class, Return (Class::*)(Args...)>{instance, op};
   }
 
  private:
   template <typename>
   struct Helper;
 
-  template <typename Return, typename... Params>
-  struct Helper<Return(Params...)> {
-    using ParamsTuple = std::tuple<std::decay_t<Params>...>;
+  template <typename Return, typename... Args>
+  struct Helper<Return(Args...)> {
+    using ArgsTuple = std::tuple<std::decay_t<Args>...>;
 
     template <typename Serializer>
-    static Status<void> Invoke(Serializer* serializer, Params&&... params) {
+    static Status<void> Invoke(Serializer* serializer, Args... args) {
+      auto status = serializer->Write(Hash);
+      if (!status)
+        return status;
+
       return serializer->Write(
-          std::forward_as_tuple(std::forward<Params>(params)...));
+          std::forward_as_tuple(std::forward<Args>(args)...));
     }
 
-    template <typename Deserializer, typename Op>
-    static Status<Return> Dispatch(Deserializer* deserializer, Op&& op) {
-      ParamsTuple params;
-      auto status = deserializer->Read(&params);
+    template <typename Deserializer>
+    static Status<Return> GetReturn(Deserializer* deserializer) {
+      Return return_value;
+      auto status = deserializer->Read(&return_value);
+      if (!status)
+        return status.error_status();
+      else
+        return {std::move(return_value)};
+    }
+
+    template <typename Deserializer, typename Serializer, typename Op>
+    static Status<void> Dispatch(Deserializer* deserializer,
+                                 Serializer* serializer, Op&& op) {
+      ArgsTuple args;
+      auto status = deserializer->Read(&args);
+      if (!status)
+        return status;
+
+      Return return_value{Call(std::forward<Op>(op), &args,
+                               std::make_index_sequence<sizeof...(Args)>{})};
+
+      return serializer->Write(return_value);
+    }
+
+    template <typename Deserializer, typename Serializer, typename Class,
+              typename Op>
+    static Status<void> Dispatch(Deserializer* deserializer,
+                                 Serializer* serializer, Class* instance,
+                                 Op&& op) {
+      ArgsTuple args;
+      auto status = deserializer->Read(&args);
       if (!status)
         return status.error_status();
 
-      return {Call(std::forward<Op>(op), &params,
-                   std::make_index_sequence<sizeof...(Params)>{})};
+      Return return_value{Call(instance, std::forward<Op>(op), &args,
+                               std::make_index_sequence<sizeof...(Args)>{})};
+
+      return serializer->Write(return_value);
     }
 
     template <typename Op, std::size_t... Is>
-    static Return Call(Op&& op, ParamsTuple* params,
-                       std::index_sequence<Is...>) {
+    static Return Call(Op&& op, ArgsTuple* args, std::index_sequence<Is...>) {
       return static_cast<Return>(std::forward<Op>(op)(
-          std::get<Is>(std::forward<ParamsTuple>(*params))...));
+          std::get<Is>(std::forward<ArgsTuple>(*args))...));
+    }
+
+    template <typename Class, typename Op, std::size_t... Is>
+    static Return Call(Class* instance, Op&& op, ArgsTuple* args,
+                       std::index_sequence<Is...>) {
+      return static_cast<Return>((instance->*std::forward<Op>(op))(
+          std::get<Is>(std::forward<ArgsTuple>(*args))...));
     }
   };
 };
@@ -89,6 +174,7 @@ struct InterfaceMethod {
 template <typename... InterfaceMethods>
 struct InterfaceAPI {
   using Methods = std::tuple<InterfaceMethods...>;
+
   enum : std::size_t { Length = sizeof...(InterfaceMethods) };
 
   template <std::size_t Index>
@@ -96,39 +182,44 @@ struct InterfaceAPI {
 };
 
 template <typename T>
-using GetInterface = typename T::NOP__INTERFACE;
+using InterfaceType = typename T::NOP__INTERFACE;
 
 template <typename T>
-using GetInterfaceAPI = typename T::NOP__INTERFACE_API;
-
-#define NOP_EXPAND_PACK(...) [](...) {}(__VA_ARGS__)
+using InterfaceApiType = typename T::NOP__INTERFACE_API;
 
 template <typename T>
 struct Interface {
   using BASE = Interface<T>;
 
-  static std::uint64_t GetInterfaceHash() { return GetInterface<T>::Hash; }
-  static std::string GetInterfaceName() { return GetInterface<T>::GetName(); }
+  static std::uint64_t GetInterfaceHash() { return InterfaceType<T>::Hash; }
+  static std::string GetInterfaceName() { return InterfaceType<T>::GetName(); }
 
   template <std::size_t Index>
   static constexpr std::uint64_t GetMethodHash() {
-    return GetInterfaceAPI<T>::template Method<Index>::Hash;
+    return InterfaceApiType<T>::template Method<Index>::Hash;
   }
 };
 
 template <typename... Bindings>
-class Binding {
+class InterfaceBindings {
  public:
   enum : std::size_t { Count = sizeof...(Bindings) };
-  using ReturnTypes = Variant<typename Bindings::Return...>;
 
-  Binding(Bindings&&... bindings)
+  InterfaceBindings(Bindings&&... bindings)
       : bindings{std::forward<Bindings>(bindings)...} {}
 
-  template <typename Deserializer>
-  Status<ReturnTypes> Dispatch(Deserializer* deserializer,
-                               std::uint64_t method_hash) {
-    return DispatchTable(deserializer, method_hash,
+  bool Match(std::uint64_t method_hash) {
+    return MatchTable(method_hash, Index<sizeof...(Bindings)>{});
+  }
+
+  template <typename Deserializer, typename Serializer>
+  Status<void> Dispatch(Deserializer* deserializer, Serializer* serializer) {
+    std::uint64_t method_hash;
+    auto status = deserializer->Read(&method_hash);
+    if (!status)
+      return status;
+
+    return DispatchTable(deserializer, serializer, method_hash,
                          Index<sizeof...(Bindings)>{});
   }
 
@@ -138,31 +229,37 @@ class Binding {
   template <std::size_t Index>
   using At = typename std::tuple_element<Index, decltype(bindings)>::type;
 
-  template <typename Deserializer>
-  Status<ReturnTypes> DispatchTable(Deserializer* deserializer,
-                                    std::uint64_t method_hash, Index<0>) {
+  bool MatchTable(std::uint64_t method_hash, Index<0>) { return false; }
+
+  template <std::size_t index>
+  bool MatchTable(std::uint64_t method_hash, Index<index>) {
+    if (At<index - 1>::Match(method_hash))
+      return true;
+    else
+      return MatchTable(method_hash, Index<index - 1>{});
+  }
+
+  template <typename Deserializer, typename Serializer>
+  Status<void> DispatchTable(Deserializer* deserializer, Serializer* serializer,
+                             std::uint64_t method_hash, Index<0>) {
     return ErrorStatus(EOPNOTSUPP);
   }
 
-  template <typename Deserializer, std::size_t index>
-  Status<ReturnTypes> DispatchTable(Deserializer* deserializer,
-                                    std::uint64_t method_hash, Index<index>) {
+  template <typename Deserializer, typename Serializer, std::size_t index>
+  Status<void> DispatchTable(Deserializer* deserializer, Serializer* serializer,
+                             std::uint64_t method_hash, Index<index>) {
     if (At<index - 1>::Match(method_hash)) {
-      auto status = std::get<index - 1>(bindings).Dispatch(deserializer);
-      if (!status)
-        return status.error_status();
-      else
-        return {ReturnTypes(status.take())};
+      return std::get<index - 1>(bindings).Dispatch(deserializer, serializer);
     } else {
-      return DispatchTable(deserializer, method_hash, Index<index - 1>{});
+      return DispatchTable(deserializer, serializer, method_hash,
+                           Index<index - 1>{});
     }
   }
 };
 
-// TODO(eieio): Prevent duplicate bindings.
 template <typename... Bindings>
-static Binding<Bindings...> BindInterface(Bindings&&... bindings) {
-  return Binding<Bindings...>{std::forward<Bindings>(bindings)...};
+InterfaceBindings<Bindings...> BindInterface(Bindings&&... bindings) {
+  return {std::forward<Bindings>(bindings)...};
 }
 
 enum : std::uint64_t {

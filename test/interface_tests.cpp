@@ -62,8 +62,11 @@ TEST(InterfaceTests, Interface) {
 }
 
 TEST(InterfaceTests, Bind) {
+  std::vector<std::uint8_t> expected;
   TestReader reader;
+  TestWriter writer;
   Deserializer<TestReader*> deserializer{&reader};
+  Serializer<TestWriter*> serializer{&writer};
 
   auto binding = BindInterface(
       TestInterface::Sum::Bind([](int a, int b) { return a + b; }),
@@ -71,23 +74,31 @@ TEST(InterfaceTests, Bind) {
   EXPECT_EQ(2u, binding.Count);
 
   // Methods not bound should return an error.
-  auto status = binding.Dispatch(&deserializer, TestInterface::Match::Hash);
+  reader.Set(Compose(EncodingByte::U64,
+                     Integer<std::uint64_t>(TestInterface::Match::Hash)));
+  auto status = binding.Dispatch(&deserializer, &serializer);
   EXPECT_FALSE(status);
   EXPECT_EQ(EOPNOTSUPP, status.error());
 
-  reader.Set(Compose(EncodingByte::Array, 2, 10, 20));
+  reader.Set(Compose(EncodingByte::U64,
+                     Integer<std::uint64_t>(TestInterface::Sum::Hash),
+                     EncodingByte::Array, 2, 10, 20));
+  expected = Compose(30);
 
-  status = binding.Dispatch(&deserializer, TestInterface::Sum::Hash);
+  status = binding.Dispatch(&deserializer, &serializer);
   ASSERT_TRUE(status);
-  ASSERT_TRUE(status.get().is<int>());
-  EXPECT_EQ(30, std::get<int>(status.get()));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
 
-  reader.Set(Compose(EncodingByte::Array, 2, 10, 20));
+  reader.Set(Compose(EncodingByte::U64,
+                     Integer<std::uint64_t>(TestInterface::Product::Hash),
+                     EncodingByte::Array, 2, 10, 20));
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(200));
 
-  status = binding.Dispatch(&deserializer, TestInterface::Product::Hash);
+  status = binding.Dispatch(&deserializer, &serializer);
   ASSERT_TRUE(status);
-  ASSERT_TRUE(status.get().is<int>());
-  EXPECT_EQ(200, std::get<int>(status.get()));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
 }
 
 TEST(InterfaceTests, Invoke) {
@@ -98,7 +109,9 @@ TEST(InterfaceTests, Invoke) {
   {
     ASSERT_TRUE((TestInterface::Sum::Invoke(&serializer, 10, 20)));
 
-    expected = Compose(EncodingByte::Array, 2, 10, 20);
+    expected = Compose(EncodingByte::U64,
+                       Integer<std::uint64_t>(TestInterface::Sum::Hash),
+                       EncodingByte::Array, 2, 10, 20);
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -106,7 +119,9 @@ TEST(InterfaceTests, Invoke) {
   {
     ASSERT_TRUE((TestInterface::Length::Invoke(&serializer, "foo")));
 
-    expected = Compose(EncodingByte::Array, 1, EncodingByte::String, 3, "foo");
+    expected = Compose(EncodingByte::U64,
+                       Integer<std::uint64_t>(TestInterface::Length::Hash),
+                       EncodingByte::Array, 1, EncodingByte::String, 3, "foo");
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -117,65 +132,16 @@ TEST(InterfaceTests, Invoke) {
     ASSERT_TRUE((TestInterface::Match::Invoke(&serializer, message_a)));
     ASSERT_TRUE((TestInterface::Match::Invoke(&serializer, message_b)));
 
-    expected = Compose(EncodingByte::Array, 1, EncodingByte::Variant, 0,
-                       EncodingByte::Structure, 2, 10, EncodingByte::String, 3,
-                       "foo", EncodingByte::Array, 1, EncodingByte::Variant, 1,
-                       EncodingByte::Structure, 2, EncodingByte::F32,
-                       Float(20.0f), EncodingByte::Binary, 3, Integer<int>(1),
-                       Integer<int>(2), Integer<int>(3));
+    expected = Compose(
+        EncodingByte::U64, Integer<std::uint64_t>(TestInterface::Match::Hash),
+        EncodingByte::Array, 1, EncodingByte::Variant, 0,
+        EncodingByte::Structure, 2, 10, EncodingByte::String, 3, "foo",
+        EncodingByte::U64, Integer<std::uint64_t>(TestInterface::Match::Hash),
+        EncodingByte::Array, 1, EncodingByte::Variant, 1,
+        EncodingByte::Structure, 2, EncodingByte::F32, Float(20.0f),
+        EncodingByte::Binary, 3, Integer<int>(1), Integer<int>(2),
+        Integer<int>(3));
     EXPECT_EQ(expected, writer.data());
     writer.clear();
-  }
-}
-
-TEST(InterfaceTests, Dispatch) {
-  TestReader reader;
-  Deserializer<TestReader*> deserializer{&reader};
-
-  {
-    reader.Set(Compose(EncodingByte::Array, 2, 10, 20));
-
-    auto status_return = TestInterface::Sum::Dispatch(
-        &deserializer, [](int a, int b) { return a + b; });
-    ASSERT_TRUE(status_return);
-
-    const int expected = 30;
-    EXPECT_EQ(expected, status_return.get());
-  }
-
-  {
-    reader.Set(Compose(EncodingByte::Array, 1, EncodingByte::String, 3, "foo"));
-
-    auto status_return = TestInterface::Length::Dispatch(
-        &deserializer, [](const std::string& string) { return string.size(); });
-    ASSERT_TRUE(status_return);
-
-    const int expected = 3;
-    EXPECT_EQ(expected, status_return.get());
-  }
-
-  {
-    reader.Set(Compose(EncodingByte::Array, 1, EncodingByte::Variant, 0,
-                       EncodingByte::Structure, 2, 10, EncodingByte::String, 3,
-                       "foo", EncodingByte::Array, 1, EncodingByte::Variant, 1,
-                       EncodingByte::Structure, 2, EncodingByte::F32,
-                       Float(20.0f), EncodingByte::Binary, 3, Integer<int>(1),
-                       Integer<int>(2), Integer<int>(3)));
-
-    auto status_return = TestInterface::Match::Dispatch(
-        &deserializer, [](const Variant<MessageA, MessageB>& message) {
-          return message.is<MessageA>() &&
-                 std::get<MessageA>(message).b == "foo";
-        });
-    ASSERT_TRUE(status_return);
-    EXPECT_TRUE(status_return.get());
-
-    status_return = TestInterface::Match::Dispatch(
-        &deserializer, [](const Variant<MessageA, MessageB>& message) {
-          return message.is<MessageB>() &&
-                 std::get<MessageB>(message).b == std::vector<int>{1, 2, 3};
-        });
-    ASSERT_TRUE(status_return);
-    EXPECT_TRUE(status_return.get());
   }
 }
