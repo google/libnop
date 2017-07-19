@@ -1,0 +1,212 @@
+#include <errno.h>
+#include <unistd.h>
+
+#include <iostream>
+#include <string>
+#include <tuple>
+#include <utility>
+
+#include <nop/serializer.h>
+#include <nop/status.h>
+#include <nop/types/file_handle.h>
+#include <nop/types/result.h>
+#include <nop/utility/stream_reader.h>
+#include <nop/utility/stream_writer.h>
+
+#include "stream_utilities.h"
+#include "string_to_hex.h"
+
+using nop::Deserializer;
+using nop::ErrorStatus;
+using nop::Result;
+using nop::Serializer;
+using nop::Status;
+using nop::StreamReader;
+using nop::StreamWriter;
+using nop::StringToHex;
+using nop::UniqueFileHandle;
+
+namespace {
+
+using Reader = StreamReader<FdInputStream>;
+using Writer = StreamWriter<FdOutputStream>;
+
+// Utility class to combine a serializer and deserializer into a single
+// bi-directional entity.
+struct Conduit {
+  Serializer<std::unique_ptr<Writer>> serializer;
+  Deserializer<std::unique_ptr<Reader>> deserializer;
+
+  template <typename T>
+  Status<void> Read(T* value) {
+    return deserializer.Read(value);
+  }
+
+  template <typename T>
+  Status<void> Write(const T& value) {
+    return serializer.Write(value);
+  }
+};
+
+// Defines the format of request messages sent from parent to child.
+struct Request {
+  std::uint32_t request_bytes{0};
+  NOP_MEMBERS(Request, request_bytes);
+};
+
+// Defines the errors that may be returned from child to parent.
+enum class Error {
+  None,
+  InvalidRequest,
+  InternalError,
+};
+
+// Defines a subclass of nop::Result for the error type used in this example.
+template <typename T>
+struct Return : Result<Error, T> {
+  using Base = Result<Error, T>;
+  using Base::Base;
+
+  std::string GetErrorMessage() const {
+    switch (this->error()) {
+      case Error::None:
+        return "No Error";
+      case Error::InvalidRequest:
+        return "Invalid Request";
+      case Error::InternalError:
+        return "Internal Error";
+      default:
+        return "Unknown Error";
+    }
+  }
+};
+
+// Prints the Return<T> to the given stream.
+template <typename T>
+std::ostream& operator<<(std::ostream& stream, const Return<T>& result) {
+  stream << result.GetErrorMessage();
+  return stream;
+}
+
+// Response type returned from child to parent.
+using Response = Return<std::string>;
+
+// Builds a pair of Conduits connected by a pair of pipes.
+Status<std::pair<Conduit, Conduit>> MakePipes() {
+  int pipe_fds[2];
+  int ret = pipe(pipe_fds);
+  if (ret < 0)
+    return ErrorStatus(errno);
+
+  // The first fd is the read end, the second is the write end.
+  auto reader_a = std::make_unique<Reader>(pipe_fds[0]);
+  auto writer_b = std::make_unique<Writer>(pipe_fds[1]);
+
+  ret = pipe(pipe_fds);
+  if (ret < 0)
+    return ErrorStatus(errno);
+
+  // The first fd is the read end, the second is the write end.
+  auto reader_b = std::make_unique<Reader>(pipe_fds[0]);
+  auto writer_a = std::make_unique<Writer>(pipe_fds[1]);
+
+  // Criss-cross the pipe ends to make two bi-directional conduits.
+  return {{Conduit{std::move(writer_a), std::move(reader_a)},
+           Conduit{std::move(writer_b), std::move(reader_b)}}};
+}
+
+int HandleChild(Conduit conduit) {
+  std::cout << "Child waiting for message..." << std::endl;
+
+  Request request;
+  auto status = conduit.Read(&request);
+  if (!status) {
+    std::cerr << "Child failed to read request: " << status.GetErrorMessage()
+              << std::endl;
+    return -status.error();
+  }
+
+  std::cout << "Child received a request for " << request.request_bytes
+            << " bytes." << std::endl;
+
+  UniqueFileHandle handle = UniqueFileHandle::Open("/dev/urandom", O_RDONLY);
+  if (!handle) {
+    const int error = errno;
+    std::cerr << "Child failed to open file: " << strerror(error) << std::endl;
+    status = conduit.Write(Response{Error::InternalError});
+  } else {
+    std::string data(request.request_bytes, '\0');
+    int count = read(handle.get(), &data[0], data.size());
+    if (count < 0) {
+      status = ErrorStatus(errno);
+    } else {
+      data.resize(count);
+
+      std::cout << "Client replying with    : " << StringToHex(data)
+                << std::endl;
+      status = conduit.Write(Response{std::move(data)});
+    }
+  }
+
+  if (!status) {
+    std::cerr << "Child failed to write response: " << status.GetErrorMessage()
+              << std::endl;
+    return -status.error();
+  }
+
+  return 0;
+}
+
+int HandleParent(Conduit conduit) {
+  std::cout << "Parent sending message..." << std::endl;
+
+  const std::uint32_t kRequestBytes = 32;
+  auto status = conduit.Write(Request{kRequestBytes});
+  if (!status) {
+    std::cerr << "Parent failed to write request: " << status.GetErrorMessage()
+              << std::endl;
+    return -status.error();
+  }
+
+  Response response;
+  status = conduit.Read(&response);
+  if (!status) {
+    std::cerr << "Parent failed to read response: " << status.GetErrorMessage()
+              << std::endl;
+    return -status.error();
+  }
+
+  if (response) {
+    std::cout << "Parent received " << response.get().size()
+              << " bytes: " << StringToHex(response.get()) << std::endl;
+  } else {
+    std::cout << "Parent received error: " << response << std::endl;
+  }
+
+  return 0;
+}
+
+}  // anonymous namespace
+
+int main(int /*argc*/, char** /*argv*/) {
+  auto pipe_status = MakePipes();
+  if (!pipe_status) {
+    std::cerr << "Failed to create pipe: " << pipe_status.GetErrorMessage()
+              << std::endl;
+    return -pipe_status.error();
+  }
+
+  Conduit parent_conduit, child_conduit;
+  std::tie(parent_conduit, child_conduit) = pipe_status.take();
+
+  pid_t pid = fork();
+  if (pid == -1) {
+    const int error = errno;
+    std::cerr << "Failed to fork child: " << strerror(error) << std::endl;
+    return -error;
+  } else if (pid == 0) {
+    return HandleChild(std::move(child_conduit));
+  } else {
+    return HandleParent(std::move(parent_conduit));
+  }
+}

@@ -52,6 +52,18 @@ M_OBJS := \
 
 include build/host-executable.mk
 
+M_NAME := interface_example
+M_OBJS := \
+	examples/interface.o
+
+include build/host-executable.mk
+
+M_NAME := pipe_example
+M_OBJS := \
+	examples/pipe.o
+
+include build/host-executable.mk
+
 clean::
 	@echo clean
 	@rm -rf $(OUT)
