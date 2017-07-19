@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <nop/base/utility.h>
+#include <nop/types/result.h>
 
 // This header defines rules for which types have equivalent encodings. Types
 // with equivalent encodings my be legally substituted during serialization and
@@ -130,6 +131,10 @@ struct IsFungible<A[Size], std::array<B, Size>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 template <typename A, typename B, std::size_t Size>
 struct IsFungible<std::array<A, Size>, B[Size]>
+    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+
+template <typename ErrorEnum, typename A, typename B>
+struct IsFungible<Result<ErrorEnum, A>, Result<ErrorEnum, B>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
 }  // namepsace nop

@@ -19,6 +19,7 @@ inline constexpr std::size_t BaseEncodingSize(EncodingByte prefix) {
     case EncodingByte::PositiveFixIntMin... EncodingByte::PositiveFixIntMax:
     case EncodingByte::NegativeFixIntMin... EncodingByte::NegativeFixIntMax:
     /* case EncodingByte::False ... EncodingByte::True: */
+    case EncodingByte::Error:
     case EncodingByte::Handle:
     case EncodingByte::Variant:
     case EncodingByte::Structure:

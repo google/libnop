@@ -36,6 +36,7 @@ M_OBJS := \
 	test/interface_tests.o \
 	test/fungible_tests.o \
 	test/optional_tests.o \
+	test/result_tests.o \
 
 include build/host-executable.mk
 

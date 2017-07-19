@@ -10,6 +10,7 @@
 #include <nop/base/optional.h>
 #include <nop/base/pair.h>
 #include <nop/base/reference_wrapper.h>
+#include <nop/base/result.h>
 #include <nop/base/serializer.h>
 #include <nop/base/string.h>
 #include <nop/base/tuple.h>
