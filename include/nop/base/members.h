@@ -57,6 +57,8 @@ template <typename T>
 struct HasInternalMemberList<T, Void<typename T::NOP__MEMBERS>>
     : std::integral_constant<
           bool, IsTemplateBaseOf<MemberList, typename T::NOP__MEMBERS>::value> {
+  static_assert(std::is_default_constructible<T>::value,
+                "Serializable types must be default constructible.");
 };
 
 // Determines whether type T has a properly defined traits type that can be
@@ -68,7 +70,10 @@ struct HasExternalMemberList<T,
                              Void<typename ExternalMemberTraits<T>::MemberList>>
     : std::integral_constant<
           bool, IsTemplateBaseOf<MemberList, typename ExternalMemberTraits<
-                                                 T>::MemberList>::value> {};
+                                                 T>::MemberList>::value> {
+  static_assert(std::is_default_constructible<T>::value,
+                "Serializable types must be default constructible.");
+};
 
 // Determines whether a type has either an internal or external MemberList as
 // defined by the predicates above.
