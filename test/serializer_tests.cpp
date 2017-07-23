@@ -186,7 +186,7 @@ TEST(Serializer, Vector) {
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
 
-    expected = Compose(EncodingByte::Binary, 4, Integer<int>(1),
+    expected = Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4));
     EXPECT_EQ(expected, writer.data());
     writer.clear();
@@ -198,9 +198,9 @@ TEST(Serializer, Vector) {
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
 
-    expected = Compose(EncodingByte::Binary, 4, Integer<std::int64_t>(1),
-                       Integer<std::int64_t>(2), Integer<std::int64_t>(3),
-                       Integer<std::int64_t>(4));
+    expected = Compose(EncodingByte::Binary, 4 * sizeof(std::int64_t),
+                       Integer<std::int64_t>(1), Integer<std::int64_t>(2),
+                       Integer<std::int64_t>(3), Integer<std::int64_t>(4));
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -236,7 +236,7 @@ TEST(Deserializer, Vector) {
   }
 
   {
-    reader.Set(Compose(EncodingByte::Binary, 4, Integer<int>(1),
+    reader.Set(Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4)));
 
     std::vector<int> value;
@@ -248,9 +248,9 @@ TEST(Deserializer, Vector) {
   }
 
   {
-    reader.Set(Compose(EncodingByte::Binary, 4, Integer<std::uint64_t>(1),
-                       Integer<std::uint64_t>(2), Integer<std::uint64_t>(3),
-                       Integer<std::uint64_t>(4)));
+    reader.Set(Compose(EncodingByte::Binary, 4 * sizeof(std::uint64_t),
+                       Integer<std::uint64_t>(1), Integer<std::uint64_t>(2),
+                       Integer<std::uint64_t>(3), Integer<std::uint64_t>(4)));
 
     std::vector<std::uint64_t> value;
     status = deserializer.Read(&value);
@@ -308,7 +308,7 @@ TEST(Serializer, Array) {
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
 
-    expected = Compose(EncodingByte::Binary, 4, Integer<int>(1),
+    expected = Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4));
     EXPECT_EQ(expected, writer.data());
     writer.clear();
@@ -320,7 +320,7 @@ TEST(Serializer, Array) {
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
 
-    expected = Compose(EncodingByte::Binary, 4, Integer<int>(1),
+    expected = Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4));
     EXPECT_EQ(expected, writer.data());
     writer.clear();
@@ -332,9 +332,9 @@ TEST(Serializer, Array) {
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
 
-    expected = Compose(EncodingByte::Binary, 4, Integer<std::int64_t>(1),
-                       Integer<std::int64_t>(2), Integer<std::int64_t>(3),
-                       Integer<std::int64_t>(4));
+    expected = Compose(EncodingByte::Binary, 4 * sizeof(std::int64_t),
+                       Integer<std::int64_t>(1), Integer<std::int64_t>(2),
+                       Integer<std::int64_t>(3), Integer<std::int64_t>(4));
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -345,9 +345,9 @@ TEST(Serializer, Array) {
     status = serializer.Write(value);
     ASSERT_TRUE(status.ok());
 
-    expected = Compose(EncodingByte::Binary, 4, Integer<std::int64_t>(1),
-                       Integer<std::int64_t>(2), Integer<std::int64_t>(3),
-                       Integer<std::int64_t>(4));
+    expected = Compose(EncodingByte::Binary, 4 * sizeof(std::int64_t),
+                       Integer<std::int64_t>(1), Integer<std::int64_t>(2),
+                       Integer<std::int64_t>(3), Integer<std::int64_t>(4));
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -408,7 +408,7 @@ TEST(Deserializer, Array) {
   }
 
   {
-    reader.Set(Compose(EncodingByte::Binary, 4, Integer<int>(1),
+    reader.Set(Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4)));
 
     std::array<int, 4> value;
@@ -420,7 +420,7 @@ TEST(Deserializer, Array) {
   }
 
   {
-    reader.Set(Compose(EncodingByte::Binary, 4, Integer<int>(1),
+    reader.Set(Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4)));
 
     int value[4];
@@ -433,9 +433,9 @@ TEST(Deserializer, Array) {
   }
 
   {
-    reader.Set(Compose(EncodingByte::Binary, 4, Integer<std::uint64_t>(1),
-                       Integer<std::uint64_t>(2), Integer<std::uint64_t>(3),
-                       Integer<std::uint64_t>(4)));
+    reader.Set(Compose(EncodingByte::Binary, 4 * sizeof(std::uint64_t),
+                       Integer<std::uint64_t>(1), Integer<std::uint64_t>(2),
+                       Integer<std::uint64_t>(3), Integer<std::uint64_t>(4)));
 
     std::array<std::uint64_t, 4> value;
     status = deserializer.Read(&value);
@@ -446,9 +446,9 @@ TEST(Deserializer, Array) {
   }
 
   {
-    reader.Set(Compose(EncodingByte::Binary, 4, Integer<std::uint64_t>(1),
-                       Integer<std::uint64_t>(2), Integer<std::uint64_t>(3),
-                       Integer<std::uint64_t>(4)));
+    reader.Set(Compose(EncodingByte::Binary, 4 * sizeof(std::uint64_t),
+                       Integer<std::uint64_t>(1), Integer<std::uint64_t>(2),
+                       Integer<std::uint64_t>(3), Integer<std::uint64_t>(4)));
 
     std::uint64_t value[4];
     status = deserializer.Read(&value);
@@ -896,12 +896,12 @@ TEST(Serializer, Members) {
     ASSERT_TRUE(serializer.Write(value_a));
     ASSERT_TRUE(serializer.Write(value_b));
 
-    expected =
-        Compose(EncodingByte::Structure, 2, 10, EncodingByte::Binary, 3,
-                Integer<int>(1), Integer<int>(2), Integer<int>(3),
-                EncodingByte::Structure, 2, EncodingByte::String, 3, "foo",
-                EncodingByte::Array, 3, EncodingByte::String, 3, "bar",
-                EncodingByte::String, 3, "baz", EncodingByte::String, 3, "fuz");
+    expected = Compose(EncodingByte::Structure, 2, 10, EncodingByte::Binary,
+                       3 * sizeof(int), Integer<int>(1), Integer<int>(2),
+                       Integer<int>(3), EncodingByte::Structure, 2,
+                       EncodingByte::String, 3, "foo", EncodingByte::Array, 3,
+                       EncodingByte::String, 3, "bar", EncodingByte::String, 3,
+                       "baz", EncodingByte::String, 3, "fuz");
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -982,12 +982,12 @@ TEST(Deserializer, Members) {
     TestE<int> value_a;
     TestE<std::string> value_b;
 
-    reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::Binary, 3,
-                       Integer<int>(1), Integer<int>(2), Integer<int>(3),
-                       EncodingByte::Structure, 2, EncodingByte::String, 3,
-                       "foo", EncodingByte::Array, 3, EncodingByte::String, 3,
-                       "bar", EncodingByte::String, 3, "baz",
-                       EncodingByte::String, 3, "fuz"));
+    reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::Binary,
+                       3 * sizeof(int), Integer<int>(1), Integer<int>(2),
+                       Integer<int>(3), EncodingByte::Structure, 2,
+                       EncodingByte::String, 3, "foo", EncodingByte::Array, 3,
+                       EncodingByte::String, 3, "bar", EncodingByte::String, 3,
+                       "baz", EncodingByte::String, 3, "fuz"));
     ASSERT_TRUE(deserializer.Read(&value_a));
     ASSERT_TRUE(deserializer.Read(&value_b));
 

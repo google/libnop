@@ -16,13 +16,15 @@ namespace nop {
 // | ARY | INT64:N | N ELEMENTS |
 // +-----+---------+-----//-----+
 //
-// Elements are expected to be valid encodings of type T.
+// Elements must be valid encodings of type T.
 //
 // std::vector<T> encoding format for integral types:
 //
-// +-----+---------+-----//-----+
-// | BIN | INT64:N | N ELEMENTS |
-// +-----+---------+-----//-----+
+// +-----+---------+---//----+
+// | BIN | INT64:L | L BYTES |
+// +-----+---------+---//----+
+//
+// Where L = N * sizeof(T).
 //
 // Elements are stored as direct little-endian representation of the integral
 // value; each element is sizeof(T) bytes in size.
@@ -105,9 +107,9 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
   }
 
   static constexpr std::size_t Size(const Type& value) {
+    const std::size_t size = value.size() * sizeof(T);
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(value.size()) +
-           sizeof(T) * value.size();
+           Encoding<std::uint64_t>::Size(size) + size;
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -117,7 +119,8 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte prefix, const Type& value,
                                    Writer* writer) {
-    auto status = Encoding<std::uint64_t>::Write(value.size(), writer);
+    auto status =
+        Encoding<std::uint64_t>::Write(value.size() * sizeof(T), writer);
     if (!status)
       return status;
 
@@ -132,14 +135,19 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
     if (!status)
       return status;
 
+    if (size % sizeof(T) != 0)
+      return ErrorStatus(EPROTO);
+
+    const std::uint64_t length = size / sizeof(T);
+
     // Make sure the reader has enough data to fulfill the requested size as a
     // defense against abusive or erroneous vector sizes.
-    status = reader->Ensure(size);
+    status = reader->Ensure(length);
     if (!status)
       return status;
 
-    value->resize(size);
-    return reader->ReadRaw(&(*value)[0], &(*value)[size]);
+    value->resize(length);
+    return reader->ReadRaw(&(*value)[0], &(*value)[length]);
   }
 };
 }  // namespace nop

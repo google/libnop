@@ -139,7 +139,7 @@ TEST(InterfaceTests, Invoke) {
         EncodingByte::U64, Integer<std::uint64_t>(TestInterface::Match::Hash),
         EncodingByte::Array, 1, EncodingByte::Variant, 1,
         EncodingByte::Structure, 2, EncodingByte::F32, Float(20.0f),
-        EncodingByte::Binary, 3, Integer<int>(1), Integer<int>(2),
+        EncodingByte::Binary, 3 * sizeof(int), Integer<int>(1), Integer<int>(2),
         Integer<int>(3));
     EXPECT_EQ(expected, writer.data());
     writer.clear();
