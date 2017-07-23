@@ -1,6 +1,7 @@
 #ifndef LIBNOP_INCLUDE_NOP_TYPES_OPTIONAL_H_
 #define LIBNOP_INCLUDE_NOP_TYPES_OPTIONAL_H_
 
+#include <type_traits>
 #include <utility>
 
 namespace nop {
@@ -13,6 +14,25 @@ class Optional {
   explicit Optional(T&& value) : empty_{false}, value_{std::move(value)} {}
   Optional(const Optional& other) { *this = other; }
   Optional(Optional&& other) { *this = std::move(other); }
+
+  template <typename U,
+            typename Enabled = typename std::enable_if<
+                !std::is_same<std::decay_t<U>, T>::value &&
+                !std::is_same<U, Optional>::value>::type>
+  explicit Optional(U&& value)
+      : empty_{false}, value_{std::forward<U>(value)} {}
+  template <typename... Args,
+            typename Enabled = typename std::enable_if<
+                sizeof...(Args) >= 0 &&
+                std::is_constructible<T, Args...>::value>::type>
+  Optional(Args&&... args)
+      : empty_{false}, value_{std::forward<Args>(args)...} {}
+  template <typename U,
+            typename Enabled = typename std::enable_if<std::is_constructible<
+                T, std::initializer_list<U>>::value>::type>
+  Optional(std::initializer_list<U>&& initializer)
+      : empty_{false},
+        value_{std::forward<std::initializer_list<U>>(initializer)} {}
 
   ~Optional() { Destruct(); }
 
