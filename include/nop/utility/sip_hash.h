@@ -40,6 +40,12 @@ class BlockReader {
   std::size_t size_;
 };
 
+// Captures a hash value as a compile-time type.
+template <std::uint64_t Hash_>
+struct HashValue {
+  enum : std::uint64_t { Value = Hash_ };
+};
+
 struct SipHash {
   template <typename T, std::size_t Size>
   static constexpr std::uint64_t Compute(const T (&buffer)[Size],
