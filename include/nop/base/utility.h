@@ -80,6 +80,30 @@ struct And<A, B> : std::integral_constant<bool, A::value && B::value> {};
 template <typename A, typename B, typename... Rest>
 struct And<A, B, Rest...> : And<A, And<B, Rest...>> {};
 
+// Utility to determine whether a set of one or more types is a true set,
+// ccontaining no duplicates, according to the given comparison template. The
+// comparison template must accept two type arguments and evaluate to true if
+// its arguments are the same according to the intended criteria.
+//
+// An example using integer types and std::is_same for comparison:
+//
+//  static_assert(IsUnique<std::is_same, int, short, int>::value,
+//                "Types in set are not unique!");
+//
+template <template <typename, typename> class, typename...>
+struct IsUnique;
+template <template <typename, typename> class Same, typename T>
+struct IsUnique<Same, T> : std::true_type {};
+template <template <typename, typename> class Same, typename First,
+          typename Second>
+struct IsUnique<Same, First, Second>
+    : std::integral_constant<bool, !Same<First, Second>::value> {};
+template <template <typename, typename> class Same, typename First,
+          typename Second, typename... Rest>
+struct IsUnique<Same, First, Second, Rest...>
+    : And<IsUnique<Same, First, Second>, IsUnique<Same, First, Rest...>,
+          IsUnique<Same, Second, Rest...>> {};
+
 }  // namespace nop
 
 #endif  // LIBNOP_INCLUDE_NOP_BASE_UTILITY_H_
