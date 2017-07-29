@@ -37,6 +37,18 @@ class StreamWriter {
     return ReturnStatus();
   }
 
+  Status<void> Skip(std::size_t padding_bytes,
+                    std::uint8_t padding_value = 0x00) {
+    for (std::size_t i = 0; i < padding_bytes; i++) {
+      stream_.put(padding_value);
+      auto status = ReturnStatus();
+      if (!status)
+        return status;
+    }
+
+    return {};
+  }
+
   const OStream& stream() const { return stream_; }
   OStream& stream() { return stream_; }
   OStream&& take() { return std::move(stream_); }

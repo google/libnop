@@ -48,6 +48,11 @@ class TestReader {
     return {};
   }
 
+  Status<void> Skip(std::size_t padding_bytes) {
+    std::vector<std::uint8_t> padding(padding_bytes);
+    return ReadRaw(padding.begin(), padding.end());
+  }
+
   template <typename HandleType>
   Status<HandleType> GetHandle(HandleReference handle_reference) {
     if (handle_reference < 0)

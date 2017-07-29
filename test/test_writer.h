@@ -42,6 +42,12 @@ class TestWriter {
     return {};
   }
 
+  Status<void> Skip(std::size_t padding_bytes,
+                    std::uint8_t padding_value = 0x00) {
+    std::vector<std::uint8_t> padding(padding_bytes, padding_value);
+    return WriteRaw(padding.begin(), padding.end());
+  }
+
   template <typename HandleType>
   Status<HandleReference> PushHandle(const HandleType& handle) {
     if (handle) {

@@ -38,6 +38,11 @@ class StreamReader {
     return ReturnStatus();
   }
 
+  Status<void> Skip(std::size_t padding_bytes) {
+    stream_.seekg(padding_bytes, std::ios_base::cur);
+    return ReturnStatus();
+  }
+
   const IStream& stream() const { return stream_; }
   IStream& stream() { return stream_; }
   IStream&& take() { return std::move(stream_); }
