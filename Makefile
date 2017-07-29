@@ -64,6 +64,12 @@ M_OBJS := \
 
 include build/host-executable.mk
 
+M_NAME := table_example
+M_OBJS := \
+	examples/table.o
+
+include build/host-executable.mk
+
 clean::
 	@echo clean
 	@rm -rf $(OUT)
