@@ -64,7 +64,7 @@ struct SipHash {
     std::uint64_t v[4] = {0x736f6d6570736575ULL, 0x646f72616e646f6dULL,
                           0x6c7967656e657261ULL, 0x7465646279746573ULL};
 
-    std::uint64_t b = kLength << 56;
+    std::uint64_t b = static_cast<std::uint64_t>(kLength) << 56;
 
     v[3] ^= k1;
     v[2] ^= k0;
