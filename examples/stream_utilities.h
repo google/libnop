@@ -2,6 +2,8 @@
 #define LIBNOP_EXAMPLES_STREAM_UTILITIES_H_
 
 #include <array>
+#include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <vector>
 
