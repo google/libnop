@@ -33,7 +33,7 @@ using Writer = StreamWriter<FdOutputStream>;
 
 // Utility class to combine a serializer and deserializer into a single
 // bi-directional entity.
-struct Conduit {
+struct Channel {
   Serializer<std::unique_ptr<Writer>> serializer;
   Deserializer<std::unique_ptr<Reader>> deserializer;
 
@@ -91,8 +91,8 @@ std::ostream& operator<<(std::ostream& stream, const Return<T>& result) {
 // Response type returned from child to parent.
 using Response = Return<std::string>;
 
-// Builds a pair of Conduits connected by a pair of pipes.
-Status<std::pair<Conduit, Conduit>> MakePipes() {
+// Builds a pair of channels connected by a pair of pipes.
+Status<std::pair<Channel, Channel>> MakeChannels() {
   int pipe_fds[2];
   int ret = pipe(pipe_fds);
   if (ret < 0)
@@ -110,16 +110,16 @@ Status<std::pair<Conduit, Conduit>> MakePipes() {
   auto reader_b = std::make_unique<Reader>(pipe_fds[0]);
   auto writer_a = std::make_unique<Writer>(pipe_fds[1]);
 
-  // Criss-cross the pipe ends to make two bi-directional conduits.
-  return {{Conduit{std::move(writer_a), std::move(reader_a)},
-           Conduit{std::move(writer_b), std::move(reader_b)}}};
+  // Criss-cross the pipe ends to make two bi-directional channels.
+  return {{Channel{std::move(writer_a), std::move(reader_a)},
+           Channel{std::move(writer_b), std::move(reader_b)}}};
 }
 
-int HandleChild(Conduit conduit) {
+int HandleChild(Channel channel) {
   std::cout << "Child waiting for message..." << std::endl;
 
   Request request;
-  auto status = conduit.Read(&request);
+  auto status = channel.Read(&request);
   if (!status) {
     std::cerr << "Child failed to read request: " << status.GetErrorMessage()
               << std::endl;
@@ -133,7 +133,7 @@ int HandleChild(Conduit conduit) {
   if (!handle) {
     const int error = errno;
     std::cerr << "Child failed to open file: " << strerror(error) << std::endl;
-    status = conduit.Write(Response{Error::InternalError});
+    status = channel.Write(Response{Error::InternalError});
   } else {
     std::string data(request.request_bytes, '\0');
     int count = read(handle.get(), &data[0], data.size());
@@ -144,7 +144,7 @@ int HandleChild(Conduit conduit) {
 
       std::cout << "Client replying with    : " << StringToHex(data)
                 << std::endl;
-      status = conduit.Write(Response{std::move(data)});
+      status = channel.Write(Response{std::move(data)});
     }
   }
 
@@ -157,11 +157,11 @@ int HandleChild(Conduit conduit) {
   return 0;
 }
 
-int HandleParent(Conduit conduit) {
+int HandleParent(Channel channel) {
   std::cout << "Parent sending message..." << std::endl;
 
   const std::uint32_t kRequestBytes = 32;
-  auto status = conduit.Write(Request{kRequestBytes});
+  auto status = channel.Write(Request{kRequestBytes});
   if (!status) {
     std::cerr << "Parent failed to write request: " << status.GetErrorMessage()
               << std::endl;
@@ -169,7 +169,7 @@ int HandleParent(Conduit conduit) {
   }
 
   Response response;
-  status = conduit.Read(&response);
+  status = channel.Read(&response);
   if (!status) {
     std::cerr << "Parent failed to read response: " << status.GetErrorMessage()
               << std::endl;
@@ -189,15 +189,15 @@ int HandleParent(Conduit conduit) {
 }  // anonymous namespace
 
 int main(int /*argc*/, char** /*argv*/) {
-  auto pipe_status = MakePipes();
+  auto pipe_status = MakeChannels();
   if (!pipe_status) {
     std::cerr << "Failed to create pipe: " << pipe_status.GetErrorMessage()
               << std::endl;
     return -pipe_status.error();
   }
 
-  Conduit parent_conduit, child_conduit;
-  std::tie(parent_conduit, child_conduit) = pipe_status.take();
+  Channel parent_channel, child_channel;
+  std::tie(parent_channel, child_channel) = pipe_status.take();
 
   pid_t pid = fork();
   if (pid == -1) {
@@ -205,8 +205,8 @@ int main(int /*argc*/, char** /*argv*/) {
     std::cerr << "Failed to fork child: " << strerror(error) << std::endl;
     return -error;
   } else if (pid == 0) {
-    return HandleChild(std::move(child_conduit));
+    return HandleChild(std::move(child_channel));
   } else {
-    return HandleParent(std::move(parent_conduit));
+    return HandleParent(std::move(parent_channel));
   }
 }
