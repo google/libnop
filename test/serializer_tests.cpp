@@ -1029,25 +1029,29 @@ TEST(Serializer, Variant) {
   {
     Variant<int, std::string> value_a{10};
     Variant<int, std::string> value_b{"foo"};
+    Variant<int, std::string> value_c;
 
     ASSERT_TRUE(serializer.Write(value_a));
     ASSERT_TRUE(serializer.Write(value_b));
+    ASSERT_TRUE(serializer.Write(value_c));
 
     expected = Compose(EncodingByte::Variant, 0, 10, EncodingByte::Variant, 1,
-                       EncodingByte::String, 3, "foo");
+                       EncodingByte::String, 3, "foo", EncodingByte::Variant,
+                       -1, EncodingByte::Nil);
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
 
   {
-    std::array<Variant<int, std::string>, 2> value{
-        {Variant<int, std::string>(10), Variant<int, std::string>("foo")}};
+    std::array<Variant<int, std::string>, 3> value{
+        {Variant<int, std::string>(10), Variant<int, std::string>("foo"),
+         Variant<int, std::string>()}};
 
     ASSERT_TRUE(serializer.Write(value));
 
-    expected =
-        Compose(EncodingByte::Array, 2, EncodingByte::Variant, 0, 10,
-                EncodingByte::Variant, 1, EncodingByte::String, 3, "foo");
+    expected = Compose(EncodingByte::Array, 3, EncodingByte::Variant, 0, 10,
+                       EncodingByte::Variant, 1, EncodingByte::String, 3, "foo",
+                       EncodingByte::Variant, -1, EncodingByte::Nil);
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -1056,21 +1060,25 @@ TEST(Serializer, Variant) {
 TEST(Deserializer, Variant) {
   TestReader reader;
   Deserializer<TestReader*> deserializer{&reader};
-  Status<void> status;
 
   {
     Variant<int, std::string> value_a;
     Variant<int, std::string> value_b;
+    Variant<int, std::string> value_c;
 
     reader.Set(Compose(EncodingByte::Variant, 0, 10, EncodingByte::Variant, 1,
-                       EncodingByte::String, 3, "foo"));
+                       EncodingByte::String, 3, "foo", EncodingByte::Variant,
+                       -1, EncodingByte::Nil));
+
     ASSERT_TRUE(deserializer.Read(&value_a));
     ASSERT_TRUE(deserializer.Read(&value_b));
+    ASSERT_TRUE(deserializer.Read(&value_c));
 
     ASSERT_TRUE(value_a.is<int>());
     EXPECT_EQ(10, std::get<int>(value_a));
     ASSERT_TRUE(value_b.is<std::string>());
     EXPECT_EQ("foo", std::get<std::string>(value_b));
+    EXPECT_TRUE(value_c.empty());
   }
 }
 

@@ -94,10 +94,12 @@ struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
                                   Reader* reader) {
     std::int32_t type;
     auto status = Encoding<std::int32_t>::Read(&type, reader);
-    if (!status)
+    if (!status) {
       return status;
-    else if (type < Type::kEmptyIndex || type >= sizeof...(Ts))
+    } else if (type < Type::kEmptyIndex ||
+               type >= static_cast<std::int32_t>(sizeof...(Ts))) {
       return ErrorStatus(EPROTO);
+    }
 
     value->Become(type);
 
