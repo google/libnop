@@ -6,6 +6,23 @@
 
 namespace nop {
 
+// Optional single-value container type. This type may either be empty or
+// contain a valid instance of type T.
+//
+// Optional<T> has several useful properties:
+//   1. An empty Optional<T> does not default construct its internal T value,
+//      instead leaving the memory uninitialized via union semantics. This
+//      avoids unnecessary initialization costs and dynamic allocation in the
+//      case that type T performs internal dynamic allocation when constructed.
+//   2. Optional<T> adds only one byte to the static size of type T. Alignment
+//      requirements may still result in additional padding.
+//   3. When serialized, an empty Optional<T> may be more compact than the most
+//      minimal encoding of type T. For example, when T is std::array<char, 256>
+//      the minimal encoding of T is 258 bytes, making Optional<T> a good option
+//      to save space during serialization when the value is not always
+//      necessary. Conversely, the minimal encoding of an empty std::string is
+//      two bytes, making Optional<T> less helpful for strings.
+//
 template <typename T>
 class Optional {
  public:
