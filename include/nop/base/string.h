@@ -23,7 +23,7 @@ struct Encoding<std::string> : EncodingIO<std::string> {
     return EncodingByte::String;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static std::size_t Size(const Type& value) {
     const std::size_t length_bytes = value.length() * sizeof(Type::value_type);
     return BaseEncodingSize(Prefix(value)) +
            Encoding<std::uint64_t>::Size(length_bytes) + length_bytes;
