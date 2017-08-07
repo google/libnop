@@ -10,29 +10,28 @@ template <typename T>
 class Optional {
  public:
   Optional() {}
-  explicit Optional(const T& value) : empty_{false}, value_{value} {}
-  explicit Optional(T&& value) : empty_{false}, value_{std::move(value)} {}
+  explicit Optional(const T& value) : value_{value}, empty_{false} {}
+  explicit Optional(T&& value) : value_{std::move(value)}, empty_{false} {}
   Optional(const Optional& other) { *this = other; }
   Optional(Optional&& other) { *this = std::move(other); }
 
-  template <typename U,
-            typename Enabled = typename std::enable_if<
-                !std::is_same<std::decay_t<U>, T>::value &&
-                !std::is_same<U, Optional>::value>::type>
+  template <typename U, typename Enabled = typename std::enable_if<
+                            !std::is_same<std::decay_t<U>, T>::value &&
+                            !std::is_same<U, Optional>::value>::type>
   explicit Optional(U&& value)
-      : empty_{false}, value_{std::forward<U>(value)} {}
+      : value_{std::forward<U>(value)}, empty_{false} {}
   template <typename... Args,
             typename Enabled = typename std::enable_if<
                 sizeof...(Args) >= 0 &&
                 std::is_constructible<T, Args...>::value>::type>
   Optional(Args&&... args)
-      : empty_{false}, value_{std::forward<Args>(args)...} {}
+      : value_{std::forward<Args>(args)...}, empty_{false} {}
   template <typename U,
             typename Enabled = typename std::enable_if<std::is_constructible<
                 T, std::initializer_list<U>>::value>::type>
   Optional(std::initializer_list<U>&& initializer)
-      : empty_{false},
-        value_{std::forward<std::initializer_list<U>>(initializer)} {}
+      : value_{std::forward<std::initializer_list<U>>(initializer)},
+        empty_{false} {}
 
   ~Optional() { Destruct(); }
 
@@ -108,10 +107,10 @@ class Optional {
   const T* value() const { return empty() ? nullptr : &value_; }
   T* value() { return empty() ? nullptr : &value_; }
 
-  bool empty_{true};
   union {
     T value_;
   };
+  bool empty_{true};
 };
 
 }  // namespace nop
