@@ -10,6 +10,10 @@
 
 namespace nop {
 
+//
+// Types for managing UNIX file handles.
+//
+
 // UniqueHandle policy for file handles.
 struct FileHandlePolicy {
   using Type = int;
@@ -32,18 +36,24 @@ struct FileHandlePolicy {
   static constexpr std::uint64_t HandleType() { return 1; }
 };
 
+// Alias for unmanaged file handles.
 using FileHandle = Handle<FileHandlePolicy>;
 
+// Represents a managed file handle with defined lifetime.
 class UniqueFileHandle : public UniqueHandle<FileHandlePolicy> {
  public:
   using Base = UniqueHandle<FileHandlePolicy>;
   using Base::Base;
 
+  // Named constructor that opens a UniqueFileHandle given a path, flags, and
+  // optional file mode.
   static UniqueFileHandle Open(const std::string& path, int flags,
                                mode_t mode = 0) {
     return UniqueFileHandle{::open(path.c_str(), flags, mode)};
   }
 
+  // Named constructor that opens a UniqueFileHandle relative to the given
+  // directory with the given path, flags, and optional file mode.
   static UniqueFileHandle OpenAt(FileHandle directory_handle,
                                  const std::string& path, int flags,
                                  mode_t mode = 0) {
@@ -51,6 +61,7 @@ class UniqueFileHandle : public UniqueHandle<FileHandlePolicy> {
         ::openat(directory_handle.get(), path.c_str(), flags, mode)};
   }
 
+  // Named constructor that duplicated the given file handle.
   static UniqueFileHandle AsDuplicate(FileHandle handle) {
     return UniqueFileHandle{::dup(handle.get())};
   }

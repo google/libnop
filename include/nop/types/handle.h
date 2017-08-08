@@ -8,6 +8,16 @@
 
 namespace nop {
 
+//
+// Types for managing abstract resource objects. Examples of resource objects
+// are QNX channels, UNIX file descriptors, and Android binders.
+//
+// The types here address two major concerns for resource objects:
+//   1. The ownership of resource objects and their lifetime within the local
+//      process.
+//   2. Sharing of resource objects between processes, when supported.
+//
+
 // Default handle policy. Primarily useful as an example of the required form of
 // a handle policy.
 template <typename T, T Empty = T{}>
@@ -37,6 +47,11 @@ struct DefaultHandlePolicy {
   static constexpr std::uint64_t HandleType() { return 0; }
 };
 
+// Represents a handle to a resource object. The given policy type provides the
+// underlying handle type and the operations necessary to managae the resource.
+// This class does not explicitly manage the lifetime of the underlying
+// resource: it is useful as an argument for functions that don't acquire
+// ownership of the handle.
 template <typename Policy>
 class Handle {
  public:
@@ -56,6 +71,8 @@ class Handle {
   Type value_;
 };
 
+// Represents a handle to a resource object with a managed lifetime and
+// ownership.
 template <typename Policy>
 class UniqueHandle : public Handle<Policy> {
  public:
