@@ -10,6 +10,14 @@
 
 namespace nop {
 
+//
+// Function type traits type that captures and compares function signature
+// types.
+//
+// Function traits used by the serialization engine to store and manipulate
+// function signature types and other traits.
+//
+
 template <typename T>
 struct FunctionTraits;
 
