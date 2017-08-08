@@ -11,11 +11,12 @@ class Result {
                 "ErrorEnum must be an enum class.");
   static_assert(!std::is_same<ErrorEnum, std::decay_t<T>>::value,
                 "ErrorEnum and T must not be the same type.");
+
  public:
-  Result() : state_{State::Error}, error_{ErrorEnum::None} {}
-  Result(const T& value) : state_{State::Value}, value_{value} {}
-  Result(T&& value) : state_{State::Value}, value_{std::move(value)} {}
-  Result(ErrorEnum error) : state_{State::Error}, error_{error} {}
+  Result() : error_{ErrorEnum::None}, state_{State::Error} {}
+  Result(const T& value) : value_{value}, state_{State::Value} {}
+  Result(T&& value) : value_{std::move(value)}, state_{State::Value} {}
+  Result(ErrorEnum error) : error_{error}, state_{State::Error} {}
   Result(const Result& other) { *this = other; }
   Result(Result&& other) { *this = std::move(other); }
 
@@ -110,11 +111,11 @@ class Result {
     Value,
   };
 
-  State state_;
   union {
     ErrorEnum error_;
     T value_;
   };
+  State state_;
 };
 
 }  // namespace nop
