@@ -9,6 +9,12 @@
 
 namespace nop {
 
+//
+// Reader template type that wraps STL input streams.
+//
+// Implements the basic reader interface on top of an STL input stream type.
+//
+
 template <typename IStream>
 class StreamReader {
  public:

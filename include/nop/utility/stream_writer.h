@@ -9,6 +9,12 @@
 
 namespace nop {
 
+//
+// Writer template type that wraps STL output streams.
+//
+// Implements the basic writer interface on top of an STL output stream type.
+//
+
 template <typename OStream>
 class StreamWriter {
  public:
