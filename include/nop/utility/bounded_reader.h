@@ -12,11 +12,21 @@
 
 namespace nop {
 
+// BoundedReader is a reader type that wraps another reader pointer and tracks
+// the number of bytes read. Reader operations are transparently passed to the
+// underlying reader unless the requested operation would exceed the size limit
+// set at construction. BufferReader can also skip padding remaining in the
+// input up to the size limit in situations that require specific input payload
+// size.
 template <typename Reader>
 class BoundedReader {
  public:
+  BoundedReader() = default;
+  BoundedReader(const BoundedReader&) = default;
   BoundedReader(Reader* reader, std::size_t size)
       : reader_{reader}, size_{size} {}
+
+  BoundedReader& operator=(const BoundedReader&) = default;
 
   Status<void> Ensure(std::size_t size) {
     if (size_ - index_ < size)
@@ -55,6 +65,19 @@ class BoundedReader {
     return {};
   }
 
+  Status<void> Skip(std::size_t padding_bytes) {
+    if (padding_bytes > (size_ - index_))
+      return ErrorStatus(ENOBUFS);
+
+    auto status = reader_->Skip(padding_bytes);
+    if (!status)
+      return status;
+
+    index_ += padding_bytes;
+    return {};
+  }
+
+  // Skips any bytes remaining in the limit set at construction.
   Status<void> ReadPadding() {
     const std::size_t padding_bytes = size_ - index_;
     auto status = reader_->Skip(padding_bytes);
@@ -72,13 +95,13 @@ class BoundedReader {
 
   bool empty() const { return index_ == size_; }
 
- private:
-  Reader* reader_;
-  std::size_t size_;
-  std::size_t index_{0};
+  std::size_t size() const { return index_; }
+  std::size_t capacity() const { return size_; }
 
-  BoundedReader(const BoundedReader&) = delete;
-  void operator=(const BoundedReader&) = delete;
+ private:
+  Reader* reader_{nullptr};
+  std::size_t size_{0};
+  std::size_t index_{0};
 };
 
 }  // namespace nop

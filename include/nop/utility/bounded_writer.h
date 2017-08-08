@@ -12,11 +12,20 @@
 
 namespace nop {
 
+// BoundedWriter is a writer type that wraps another writer pointer and tracks
+// the number of bytes written. Writer operations are transparently passed to
+// the underlying writer unless the requested operation would exceed the size
+// limit set at construction. BufferWriter can also pad the output up to the
+// size limit in situations that require specific output payload size.
 template <typename Writer>
 class BoundedWriter {
  public:
+  BoundedWriter() = default;
+  BoundedWriter(const BoundedWriter&) = default;
   BoundedWriter(Writer* writer, std::size_t size)
       : writer_{writer}, size_{size} {}
+
+  BoundedWriter& operator=(const BoundedWriter&) = default;
 
   Status<void> Prepare(std::size_t size) {
     if (index_ + size > size_)
@@ -55,9 +64,23 @@ class BoundedWriter {
     return {};
   }
 
-  Status<void> WritePadding() {
+  Status<void> Skip(std::size_t padding_bytes,
+                    std::uint8_t padding_value = 0x00) {
+    if (padding_bytes > (size_ - index_))
+      return ErrorStatus(ENOBUFS);
+
+    auto status = writer_->Skip(padding_bytes, padding_value);
+    if (!status)
+      return status;
+
+    index_ += padding_bytes;
+    return {};
+  }
+
+  // Fills out any remaining bytes with the given padding value.
+  Status<void> WritePadding(std::uint8_t padding_value = 0x00) {
     const std::size_t padding_bytes = size_ - index_;
-    auto status = writer_->Skip(padding_bytes, 0x5a);
+    auto status = writer_->Skip(padding_bytes, padding_value);
     if (!status)
       return status;
 
@@ -70,9 +93,12 @@ class BoundedWriter {
     return writer_->PushHandle(handle);
   }
 
+  std::size_t size() const { return index_; }
+  std::size_t capacity() const { return size_; }
+
  private:
-  Writer* writer_;
-  std::size_t size_;
+  Writer* writer_{nullptr};
+  std::size_t size_{0};
   std::size_t index_{0};
 };
 
