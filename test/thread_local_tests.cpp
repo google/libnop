@@ -74,4 +74,9 @@ TEST(ThreadLocal, Clear) {
     int_value.Initialize(2);
     EXPECT_EQ(2, int_value.Get());
   }
+
+  {
+    IntType int_value{3};
+    EXPECT_EQ(2, int_value.Get());
+  }
 }

@@ -4,19 +4,31 @@
 #include <cstdint>
 #include <memory>
 
-#include <nop/types/variant.h>
+#include <nop/types/optional.h>
 
 namespace nop {
 
+//
+// Types for managing thread-local data.
+//
+
+// Type tag that takes both a type T and a numeric Index to define thread-local
+// slot.
 template <typename T, std::size_t Index>
 struct ThreadLocalSlot;
 
+// Type tag that takes a type T to define a thread-local slot.
 template <typename T>
 using ThreadLocalTypeSlot = T;
 
+// Type tag that takes a numeric Index to define a thread-local slot.
 template <std::size_t Index>
 struct ThreadLocalIndexSlot;
 
+// Defines a thread-local data type with the given type T and type Slot. Each
+// unique combination of (T, Slot) defines a different thread-local data type
+// that is independent from any other thread-local data with a different (T,
+// Slot) combination.
 template <typename T, typename Slot = ThreadLocalSlot<void, 0>>
 class ThreadLocal {
  public:
@@ -27,25 +39,26 @@ class ThreadLocal {
 
   template <typename... Args>
   void Initialize(Args&&... args) {
-    value_->Become(0, std::forward<Args>(args)...);
+    Setup(std::forward<Args>(args)...);
   }
 
-  ValueType& Get() { return std::get<ValueType>(*value_); }
+  ValueType& Get() { return value_->get(); }
 
-  void Clear() { *value_ = EmptyVariant{}; }
+  void Clear() { value_->clear(); }
 
  private:
-  Variant<ValueType>* value_;
+  Optional<ValueType>* value_;
 
   template <typename... Args>
-  static Variant<ValueType>* Setup(Args&&... args) {
-    Variant<ValueType>* variant = GetVariant();
-    variant->Become(0, std::forward<Args>(args)...);
-    return variant;
+  static Optional<ValueType>* Setup(Args&&... args) {
+    Optional<ValueType>* value = GetValue();
+    if (value->empty())
+      *value = Optional<ValueType>(std::forward<Args>(args)...);
+    return value;
   }
 
-  static Variant<ValueType>* GetVariant() {
-    static thread_local Variant<ValueType> value;
+  static Optional<ValueType>* GetValue() {
+    static thread_local Optional<ValueType> value;
     return &value;
   }
 
