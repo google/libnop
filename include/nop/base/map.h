@@ -8,6 +8,16 @@
 
 namespace nop {
 
+//
+// std::map<Key, T> and std::unordered_map<Key, T> encoding format:
+//
+// +-----+---------+--------//---------+
+// | MAP | INT64:N | N KEY/VALUE PAIRS |
+// +-----+---------+--------//---------+
+//
+// Each pair must be a valid encoding of Key followed by a valid encoding of T.
+//
+
 template <typename Key, typename T, typename Compare, typename Allocator>
 struct Encoding<std::map<Key, T, Compare, Allocator>>
     : EncodingIO<std::map<Key, T, Compare, Allocator>> {
