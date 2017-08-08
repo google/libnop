@@ -7,15 +7,57 @@
 
 namespace nop {
 
+//
+// Utility to make using enum classes as bit flags more convenient and useful.
+//
+// An enum class type is enabled as a bit flag type by tagging it with the macro
+// NOP_ENUM_FLAGS(type). The bitwise and some logical operators can be used on
+// values of the tagged enum class without casting. Although this effectively
+// relaxes some of the enum class constraints, type safety is preserved by
+// restricting operators to arguments of the same flags type.
+//
+// For example:
+//
+// namespace MyNamespace {
+//   enum class SomeFlags {
+//     Foo = 0b001,
+//     Bar = 0b010,
+//     Baz = 0b100,
+//     BuzMask = Bar | Baz,
+//   };
+//   NOP_ENUM_FLAGS(SomeType);
+//
+//   inline bool IsBuz(SomeFlags value) {
+//     return !!(SomeFlags::BuzMask & value);
+//   }
+// }  // namespace MyNamespace
+//
+// Note: When tagging an enum class, the macro NOP_ENUM_FLAGS() must be invoked
+// in the same namespace as the enum class is originally defined in.
+//
+
+// Evaluates to the traits type defined by NOP_ENUM_FLAGS() for the given type
+// T. This type alias uses ADL to find the traits type for type T in the
+// namespace type T is defined in.
 template <typename T>
 using EnumFlagsTraits = decltype(NOP__GetEnumFlagsTraits(std::declval<T*>()));
 
+// Evaluates to std::true_type if the given type T has been tagged as an enum
+// flags type by NOP_ENUM_FLAGS() or std::false_type otherwise.
 template <typename, typename = void>
 struct IsEnumFlags : std::false_type {};
 template <typename T>
 struct IsEnumFlags<T, Void<typename EnumFlagsTraits<T>::Type>>
     : std::true_type {};
 
+// Enable if type T is tagged as an enum flags type.
+template <typename T>
+using EnableIfEnumFlags = typename std::enable_if<IsEnumFlags<T>::value>::type;
+
+// Macro to tag a given enum class type as an enum flags type. This is
+// accomplished by defining a partial specialization of the type
+// NOP__ENUM_FLAGS_TRAITS and a function declaration tying the given type to the
+// partial specialization for ADL lookup.
 #define NOP_ENUM_FLAGS(type)                                                  \
   template <typename>                                                         \
   struct NOP__ENUM_FLAGS_TRAITS;                                              \
@@ -28,11 +70,10 @@ struct IsEnumFlags<T, Void<typename EnumFlagsTraits<T>::Type>>
   NOP__ENUM_FLAGS_TRAITS<type> __attribute__((used))                          \
       NOP__GetEnumFlagsTraits(type*)
 
-template <typename T>
-using EnableIfEnumFlags = typename std::enable_if<IsEnumFlags<T>::value>::type;
-
 }  // namespace nop
 
+// Operator overloads at global scope enabled only for types tagged as enum
+// flags.
 template <typename T, typename Enable = ::nop::EnableIfEnumFlags<T>>
 T operator|(T a, T b) {
   using U = typename std::underlying_type<T>::type;
