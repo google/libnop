@@ -9,6 +9,20 @@
 
 namespace nop {
 
+//
+// Variant type that can store one of a number of types.
+//
+// Variant is a type-safe union that can store any one of the types it is
+// instantiated with. A Variant may only hold one type at a time and supports
+// examination of which type is currently stored and various means of
+// manipulating the stored value. In particular, Variant supports generic lambda
+// visitor functions, enabling flexible value manipulation.
+//
+// Variant has the notion of emptiness, or holding none of the types it is
+// instantiated with. This means Variant is default constructible to empty,
+// regardless of whether any of its element types are default constructible.
+//
+
 template <typename... Types>
 class Variant {
  private:
