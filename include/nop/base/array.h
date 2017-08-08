@@ -10,7 +10,7 @@
 namespace nop {
 
 //
-// std::array<T, N> encoding format for non-integral types:
+// std::array<T, N> and T[N] encoding format for non-integral types:
 //
 // +-----+---------+-----//-----+
 // | ARY | INT64:N | N ELEMENTS |
@@ -18,7 +18,7 @@ namespace nop {
 //
 // Elements must be valid encodings of type T.
 //
-// std::array<T, N> encoding format for integral types:
+// std::array<T, N> and T[N] encoding format for integral types:
 //
 // +-----+---------+---//----+
 // | BIN | INT64:L | L BYTES |
