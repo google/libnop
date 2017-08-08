@@ -12,6 +12,12 @@
 
 namespace nop {
 
+//
+// Backtrace utility based on the UNIX backtrace API.
+//
+// Provides a simple mechanism to generate a backtrace with sumbol lookup.
+//
+
 class Backtrace {
  public:
   Backtrace() = default;
