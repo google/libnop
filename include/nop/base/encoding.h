@@ -55,6 +55,8 @@ inline constexpr std::size_t BaseEncodingSize(EncodingByte prefix) {
   }
 }
 
+// Base type for all encoding templates. If type T does not have a
+// specialization this template generates a static assert.
 template <typename T, typename Enabled = void>
 struct Encoding {
   // Generate a clear compiler error if there is no encoding specified for a
