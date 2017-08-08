@@ -7,6 +7,16 @@
 
 namespace nop {
 
+//
+// std::pair<T, U> encoding format:
+//
+// +-----+---------+-------+--------+
+// | ARY | INT64:2 | FIRST | SECOND |
+// +-----+---------+-------+--------+
+//
+// First must be a valid encoding of T; second must be a valid encoding of U.
+//
+
 template <typename T, typename U>
 struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
   using Type = std::pair<T, U>;
