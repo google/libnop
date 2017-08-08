@@ -5,6 +5,46 @@
 
 namespace nop {
 
+// Result is a template type that contains either an error value of type
+// ErrorEnum or a value of type T. Functions can use Result as a return type to
+// unambiguously signal success with a value or failure with an error code.
+//
+// Result imposes these rules on the types it is instantiated with:
+//   1. EnumType must be an enum class and must define a constant named "None",
+//      such that ErrorEnum::None is a valid constant expression.
+//   2. Type T must not be the same type as ErrorEnum.
+//
+// Result uses union semantics and lazy initialization to increase efficiency
+// and convenience, particularly where T is not default constructible.
+//
+// Users of Result may find it convenient to subclass the type in the following
+// way to simplify type expressions that use a common set of error codes:
+//
+// namespace MyNamespace {
+//
+// enum class Error {
+//   None, // Required by Result.
+//   InvalidArgument,
+//   TimedOut,
+//   PermissionDenied,
+// };
+//
+// template <typename T>
+// struct Result : nop::Result<Error, T> {
+//   using nop::Result<Error, T>::Result;
+//   std::string GetErrorMessage() const {
+//     switch (this->error()) {
+//       case Error::None: return "No Error";
+//       case Error::InvalidArgument: return "Invalid Argument";
+//       case Error::TimedOut: return "Timed Out";
+//       case Error::PermissionDenied: return "Permission Denied";
+//       default: return "Unknown Error";
+//     }
+//   }
+// };
+//
+// }  // namespace MyNamespace
+//
 template <typename ErrorEnum, typename T>
 class Result {
   static_assert(std::is_enum<ErrorEnum>::value,
