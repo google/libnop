@@ -7,6 +7,8 @@
 
 namespace nop {
 
+// std::reference_wrapper<T> encoding forwards to Encoding<T>.
+
 template <typename T>
 struct Encoding<std::reference_wrapper<T>>
     : EncodingIO<std::reference_wrapper<T>> {
