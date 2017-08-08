@@ -3,13 +3,13 @@
 
 #include <type_traits>
 
-#include <nop/base/container_reader.h>
-#include <nop/base/container_writer.h>
 #include <nop/base/encoding.h>
 #include <nop/base/macros.h>
 #include <nop/base/members.h>
 #include <nop/base/optional.h>
 #include <nop/base/utility.h>
+#include <nop/utility/bounded_reader.h>
+#include <nop/utility/bounded_writer.h>
 #include <nop/utility/sip_hash.h>
 
 namespace nop {
@@ -311,21 +311,21 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
       if (!status)
         return status;
 
-      // Use a ContainerWriter to track the number of bytes written. Since a few
+      // Use a BoundedWriter to track the number of bytes written. Since a few
       // encodings overestimate their size, the remaining bytes must be padded
       // out to match the size written above. This is a tradeoff that
       // potentially increases the encoding size to avoid unnecessary dynamic
       // memory allocation during encoding; some size savings could be made by
       // encoding the entry to a temporary buffer and then writing the exact
-      // size for the binary container however, overestimation is rare and
+      // size for the binary container. However, overestimation is rare and
       // small, making the savings not worth the expense of the temporary
       // buffer.
-      ContainerWriter<Writer> container_writer{writer, size};
-      status = Encoding<T>::Write(entry.get(), &container_writer);
+      BoundedWriter<Writer> bounded_writer{writer, size};
+      status = Encoding<T>::Write(entry.get(), &bounded_writer);
       if (!status)
         return status;
 
-      return container_writer.WritePadding();
+      return bounded_writer.WritePadding();
     } else {
       return {};
     }
@@ -376,15 +376,15 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
       // Default construct the entry;
       *entry = T{};
 
-      // Use a ContainerReader to handle any padding that might follow the
+      // Use a BoundedReader to handle any padding that might follow the
       // value and catch invalid sizes while decoding inside the binary
       // container.
-      ContainerReader<Reader> container_reader{reader, size};
-      status = Encoding<T>::Read(&entry->get(), &container_reader);
+      BoundedReader<Reader> bounded_reader{reader, size};
+      status = Encoding<T>::Read(&entry->get(), &bounded_reader);
       if (!status)
         return status;
 
-      return container_reader.ReadPadding();
+      return bounded_reader.ReadPadding();
     } else {
       return ErrorStatus(EPROTO);
     }

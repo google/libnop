@@ -1,5 +1,5 @@
-#ifndef LIBNOP_INCLUDE_NOP_BASE_CONTAINER_READER_H_
-#define LIBNOP_INCLUDE_NOP_BASE_CONTAINER_READER_H_
+#ifndef LIBNOP_INCLUDE_NOP_UTILITY_BOUNDED_WRITER_H_
+#define LIBNOP_INCLUDE_NOP_UTILITY_BOUNDED_WRITER_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -12,22 +12,22 @@
 
 namespace nop {
 
-template <typename Reader>
-class ContainerReader {
+template <typename Writer>
+class BoundedWriter {
  public:
-  ContainerReader(Reader* reader, std::size_t size)
-      : reader_{reader}, size_{size} {}
+  BoundedWriter(Writer* writer, std::size_t size)
+      : writer_{writer}, size_{size} {}
 
-  Status<void> Ensure(std::size_t size) {
-    if (size_ - index_ < size)
+  Status<void> Prepare(std::size_t size) {
+    if (index_ + size > size_)
       return ErrorStatus(ENOBUFS);
     else
-      return reader_->Ensure(size);
+      return writer_->Prepare(size);
   }
 
-  Status<void> Read(EncodingByte* prefix) {
+  Status<void> Write(EncodingByte prefix) {
     if (index_ < size_) {
-      auto status = reader_->Read(prefix);
+      auto status = writer_->Write(prefix);
       if (!status)
         return status;
 
@@ -39,7 +39,7 @@ class ContainerReader {
   }
 
   template <typename IterBegin, typename IterEnd>
-  Status<void> ReadRaw(IterBegin begin, IterEnd end) {
+  Status<void> WriteRaw(IterBegin begin, IterEnd end) {
     const std::size_t length_bytes =
         std::distance(begin, end) *
         sizeof(typename std::iterator_traits<IterBegin>::value_type);
@@ -47,7 +47,7 @@ class ContainerReader {
     if (length_bytes > (size_ - index_))
       return ErrorStatus(ENOBUFS);
 
-    auto status = reader_->ReadRaw(begin, end);
+    auto status = writer_->WriteRaw(begin, end);
     if (!status)
       return status;
 
@@ -55,9 +55,9 @@ class ContainerReader {
     return {};
   }
 
-  Status<void> ReadPadding() {
+  Status<void> WritePadding() {
     const std::size_t padding_bytes = size_ - index_;
-    auto status = reader_->Skip(padding_bytes);
+    auto status = writer_->Skip(padding_bytes, 0x5a);
     if (!status)
       return status;
 
@@ -66,21 +66,16 @@ class ContainerReader {
   }
 
   template <typename HandleType>
-  Status<HandleType> GetHandle(HandleReference handle_reference) {
-    return reader_->GetHandle(handle_reference);
+  Status<HandleType> PushHandle(const HandleType& handle) {
+    return writer_->PushHandle(handle);
   }
 
-  bool empty() const { return index_ == size_; }
-
  private:
-  Reader* reader_;
+  Writer* writer_;
   std::size_t size_;
   std::size_t index_{0};
-
-  ContainerReader(const ContainerReader&) = delete;
-  void operator=(const ContainerReader&) = delete;
 };
 
 }  // namespace nop
 
-#endif  // LIBNOP_INCLUDE_NOP_BASE_CONTAINER_READER_H_
+#endif  // LIBNOP_INCLUDE_NOP_UTILITY_BOUNDED_WRITER_H_
