@@ -10,7 +10,9 @@
 #include <vector>
 
 #include <nop/base/utility.h>
+#include <nop/types/optional.h>
 #include <nop/types/result.h>
+#include <nop/types/variant.h>
 
 // This header defines rules for which types have equivalent encodings. Types
 // with equivalent encodings my be legally substituted during serialization and
@@ -28,8 +30,9 @@ template <typename A, typename B, typename Enabled = void>
 struct IsFungible : std::is_same<std::decay_t<A>, std::decay_t<B>> {};
 
 // Enable if A and B are fungible.
-template <typename A, typename B>
-using EnableIfFungible = typename std::enable_if<IsFungible<A, B>::value>::type;
+template <typename A, typename B, typename Return = void>
+using EnableIfFungible =
+    typename std::enable_if<IsFungible<A, B>::value, Return>::type;
 
 // Compares two function types to see if the return types and arguments are
 // fungible.
@@ -44,10 +47,14 @@ template <typename A, typename B, std::size_t Size>
 struct IsFungible<std::array<A, Size>, std::array<B, Size>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
-// Compares two arrays to see if the element types are fungible.
-template <typename A, typename B, std::size_t Size>
-struct IsFungible<A[Size], B[Size]>
-    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+// Compares two C arrays to see if the element types are fungible. Sizes are
+// explicitly compared to avoid falling back on the base IsFungible type which
+// would decay A and B to pointers and fail to compare different array sizes
+// correctly.
+template <typename A, typename B, std::size_t SizeA, std::size_t SizeB>
+struct IsFungible<A[SizeA], B[SizeB]>
+    : And<IsFungible<std::decay_t<A>, std::decay_t<B>>,
+          std::integral_constant<bool, SizeA == SizeB>> {};
 
 // Compares two std::vectors to see if the element types are fungible.
 template <typename A, typename B, typename AllocatorA, typename AllocatorB>
@@ -86,10 +93,15 @@ struct IsFungible<std::unordered_map<KeyA, ValueA, AnyA...>,
           IsFungible<std::decay_t<ValueA>, std::decay_t<ValueB>>> {};
 
 // Compares two std::tuples to see if the corresponding elements are
-// fungible. The tuples must have the same number of elements.
+// fungible. Fungible tuples must have the same number of elements.
 template <typename... A, typename... B>
-struct IsFungible<std::tuple<A...>, std::tuple<B...>>
+struct IsFungible<std::tuple<A...>, std::tuple<B...>,
+                  std::enable_if_t<sizeof...(A) == sizeof...(B)>>
     : And<IsFungible<std::decay_t<A>, std::decay_t<B>>...> {};
+template <typename... A, typename... B>
+struct IsFungible<std::tuple<A...>, std::tuple<B...>,
+                  std::enable_if_t<sizeof...(A) != sizeof...(B)>>
+    : std::false_type {};
 
 // Compares two std::pairs to see if the corresponding elements are fungible.
 template <typename A, typename B, typename C, typename D>
@@ -117,7 +129,7 @@ template <typename A, typename B, typename Allocator, std::size_t Size>
 struct IsFungible<std::array<A, Size>, std::vector<B, Allocator>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
-// Compares array and std::vector to see if the elements types are fungible.
+// Compares C array and std::vector to see if the elements types are fungible.
 template <typename A, typename B, typename Allocator, std::size_t Size>
 struct IsFungible<A[Size], std::vector<B, Allocator>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
@@ -125,7 +137,7 @@ template <typename A, typename B, typename Allocator, std::size_t Size>
 struct IsFungible<std::vector<A, Allocator>, B[Size]>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
-// Compares array and std::array to see if the element types are fungible.
+// Compares C array and std::array to see if the element types are fungible.
 template <typename A, typename B, std::size_t Size>
 struct IsFungible<A[Size], std::array<B, Size>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
@@ -133,10 +145,29 @@ template <typename A, typename B, std::size_t Size>
 struct IsFungible<std::array<A, Size>, B[Size]>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
+// Compares Result<ErrorEnum, A> and Result<ErrorEnum, B> to see if A and B are
+// fungible. ErrorEnum must be the same between fungible Result types because
+// different enum types are not fungible.
 template <typename ErrorEnum, typename A, typename B>
 struct IsFungible<Result<ErrorEnum, A>, Result<ErrorEnum, B>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
-}  // namepsace nop
+// Compares Optional<A> and Optional<B> to see if A and B are fungible.
+template <typename A, typename B>
+struct IsFungible<Optional<A>, Optional<B>>
+    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+
+// Compares Variant<A...> and Variant<B...> to see if every member of A is
+// fungible with every corresponding member of B.
+template <typename... A, typename... B>
+struct IsFungible<Variant<A...>, Variant<B...>,
+                  std::enable_if_t<sizeof...(A) == sizeof...(B)>>
+    : And<IsFungible<A, B>...> {};
+template <typename... A, typename... B>
+struct IsFungible<Variant<A...>, Variant<B...>,
+                  std::enable_if_t<sizeof...(A) != sizeof...(B)>>
+    : std::false_type {};
+
+}  // namespace nop
 
 #endif  // LIBNOP_INCLUDE_NOP_TRAITS_IS_FUNGIBLE_H_
