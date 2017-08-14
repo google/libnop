@@ -21,8 +21,8 @@ template <typename T>
 struct IsIntegral<T> : std::is_integral<T> {};
 template <typename First, typename... Rest>
 struct IsIntegral<First, Rest...>
-    : std::integral_constant<
-          bool, IsIntegral<First>::value && IsIntegral<Rest...>::value> {};
+    : std::integral_constant<bool, IsIntegral<First>::value &&
+                                       IsIntegral<Rest...>::value> {};
 
 // Trait to determine if all types in a parameter pack are arithmetic types.
 template <typename...>
@@ -31,8 +31,8 @@ template <typename T>
 struct IsArithmetic<T> : std::is_arithmetic<T> {};
 template <typename First, typename... Rest>
 struct IsArithmetic<First, Rest...>
-    : std::integral_constant<
-          bool, IsArithmetic<First>::value && IsArithmetic<Rest...>::value> {};
+    : std::integral_constant<bool, IsArithmetic<First>::value &&
+                                       IsArithmetic<Rest...>::value> {};
 
 // Enable if every entry of Types is an integral type.
 template <typename... Types>
@@ -74,11 +74,23 @@ using IsTemplateBaseOf = decltype(DeduceTemplateType<TT>(std::declval<T*>()));
 
 // Logical AND over template parameter pack.
 template <typename... T>
-struct And : std::false_type {};
+struct And : std::true_type {};
+template <typename A>
+struct And<A> : A {};
 template <typename A, typename B>
 struct And<A, B> : std::integral_constant<bool, A::value && B::value> {};
 template <typename A, typename B, typename... Rest>
 struct And<A, B, Rest...> : And<A, And<B, Rest...>> {};
+
+// Logical OR over template parameter pack.
+template <typename... T>
+struct Or : std::true_type {};
+template <typename A>
+struct Or<A> : A {};
+template <typename A, typename B>
+struct Or<A, B> : std::integral_constant<bool, A::value || B::value> {};
+template <typename A, typename B, typename... Rest>
+struct Or<A, B, Rest...> : Or<A, Or<B, Rest...>> {};
 
 // Utility to determine whether a set of one or more types is a true set,
 // ccontaining no duplicates, according to the given comparison template. The
