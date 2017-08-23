@@ -37,6 +37,7 @@ M_OBJS := \
 	test/fungible_tests.o \
 	test/optional_tests.o \
 	test/result_tests.o \
+	test/endian_tests.o \
 
 include build/host-executable.mk
 
