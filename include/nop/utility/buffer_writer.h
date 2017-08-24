@@ -23,7 +23,7 @@ class BufferWriter {
 
   Status<void> Prepare(std::size_t size) {
     if (index_ + size > size_)
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::WriteLimitReached;
     else
       return {};
   }
@@ -33,7 +33,7 @@ class BufferWriter {
       buffer_[index_++] = static_cast<std::uint8_t>(prefix);
       return {};
     } else {
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::WriteLimitReached;
     }
   }
 
@@ -44,7 +44,7 @@ class BufferWriter {
         sizeof(typename std::iterator_traits<IterBegin>::value_type);
 
     if (length_bytes > (size_ - index_))
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::WriteLimitReached;
 
     std::copy(reinterpret_cast<const std::uint8_t*>(&*begin),
               reinterpret_cast<const std::uint8_t*>(&*end), &buffer_[index_]);

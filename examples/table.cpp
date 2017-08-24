@@ -138,7 +138,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!status) {
     std::cerr << "Failed to write t1: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
   const std::string t1_data = serializer.writer().stream().str();
   serializer.writer().stream().str("");
@@ -154,7 +154,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!status) {
     std::cerr << "Failed to write t2: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
   const std::string t2_data = serializer.writer().stream().str();
   serializer.writer().stream().str("");
@@ -170,7 +170,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!status) {
     std::cerr << "Failed to write t3: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
   const std::string t3_data = serializer.writer().stream().str();
   serializer.writer().stream().str("");
@@ -191,7 +191,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t1_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t1_data: " << table << std::endl;
   }
@@ -204,7 +204,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t2_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t2_data: " << table << std::endl;
   }
@@ -217,7 +217,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t3_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t3_data: " << table << std::endl;
   }
@@ -232,7 +232,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t1_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t1_data: " << table << std::endl;
   }
@@ -245,7 +245,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t2_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t2_data: " << table << std::endl;
   }
@@ -258,7 +258,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t3_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t3_data: " << table << std::endl;
   }
@@ -273,7 +273,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t1_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t1_data: " << table << std::endl;
   }
@@ -286,7 +286,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t2_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t2_data: " << table << std::endl;
   }
@@ -299,7 +299,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!status) {
       std::cerr << "Failed to read t3_data: " << status.GetErrorMessage()
                 << std::endl;
-      return -status.error();
+      return -1;
     }
     std::cout << "Read t3_data: " << table << std::endl;
   }

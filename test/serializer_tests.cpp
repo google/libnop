@@ -120,7 +120,7 @@ TEST(Serializer, None) {
 
   struct None {};
   auto status = serializer.Write(None{});
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
 }
 #endif
 
@@ -133,14 +133,14 @@ TEST(Serializer, bool) {
   EXPECT_EQ(1U, serializer.GetSize(false));
 
   auto status = serializer.Write(true);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
 
   expected = Compose(true);
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   status = serializer.Write(false);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
 
   expected = Compose(false);
   EXPECT_EQ(expected, writer.data());
@@ -154,12 +154,12 @@ TEST(Deserializer, bool) {
 
   reader.Set(Compose(EncodingByte::True));
   auto status = deserializer.Read(&value);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
   EXPECT_EQ(true, value);
 
   reader.Set(Compose(EncodingByte::False));
   status = deserializer.Read(&value);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
   EXPECT_EQ(false, value);
 }
 
@@ -173,7 +173,7 @@ TEST(Serializer, Vector) {
     std::vector<std::uint8_t> value = {1, 2, 3, 4};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4, 1, 2, 3, 4);
     EXPECT_EQ(expected, writer.data());
@@ -184,7 +184,7 @@ TEST(Serializer, Vector) {
     std::vector<int> value = {1, 2, 3, 4};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4));
@@ -196,7 +196,7 @@ TEST(Serializer, Vector) {
     std::vector<std::int64_t> value = {1, 2, 3, 4};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4 * sizeof(std::int64_t),
                        Integer<std::int64_t>(1), Integer<std::int64_t>(2),
@@ -209,7 +209,7 @@ TEST(Serializer, Vector) {
     std::vector<std::string> value = {"abc", "def", "123", "456"};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Array, 4, EncodingByte::String, 3, "abc",
                        EncodingByte::String, 3, "def", EncodingByte::String, 3,
@@ -229,7 +229,7 @@ TEST(Deserializer, Vector) {
 
     std::vector<std::uint8_t> value;
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::vector<std::uint8_t> expected = {1, 2, 3, 4};
     EXPECT_EQ(expected, value);
@@ -241,7 +241,7 @@ TEST(Deserializer, Vector) {
 
     std::vector<int> value;
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::vector<int> expected = {1, 2, 3, 4};
     EXPECT_EQ(expected, value);
@@ -254,7 +254,7 @@ TEST(Deserializer, Vector) {
 
     std::vector<std::uint64_t> value;
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::vector<std::uint64_t> expected = {1, 2, 3, 4};
     EXPECT_EQ(expected, value);
@@ -267,7 +267,7 @@ TEST(Deserializer, Vector) {
 
     std::vector<std::string> value;
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::vector<std::string> expected = {"abc", "def", "123", "456"};
     EXPECT_EQ(expected, value);
@@ -284,7 +284,7 @@ TEST(Serializer, Array) {
     std::array<std::uint8_t, 4> value = {{1, 2, 3, 4}};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4, 1, 2, 3, 4);
     EXPECT_EQ(expected, writer.data());
@@ -295,7 +295,7 @@ TEST(Serializer, Array) {
     std::uint8_t value[] = {1, 2, 3, 4};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4, 1, 2, 3, 4);
     EXPECT_EQ(expected, writer.data());
@@ -306,7 +306,7 @@ TEST(Serializer, Array) {
     std::array<int, 4> value = {{1, 2, 3, 4}};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4));
@@ -318,7 +318,7 @@ TEST(Serializer, Array) {
     int value[] = {1, 2, 3, 4};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4 * sizeof(int), Integer<int>(1),
                        Integer<int>(2), Integer<int>(3), Integer<int>(4));
@@ -330,7 +330,7 @@ TEST(Serializer, Array) {
     std::array<std::int64_t, 4> value = {{1, 2, 3, 4}};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4 * sizeof(std::int64_t),
                        Integer<std::int64_t>(1), Integer<std::int64_t>(2),
@@ -343,7 +343,7 @@ TEST(Serializer, Array) {
     std::int64_t value[] = {1, 2, 3, 4};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Binary, 4 * sizeof(std::int64_t),
                        Integer<std::int64_t>(1), Integer<std::int64_t>(2),
@@ -356,7 +356,7 @@ TEST(Serializer, Array) {
     std::array<std::string, 4> value = {{"abc", "def", "123", "456"}};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Array, 4, EncodingByte::String, 3, "abc",
                        EncodingByte::String, 3, "def", EncodingByte::String, 3,
@@ -369,7 +369,7 @@ TEST(Serializer, Array) {
     std::string value[] = {"abc", "def", "123", "456"};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Array, 4, EncodingByte::String, 3, "abc",
                        EncodingByte::String, 3, "def", EncodingByte::String, 3,
@@ -389,7 +389,7 @@ TEST(Deserializer, Array) {
 
     std::array<std::uint8_t, 4> value;
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::array<std::uint8_t, 4> expected = {{1, 2, 3, 4}};
     EXPECT_EQ(expected, value);
@@ -400,7 +400,7 @@ TEST(Deserializer, Array) {
 
     std::uint8_t value[4];
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     const std::uint8_t expected[] = {1, 2, 3, 4};
     EXPECT_TRUE(std::equal(std::begin(value), std::end(value),
@@ -413,7 +413,7 @@ TEST(Deserializer, Array) {
 
     std::array<int, 4> value;
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::array<int, 4> expected = {{1, 2, 3, 4}};
     EXPECT_EQ(expected, value);
@@ -425,7 +425,7 @@ TEST(Deserializer, Array) {
 
     int value[4];
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     const int expected[] = {1, 2, 3, 4};
     EXPECT_TRUE(std::equal(std::begin(value), std::end(value),
@@ -439,7 +439,7 @@ TEST(Deserializer, Array) {
 
     std::array<std::uint64_t, 4> value;
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::array<std::uint64_t, 4> expected = {{1, 2, 3, 4}};
     EXPECT_EQ(expected, value);
@@ -452,7 +452,7 @@ TEST(Deserializer, Array) {
 
     std::uint64_t value[4];
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     const std::uint64_t expected[] = {1, 2, 3, 4};
     EXPECT_TRUE(std::equal(std::begin(value), std::end(value),
@@ -466,7 +466,7 @@ TEST(Deserializer, Array) {
 
     std::array<std::string, 4> value;
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::array<std::string, 4> expected = {{"abc", "def", "123", "456"}};
     EXPECT_EQ(expected, value);
@@ -479,7 +479,7 @@ TEST(Deserializer, Array) {
 
     std::string value[4];
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     const std::string expected[] = {"abc", "def", "123", "456"};
     EXPECT_TRUE(std::equal(std::begin(value), std::end(value),
@@ -497,7 +497,7 @@ TEST(Serializer, uint8_t) {
   // Min FIXINT.
   value = 0;
   status = serializer.Write(value);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
   expected = Compose(EncodingByte::PositiveFixIntMin);
   EXPECT_EQ(expected, writer.data());
   writer.clear();
@@ -505,7 +505,7 @@ TEST(Serializer, uint8_t) {
   // Max FIXINT.
   value = (1 << 7) - 1;
   status = serializer.Write(value);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
   expected = Compose(EncodingByte::PositiveFixIntMax);
   EXPECT_EQ(expected, writer.data());
   writer.clear();
@@ -513,7 +513,7 @@ TEST(Serializer, uint8_t) {
   // Min U8.
   value = (1 << 7);
   status = serializer.Write(value);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
   expected = Compose(EncodingByte::U8, (1 << 7));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
@@ -521,7 +521,7 @@ TEST(Serializer, uint8_t) {
   // Max U8.
   value = 0xff;
   status = serializer.Write(value);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
   expected = Compose(EncodingByte::U8, 0xff);
   EXPECT_EQ(expected, writer.data());
   writer.clear();
@@ -537,7 +537,7 @@ TEST(Serializer, String) {
     std::string value = "abcdefg";
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::String, 7, "abcdefg");
     EXPECT_EQ(expected, writer.data());
@@ -554,7 +554,7 @@ TEST(Deserializer, String) {
 
   reader.Set(Compose(EncodingByte::String, 7, "abcdefg"));
   status = deserializer.Read(&value);
-  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(status);
 
   expected = "abcdefg";
   EXPECT_EQ(expected, value);
@@ -572,7 +572,7 @@ TEST(Serializer, VectorString) {
     std::vector<std::string> value = {a, b};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Array, 2, EncodingByte::String, 7,
                        "abcdefg", EncodingByte::String, 7, "1234567");
@@ -591,7 +591,7 @@ TEST(Serializer, Tuple) {
     std::tuple<int, std::string> value(10, "foo");
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected =
         Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo");
@@ -611,7 +611,7 @@ TEST(Deserializer, Tuple) {
     reader.Set(
         Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo"));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::tuple<int, std::string> expected(10, "foo");
     EXPECT_EQ(expected, value);
@@ -628,7 +628,7 @@ TEST(Serializer, Pair) {
     std::pair<int, std::string> value(10, "foo");
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected =
         Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo");
@@ -648,7 +648,7 @@ TEST(Deserializer, Pair) {
     reader.Set(
         Compose(EncodingByte::Array, 2, 10, EncodingByte::String, 3, "foo"));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::pair<int, std::string> expected(10, "foo");
     EXPECT_EQ(expected, value);
@@ -665,7 +665,7 @@ TEST(Serializer, Map) {
     std::map<int, std::string> value = {{{0, "abc"}, {1, "123"}}};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Map, 2, 0, EncodingByte::String, 3, "abc",
                        1, EncodingByte::String, 3, "123");
@@ -685,7 +685,7 @@ TEST(Deserializer, Map) {
     reader.Set(Compose(EncodingByte::Map, 2, 0, EncodingByte::String, 3, "abc",
                        1, EncodingByte::String, 3, "123"));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::map<int, std::string> expected = {{{0, "abc"}, {1, "123"}}};
     EXPECT_EQ(expected, value);
@@ -702,7 +702,7 @@ TEST(Serializer, UnorderedMap) {
     std::unordered_map<int, std::string> value = {{{0, "abc"}, {1, "123"}}};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Map, 2);
 
@@ -727,7 +727,7 @@ TEST(Deserializer, UnorderedMap) {
     reader.Set(Compose(EncodingByte::Map, 2, 0, EncodingByte::String, 3, "abc",
                        1, EncodingByte::String, 3, "123"));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     std::unordered_map<int, std::string> expected = {{{0, "abc"}, {1, "123"}}};
     EXPECT_EQ(expected, value);
@@ -744,7 +744,7 @@ TEST(Serializer, Enum) {
     EnumA value = EnumA::A;
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(1);
     EXPECT_EQ(expected, writer.data());
@@ -755,7 +755,7 @@ TEST(Serializer, Enum) {
     EnumA value = EnumA::B;
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(127);
     EXPECT_EQ(expected, writer.data());
@@ -766,7 +766,7 @@ TEST(Serializer, Enum) {
     EnumA value = EnumA::C;
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::U8, 128);
     EXPECT_EQ(expected, writer.data());
@@ -777,7 +777,7 @@ TEST(Serializer, Enum) {
     EnumA value = EnumA::D;
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::U8, 255);
     EXPECT_EQ(expected, writer.data());
@@ -795,7 +795,7 @@ TEST(Deserializer, Enum) {
 
     reader.Set(Compose(1));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     EnumA expected = EnumA::A;
     EXPECT_EQ(expected, value);
@@ -806,7 +806,7 @@ TEST(Deserializer, Enum) {
 
     reader.Set(Compose(127));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     EnumA expected = EnumA::B;
     EXPECT_EQ(expected, value);
@@ -817,7 +817,7 @@ TEST(Deserializer, Enum) {
 
     reader.Set(Compose(EncodingByte::U8, 128));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     EnumA expected = EnumA::C;
     EXPECT_EQ(expected, value);
@@ -828,7 +828,7 @@ TEST(Deserializer, Enum) {
 
     reader.Set(Compose(EncodingByte::U8, 255));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     EnumA expected = EnumA::D;
     EXPECT_EQ(expected, value);
@@ -845,7 +845,7 @@ TEST(Serializer, Members) {
     TestA value{10, "foo"};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected =
         Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3, "foo");
@@ -857,7 +857,7 @@ TEST(Serializer, Members) {
     TestB value{{10, "foo"}, EnumA::C};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected =
         Compose(EncodingByte::Structure, 2, EncodingByte::Structure, 2, 10,
@@ -870,7 +870,7 @@ TEST(Serializer, Members) {
     TestC value;
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Structure, 0);
     EXPECT_EQ(expected, writer.data());
@@ -881,7 +881,7 @@ TEST(Serializer, Members) {
     TestD value{10, EnumA::A, "foo"};
 
     status = serializer.Write(value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     expected = Compose(EncodingByte::Structure, 3, 10, 1, EncodingByte::String,
                        3, "foo");
@@ -940,7 +940,7 @@ TEST(Deserializer, Members) {
     reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3,
                        "foo"));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     TestA expected{10, "foo"};
     EXPECT_EQ(expected, value);
@@ -953,7 +953,7 @@ TEST(Deserializer, Members) {
                        10, EncodingByte::String, 3, "foo", EncodingByte::U8,
                        128));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     TestB expected{{10, "foo"}, EnumA::C};
     EXPECT_EQ(expected, value);
@@ -964,7 +964,7 @@ TEST(Deserializer, Members) {
 
     reader.Set(Compose(EncodingByte::Structure, 0));
     status = deserializer.Read(&value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
   }
 
   {
@@ -1199,7 +1199,7 @@ TEST(Deserializer, reference_wrapper) {
     reader.Set(Compose(EncodingByte::Structure, 2, 10, EncodingByte::String, 3,
                        "foo"));
     status = deserializer.Read(&ref_value);
-    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(status);
 
     TestA expected{10, "foo"};
     EXPECT_EQ(expected, value);

@@ -48,7 +48,7 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
 
     auto push_status = writer->template PushHandle<Type>(value);
     if (!push_status)
-      return push_status.error_status();
+      return push_status.error();
 
     return Encoding<HandleReference>::Write(push_status.get(), writer);
   }
@@ -61,7 +61,7 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
     if (!status)
       return status;
     else if (handle_type != Policy::HandleType())
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::UnexpectedHandleType;
 
     HandleReference handle_reference;
     status = Encoding<HandleReference>::Read(&handle_reference, reader);
@@ -70,7 +70,7 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
 
     auto get_status = reader->template GetHandle<Type>(handle_reference);
     if (!get_status)
-      return get_status.error_status();
+      return get_status.error();
 
     *value = get_status.take();
     return {};

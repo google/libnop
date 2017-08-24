@@ -56,7 +56,7 @@ class StreamReader {
  private:
   Status<void> ReturnStatus() {
     if (stream_.bad() || stream_.eof())
-      return ErrorStatus(EIO);
+      return ErrorStatus::StreamError;
     else
       return {};
   }

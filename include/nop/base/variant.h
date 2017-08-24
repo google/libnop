@@ -98,7 +98,7 @@ struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
       return status;
     } else if (type < Type::kEmptyIndex ||
                type >= static_cast<std::int32_t>(sizeof...(Ts))) {
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::UnexpectedVariantType;
     }
 
     value->Become(type);

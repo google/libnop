@@ -129,14 +129,14 @@ Status<std::vector<int>> ReadMessage(Deserializer* deserializer) {
   Header header;
   auto status = HeaderProto::Read(deserializer, &header);
   if (!status)
-    return status.error_status();
+    return status.error();
   else if (!header)
-    return ErrorStatus(EINVAL);
+    return ErrorStatus::ProtocolError;
 
   std::vector<int> body;
   status = BodyProto::Read(deserializer, &body);
   if (!status)
-    return status.error_status();
+    return status.error();
 
   return {std::move(body)};
 }
@@ -152,7 +152,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!status) {
     std::cerr << "Failed to serialize data: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
 
   // Write a message to the stream using the second overload of WriteMessage.
@@ -160,7 +160,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!status) {
     std::cerr << "Failed to serialize data: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
 
   // Write a message to the stream using the third overload of WriteMessage.
@@ -168,7 +168,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!status) {
     std::cerr << "Failed to serialize data: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
 
   // Write a message to the stream using the fourth overload of WriteMessage.
@@ -176,7 +176,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!status) {
     std::cerr << "Failed to serialize data: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
 
   // Print the serialized buffer in hexadecimal to demonstrate the wire format.
@@ -195,7 +195,7 @@ int main(int /*argc*/, char** /*argv*/) {
     if (!return_status) {
       std::cerr << "Failed to deserialize data: "
                 << return_status.GetErrorMessage() << std::endl;
-      return -return_status.error();
+      return -1;
     }
 
     std::cout << "Read: " << return_status.get() << std::endl;

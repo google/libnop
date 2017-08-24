@@ -19,7 +19,7 @@ class TestReader {
 
   Status<void> Ensure(std::size_t size) {
     if (data_.size() - index_ < size)
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
     else
       return {};
   }
@@ -29,7 +29,7 @@ class TestReader {
       *prefix = static_cast<EncodingByte>(data_[index_++]);
       return {};
     } else {
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
     }
   }
 
@@ -40,7 +40,7 @@ class TestReader {
         sizeof(typename std::iterator_traits<IterBegin>::value_type);
 
     if (length_bytes > (data_.size() - index_))
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
 
     std::copy(&data_[index_], &data_[index_ + length_bytes],
               reinterpret_cast<std::uint8_t*>(&*begin));
@@ -60,7 +60,7 @@ class TestReader {
     else if (handle_reference < handles_.size())
       return {HandleType{handles_[handle_reference]}};
     else
-      return ErrorStatus(EINVAL);
+      return ErrorStatus::InvalidHandleReference;
   }
 
   void Set(std::vector<std::uint8_t> data) {

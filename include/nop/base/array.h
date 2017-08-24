@@ -76,7 +76,7 @@ struct Encoding<std::array<T, Length>, EnableIfNotIntegral<T>>
     if (!status)
       return status;
     else if (size != Length)
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::InvalidContainerLength;
 
     for (std::uint64_t i = 0; i < Length; i++) {
       status = Encoding<T>::Read(&(*value)[i], reader);
@@ -133,7 +133,7 @@ struct Encoding<T[Length], EnableIfNotIntegral<T>> : EncodingIO<T[Length]> {
     if (!status)
       return status;
     else if (size != Length)
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::InvalidContainerLength;
 
     for (std::uint64_t i = 0; i < Length; i++) {
       status = Encoding<T>::Read(&(*value)[i], reader);
@@ -182,7 +182,7 @@ struct Encoding<std::array<T, Length>, EnableIfIntegral<T>>
     if (!status)
       return status;
     else if (size != Length * sizeof(T))
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::InvalidContainerLength;
 
     return reader->ReadRaw(&(*value)[0], &(*value)[Length]);
   }
@@ -224,7 +224,7 @@ struct Encoding<T[Length], EnableIfIntegral<T>> : EncodingIO<T[Length]> {
     if (!status)
       return status;
     else if (size != Length * sizeof(T))
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::InvalidContainerLength;
 
     return reader->ReadRaw(&(*value)[0], &(*value)[Length]);
   }

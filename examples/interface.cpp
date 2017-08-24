@@ -309,7 +309,7 @@ Status<std::pair<std::unique_ptr<Reader>, std::unique_ptr<Writer>>> MakePipe() {
   int pipe_fds[2];
   const int ret = pipe(pipe_fds);
   if (ret < 0)
-    return ErrorStatus(errno);
+    return ErrorStatus::SystemError;
 
   return {{std::make_unique<Reader>(pipe_fds[0]),
            std::make_unique<Writer>(pipe_fds[1])}};
@@ -323,7 +323,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!pipe_status) {
     std::cerr << "Failed to build pipe: " << pipe_status.GetErrorMessage()
               << std::endl;
-    return -pipe_status.error();
+    return -1;
   }
   std::unique_ptr<Reader> service_reader;
   std::unique_ptr<Writer> client_writer;
@@ -334,7 +334,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!pipe_status) {
     std::cerr << "Failed to build pipe: " << pipe_status.GetErrorMessage()
               << std::endl;
-    return -pipe_status.error();
+    return -1;
   }
   std::unique_ptr<Reader> client_reader;
   std::unique_ptr<Writer> service_writer;

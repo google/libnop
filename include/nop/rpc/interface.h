@@ -43,7 +43,7 @@ struct InterfaceMethod {
       Serializer* serializer, Deserializer* deserializer, Args&&... args) {
     auto status = Invoke(serializer, std::forward<Args>(args)...);
     if (!status)
-      return status.error_status();
+      return status.error();
 
     return GetReturn(deserializer);
   }
@@ -121,7 +121,7 @@ struct InterfaceMethod {
       Return return_value;
       auto status = deserializer->Read(&return_value);
       if (!status)
-        return status.error_status();
+        return status.error();
       else
         return {std::move(return_value)};
     }
@@ -148,7 +148,7 @@ struct InterfaceMethod {
       ArgsTuple args;
       auto status = deserializer->Read(&args);
       if (!status)
-        return status.error_status();
+        return status.error();
 
       Return return_value{Call(instance, std::forward<Op>(op), &args,
                                std::make_index_sequence<sizeof...(Args)>{})};
@@ -242,7 +242,7 @@ class InterfaceBindings {
   template <typename Deserializer, typename Serializer>
   Status<void> DispatchTable(Deserializer* deserializer, Serializer* serializer,
                              std::uint64_t method_hash, Index<0>) {
-    return ErrorStatus(EOPNOTSUPP);
+    return ErrorStatus::InvalidInterfaceMethod;
   }
 
   template <typename Deserializer, typename Serializer, std::size_t index>

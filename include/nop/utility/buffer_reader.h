@@ -23,7 +23,7 @@ class BufferReader {
 
   Status<void> Ensure(std::size_t size) {
     if (size_ - index_ < size)
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
     else
       return {};
   }
@@ -34,7 +34,7 @@ class BufferReader {
       index_ += 1;
       return {};
     } else {
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
     }
   }
 
@@ -45,7 +45,7 @@ class BufferReader {
         sizeof(typename std::iterator_traits<IterBegin>::value_type);
 
     if (length_bytes > (size_ - index_))
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
 
     std::copy(&buffer_[index_], &buffer_[index_ + length_bytes],
               reinterpret_cast<std::uint8_t*>(&*begin));
@@ -56,7 +56,7 @@ class BufferReader {
 
   Status<void> Skip(std::size_t padding_bytes) {
     if (padding_bytes > (size_ - index_))
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
 
     index_ += padding_bytes;
     return {};

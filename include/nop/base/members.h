@@ -79,9 +79,8 @@ struct HasExternalMemberList<T,
 // defined by the predicates above.
 template <typename T>
 struct HasMemberList
-    : std::integral_constant<bool,
-                             HasInternalMemberList<T>::value ||
-                                 HasExternalMemberList<T>::value> {};
+    : std::integral_constant<bool, HasInternalMemberList<T>::value ||
+                                       HasExternalMemberList<T>::value> {};
 
 // Enable utilities for member list predicates.
 template <typename T, typename ReturnType = void>
@@ -200,7 +199,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
     if (!status)
       return status;
     else if (size != Count)
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::InvalidMemberCount;
     else
       return ReadMembers(value, reader, Index<Count>{});
   }

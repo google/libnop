@@ -136,7 +136,7 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
       return status;
 
     if (size % sizeof(T) != 0)
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::InvalidContainerLength;
 
     const std::uint64_t length = size / sizeof(T);
 
@@ -150,6 +150,7 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
     return reader->ReadRaw(&(*value)[0], &(*value)[length]);
   }
 };
+
 }  // namespace nop
 
 #endif  // LIBNOP_INCLUDE_NOP_BASE_VECTOR_H_

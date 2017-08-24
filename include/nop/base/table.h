@@ -235,7 +235,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     if (!status)
       return status;
     else if (hash != EntryListTraits<Table>::EntryList::Hash)
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::InvalidTableHash;
 
     std::uint64_t count;
     status = Encoding<std::uint64_t>::Read(&count, reader);
@@ -366,7 +366,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
       if (!status)
         return status;
       else if (prefix != EncodingByte::Binary)
-        return ErrorStatus(EPROTO);
+        return ErrorStatus::UnexpectedEncodingType;
 
       std::uint64_t size;
       status = Encoding<std::uint64_t>::Read(&size, reader);
@@ -386,7 +386,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
 
       return bounded_reader.ReadPadding();
     } else {
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::DuplicateTableEntry;
     }
   }
 
@@ -398,7 +398,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     if (!status)
       return status;
     else if (prefix != EncodingByte::Binary)
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::UnexpectedEncodingType;
 
     std::uint64_t size;
     status = Encoding<std::uint64_t>::Read(&size, reader);

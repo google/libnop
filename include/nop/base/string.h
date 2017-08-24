@@ -52,7 +52,7 @@ struct Encoding<std::string> : EncodingIO<std::string> {
     if (!status)
       return status;
     else if (length_bytes % sizeof(Type::value_type) != 0)
-      return ErrorStatus(EPROTO);
+      return ErrorStatus::InvalidStringLength;
 
     const std::uint64_t size = length_bytes / sizeof(Type::value_type);
 

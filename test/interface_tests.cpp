@@ -15,6 +15,7 @@ using nop::BindInterface;
 using nop::Compose;
 using nop::Deserializer;
 using nop::EncodingByte;
+using nop::ErrorStatus;
 using nop::Float;
 using nop::Integer;
 using nop::Interface;
@@ -78,7 +79,7 @@ TEST(InterfaceTests, Bind) {
                      Integer<std::uint64_t>(TestInterface::Match::Hash)));
   auto status = binding.Dispatch(&deserializer, &serializer);
   EXPECT_FALSE(status);
-  EXPECT_EQ(EOPNOTSUPP, status.error());
+  EXPECT_EQ(ErrorStatus::InvalidInterfaceMethod, status.error());
 
   reader.Set(Compose(EncodingByte::U64,
                      Integer<std::uint64_t>(TestInterface::Sum::Hash),

@@ -96,7 +96,7 @@ Status<std::pair<Channel, Channel>> MakeChannels() {
   int pipe_fds[2];
   int ret = pipe(pipe_fds);
   if (ret < 0)
-    return ErrorStatus(errno);
+    return ErrorStatus::SystemError;
 
   // The first fd is the read end, the second is the write end.
   auto reader_a = std::make_unique<Reader>(pipe_fds[0]);
@@ -104,7 +104,7 @@ Status<std::pair<Channel, Channel>> MakeChannels() {
 
   ret = pipe(pipe_fds);
   if (ret < 0)
-    return ErrorStatus(errno);
+    return ErrorStatus::SystemError;
 
   // The first fd is the read end, the second is the write end.
   auto reader_b = std::make_unique<Reader>(pipe_fds[0]);
@@ -123,7 +123,7 @@ int HandleChild(Channel channel) {
   if (!status) {
     std::cerr << "Child failed to read request: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
 
   std::cout << "Child received a request for " << request.request_bytes
@@ -138,7 +138,7 @@ int HandleChild(Channel channel) {
     std::string data(request.request_bytes, '\0');
     int count = read(handle.get(), &data[0], data.size());
     if (count < 0) {
-      status = ErrorStatus(errno);
+      status = ErrorStatus::IOError;
     } else {
       data.resize(count);
 
@@ -151,7 +151,7 @@ int HandleChild(Channel channel) {
   if (!status) {
     std::cerr << "Child failed to write response: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
 
   return 0;
@@ -165,7 +165,7 @@ int HandleParent(Channel channel) {
   if (!status) {
     std::cerr << "Parent failed to write request: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
 
   Response response;
@@ -173,7 +173,7 @@ int HandleParent(Channel channel) {
   if (!status) {
     std::cerr << "Parent failed to read response: " << status.GetErrorMessage()
               << std::endl;
-    return -status.error();
+    return -1;
   }
 
   if (response) {
@@ -193,7 +193,7 @@ int main(int /*argc*/, char** /*argv*/) {
   if (!pipe_status) {
     std::cerr << "Failed to create pipe: " << pipe_status.GetErrorMessage()
               << std::endl;
-    return -pipe_status.error();
+    return -1;
   }
 
   Channel parent_channel, child_channel;

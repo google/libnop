@@ -30,7 +30,7 @@ class BoundedReader {
 
   Status<void> Ensure(std::size_t size) {
     if (size_ - index_ < size)
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
     else
       return reader_->Ensure(size);
   }
@@ -44,7 +44,7 @@ class BoundedReader {
       index_ += 1;
       return {};
     } else {
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
     }
   }
 
@@ -55,7 +55,7 @@ class BoundedReader {
         sizeof(typename std::iterator_traits<IterBegin>::value_type);
 
     if (length_bytes > (size_ - index_))
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
 
     auto status = reader_->ReadRaw(begin, end);
     if (!status)
@@ -67,7 +67,7 @@ class BoundedReader {
 
   Status<void> Skip(std::size_t padding_bytes) {
     if (padding_bytes > (size_ - index_))
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::ReadLimitReached;
 
     auto status = reader_->Skip(padding_bytes);
     if (!status)

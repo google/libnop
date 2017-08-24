@@ -29,7 +29,7 @@ class BoundedWriter {
 
   Status<void> Prepare(std::size_t size) {
     if (index_ + size > size_)
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::WriteLimitReached;
     else
       return writer_->Prepare(size);
   }
@@ -43,7 +43,7 @@ class BoundedWriter {
       index_ += 1;
       return {};
     } else {
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::WriteLimitReached;
     }
   }
 
@@ -54,7 +54,7 @@ class BoundedWriter {
         sizeof(typename std::iterator_traits<IterBegin>::value_type);
 
     if (length_bytes > (size_ - index_))
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::WriteLimitReached;
 
     auto status = writer_->WriteRaw(begin, end);
     if (!status)
@@ -67,7 +67,7 @@ class BoundedWriter {
   Status<void> Skip(std::size_t padding_bytes,
                     std::uint8_t padding_value = 0x00) {
     if (padding_bytes > (size_ - index_))
-      return ErrorStatus(ENOBUFS);
+      return ErrorStatus::WriteLimitReached;
 
     auto status = writer_->Skip(padding_bytes, padding_value);
     if (!status)
