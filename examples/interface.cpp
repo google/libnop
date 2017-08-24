@@ -32,6 +32,13 @@ using nop::StreamReader;
 using nop::StreamWriter;
 using nop::Variant;
 
+//
+// Example of using libnop interfaces to define RPC communication protocols.
+// This example implements a simple customer "database" with client and service
+// classes that communicate over pipes. The client and service use a common
+// interface to define the valid requests and responses.
+//
+
 namespace {
 
 // A simple class to represent phone numbers. This is not intended for
@@ -56,25 +63,23 @@ class PhoneNumber {
 
   // Prints the phone number type to the debug stream as a string.
   friend std::ostream& operator<<(std::ostream& stream, Type type) {
-    static const char* kTypeLabels[] = {
-            [static_cast<int>(Type::Work)] = "Work",
-            [static_cast<int>(Type::Home)] = "Home",
-            [static_cast<int>(Type::Cell)] = "Cell",
-            [static_cast<int>(Type::Other)] = "Other",
-    };
-
     switch (type) {
       case Type::Work:
+        stream << "Work";
+        break;
       case Type::Home:
+        stream << "Home";
+        break;
       case Type::Cell:
+        stream << "Cell";
+        break;
       case Type::Other:
-        stream << kTypeLabels[static_cast<int>(type)];
+        stream << "Other";
         break;
       default:
         stream << "Unknown";
         break;
     }
-
     return stream;
   }
 
