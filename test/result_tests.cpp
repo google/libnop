@@ -17,7 +17,7 @@ enum class TestError {
 TEST(Result, Constructor) {
   {
     Result<TestError, int> result;
-    EXPECT_TRUE(result.has_error());
+    EXPECT_FALSE(result.has_error());
     EXPECT_EQ(TestError::None, result.error());
     EXPECT_FALSE(result.has_value());
     EXPECT_EQ(nullptr, &result.get());
@@ -42,7 +42,7 @@ TEST(Result, Constructor) {
 
   {
     Result<TestError, int> result{Result<TestError, int>{}};
-    EXPECT_TRUE(result.has_error());
+    EXPECT_FALSE(result.has_error());
     EXPECT_EQ(TestError::None, result.error());
     EXPECT_FALSE(result.has_value());
     EXPECT_EQ(nullptr, &result.get());
@@ -68,7 +68,7 @@ TEST(Result, Constructor) {
   {
     const Result<TestError, int> const_other{};
     Result<TestError, int> result{const_other};
-    EXPECT_TRUE(result.has_error());
+    EXPECT_FALSE(result.has_error());
     EXPECT_EQ(TestError::None, result.error());
     EXPECT_FALSE(result.has_value());
     EXPECT_EQ(nullptr, &result.get());
@@ -91,6 +91,16 @@ TEST(Result, Constructor) {
     EXPECT_TRUE(result.has_value());
     EXPECT_NE(nullptr, &result.get());
     EXPECT_EQ(10, result.get());
+  }
+
+  {
+    Result<TestError, void> result{};
+    EXPECT_FALSE(result.has_error());
+  }
+
+  {
+    Result<TestError, void> result{TestError::None};
+    EXPECT_FALSE(result.has_error());
   }
 
   // TODO(eieio): Complete tests.

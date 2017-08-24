@@ -49,16 +49,18 @@ template <typename ErrorEnum, typename T>
 class Result {
   static_assert(std::is_enum<ErrorEnum>::value,
                 "ErrorEnum must be an enum class.");
-  static_assert(!std::is_same<ErrorEnum, std::decay_t<T>>::value,
+  static_assert(!std::is_same<std::decay_t<ErrorEnum>, std::decay_t<T>>::value,
                 "ErrorEnum and T must not be the same type.");
 
  public:
-  Result() : error_{ErrorEnum::None}, state_{State::Error} {}
+  Result() : error_{ErrorEnum::None}, state_{State::Empty} {}
   Result(const T& value) : value_{value}, state_{State::Value} {}
   Result(T&& value) : value_{std::move(value)}, state_{State::Value} {}
-  Result(ErrorEnum error) : error_{error}, state_{State::Error} {}
   Result(const Result& other) { *this = other; }
   Result(Result&& other) { *this = std::move(other); }
+  Result(ErrorEnum error)
+      : error_{error},
+        state_{error == ErrorEnum::None ? State::Empty : State::Error} {}
 
   ~Result() { Destruct(); }
 
@@ -89,6 +91,10 @@ class Result {
   }
   Result& operator=(T&& value) {
     Assign(std::move(value));
+    return *this;
+  }
+  Result& operator=(ErrorEnum error) {
+    Assign(error);
     return *this;
   }
 
@@ -131,22 +137,24 @@ class Result {
 
   void Assign(ErrorEnum error) {
     Destruct();
-    error_ = error;
-    state_ = State::Error;
+    if (error != ErrorEnum::None) {
+      error_ = error;
+      state_ = State::Error;
+    }
   }
 
   void Destruct() {
-    if (has_value()) {
+    if (has_value())
       value_.~T();
-      state_ = State::Error;
-    }
     error_ = ErrorEnum::None;
+    state_ = State::Empty;
   }
 
   const T* value() const { return has_value() ? &value_ : nullptr; }
   T* value() { return has_value() ? &value_ : nullptr; }
 
   enum class State {
+    Empty,
     Error,
     Value,
   };
@@ -156,6 +164,32 @@ class Result {
     T value_;
   };
   State state_;
+};
+
+// Specialization of Result for void types.
+template <typename ErrorEnum>
+class Result<ErrorEnum, void> {
+  static_assert(std::is_enum<ErrorEnum>::value,
+                "ErrorEnum must be an enum class.");
+
+ public:
+  Result() : error_{ErrorEnum::None} {}
+  Result(ErrorEnum error) : error_{error} {}
+  Result(const Result& other) = default;
+
+  ~Result() = default;
+
+  Result& operator=(const Result& other) = default;
+
+  bool has_error() const { return error_ != ErrorEnum::None; }
+  explicit operator bool() const { return !has_error(); }
+
+  ErrorEnum error() const { return error_; }
+
+  void clear() { error_ = ErrorEnum::None; }
+
+ private:
+  ErrorEnum error_;
 };
 
 }  // namespace nop
