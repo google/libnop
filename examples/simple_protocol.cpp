@@ -149,35 +149,19 @@ int main(int /*argc*/, char** /*argv*/) {
 
   // Write a message to the stream using the first overload of WriteMessage.
   auto status = WriteMessage(&serializer, 1, 2, 3, 4);
-  if (!status) {
-    std::cerr << "Failed to serialize data: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  CHECK_STATUS(status);
 
   // Write a message to the stream using the second overload of WriteMessage.
   status = WriteMessage(&serializer, std::array<int, 6>{{5, 6, 7, 8, 9, 10}});
-  if (!status) {
-    std::cerr << "Failed to serialize data: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  CHECK_STATUS(status);
 
   // Write a message to the stream using the third overload of WriteMessage.
   status = WriteMessage(&serializer, {11, 22, 33, 44, 55, 66, 77, 88, 99});
-  if (!status) {
-    std::cerr << "Failed to serialize data: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  CHECK_STATUS(status);
 
   // Write a message to the stream using the fourth overload of WriteMessage.
   status = WriteMessage(&serializer, std::vector<int>(42, 20));
-  if (!status) {
-    std::cerr << "Failed to serialize data: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  CHECK_STATUS(status);
 
   // Print the serialized buffer in hexadecimal to demonstrate the wire format.
   std::cout << "Serialized data: "
@@ -192,11 +176,7 @@ int main(int /*argc*/, char** /*argv*/) {
   // resulting values.
   for (int i = 0; i < 4; i++) {
     auto return_status = ReadMessage(&deserializer);
-    if (!return_status) {
-      std::cerr << "Failed to deserialize data: "
-                << return_status.GetErrorMessage() << std::endl;
-      return -1;
-    }
+    CHECK_STATUS(return_status);
 
     std::cout << "Read: " << return_status.get() << std::endl;
   }

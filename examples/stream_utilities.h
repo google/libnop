@@ -11,6 +11,17 @@
 
 namespace {
 
+// Checks whether the given nop::Status<T> contains an error. If it does the
+// error message is printed to standard error and the program is terminated.
+#define CHECK_STATUS(status)                                             \
+  do {                                                                   \
+    if (!(status)) {                                                     \
+      std::cerr << "CHECK_STATUS: Failure: " << status.GetErrorMessage() \
+                << std::endl;                                            \
+      std::exit(EXIT_FAILURE);                                           \
+    }                                                                    \
+  } while (false)
+
 // Prints a std::vector<T> to the given stream. This template will work for any
 // type T that has an operator<< overload.
 template <typename T, typename Allocator>
@@ -53,6 +64,9 @@ std::ostream& operator<<(std::ostream& stream,
   return stream;
 }
 
+// A very simple and naive streambuf that wraps a file descriptor. This is for
+// example use only and should not be used in production. In particular, this
+// code does not handle signals properly.
 class FdOutputBuffer : public std::streambuf {
  public:
   FdOutputBuffer(int fd) : fd_{fd} {}
@@ -78,6 +92,9 @@ class FdOutputBuffer : public std::streambuf {
   void operator=(const FdOutputBuffer&) = delete;
 };
 
+// A very simple and naive output stream that wraps a file descriptor. This is
+// for example use only and should not be used in production. In particular,
+// this code does not handle signals properly.
 class FdOutputStream : public std::ostream {
  public:
   FdOutputStream(int fd) : std::ostream{0}, buffer_{fd} { rdbuf(&buffer_); }
@@ -89,6 +106,9 @@ class FdOutputStream : public std::ostream {
   void operator=(const FdOutputStream&) = delete;
 };
 
+// A very simple and naive streambuf that wraps a file descriptor. This is for
+// example use only and should not be used in production. In particular, this
+// code does not handle signals properly.
 class FdInputBuffer : public std::streambuf {
  public:
   FdInputBuffer(int fd) : fd_{fd} {
@@ -128,6 +148,9 @@ class FdInputBuffer : public std::streambuf {
   void operator=(const FdInputBuffer&) = delete;
 };
 
+// A very simple and naive input stream that wraps a file descriptor. This is
+// for example use only and should not be used in production. In particular,
+// this code does not handle signals properly.
 class FdInputStream : public std::istream {
  public:
   FdInputStream(int fd) : std::istream{nullptr}, buffer_{fd} {

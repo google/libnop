@@ -18,6 +18,12 @@ using nop::StreamReader;
 using nop::StreamWriter;
 using nop::StringToHex;
 
+//
+// An example of reading and writing structured data to streams. This example
+// defines a couple of serializable types and demonstrates the serialization of
+// an externally defined structure from the C standard library.
+//
+
 // Here we describe struct tm from the standard library, which is code we don't
 // own and can't change to include an annotation. The NOP_STRUCTURE() macro
 // annotates types we don't own so that the serializer can understand how to
@@ -36,15 +42,16 @@ namespace {
 // must be default constrictible. Annotation does not affect the size or
 // function of the class: all of the necessary information is captured in the
 // type system.
-class TypeB {
+class UserDefinedA {
  public:
-  TypeB() = default;
-  TypeB(const std::string& a, std::vector<int> b) : a_{a}, b_{std::move(b)} {}
+  UserDefinedA() = default;
+  UserDefinedA(const std::string& a, std::vector<int> b)
+      : a_{a}, b_{std::move(b)} {}
 
-  TypeB(const TypeB&) = default;
-  TypeB(TypeB&&) = default;
-  TypeB& operator=(const TypeB&) = default;
-  TypeB& operator=(TypeB&&) = default;
+  UserDefinedA(const UserDefinedA&) = default;
+  UserDefinedA(UserDefinedA&&) = default;
+  UserDefinedA& operator=(const UserDefinedA&) = default;
+  UserDefinedA& operator=(UserDefinedA&&) = default;
 
   const std::string a() const { return a_; }
   const std::vector<int> b() const { return b_; }
@@ -53,7 +60,7 @@ class TypeB {
   std::string a_;
   std::vector<int> b_;
 
-  NOP_MEMBERS(TypeB, a_, b_);
+  NOP_MEMBERS(UserDefinedA, a_, b_);
 };
 
 // All enum and enum class types are serializable.
@@ -65,16 +72,16 @@ enum class EnumA {
 
 // A structure with internal annotation. The annotation only defines a nested
 // type, which does not affect the size or funcion of the structure.
-struct MessageA {
+struct UserDefinedB {
   int a;
   float b;
   std::string c;
-  std::vector<TypeB> d;
+  std::vector<UserDefinedA> d;
   std::tm e;
   EnumA f;
   Optional<std::string> g;
 
-  NOP_MEMBERS(MessageA, a, b, c, d, e, f, g);
+  NOP_MEMBERS(UserDefinedB, a, b, c, d, e, f, g);
 };
 
 // Prints a struct tm to the given stream.
@@ -118,17 +125,17 @@ std::ostream& operator<<(std::ostream& stream, const Optional<T>& value) {
   return stream;
 }
 
-// Prints a MessageA type to the given stream.
-std::ostream& operator<<(std::ostream& stream, const MessageA& message) {
-  stream << "MessageA{" << message.a << ", " << message.b << ", " << message.c
-         << ", " << message.d << ", " << message.e << ", " << message.f << ", "
-         << message.g << "}";
+// Prints a UserDefinedB type to the given stream.
+std::ostream& operator<<(std::ostream& stream, const UserDefinedB& message) {
+  stream << "UserDefinedB{" << message.a << ", " << message.b << ", "
+         << message.c << ", " << message.d << ", " << message.e << ", "
+         << message.f << ", " << message.g << "}";
   return stream;
 }
 
-// Prints a TypeB type to the given stream.
-std::ostream& operator<<(std::ostream& stream, const TypeB& value) {
-  stream << "TypeB{" << value.a() << ", " << value.b() << "}";
+// Prints a UserDefinedA type to the given stream.
+std::ostream& operator<<(std::ostream& stream, const UserDefinedA& message) {
+  stream << "UserDefinedA{" << message.a() << ", " << message.b() << "}";
   return stream;
 }
 
@@ -142,22 +149,18 @@ int main(int /*argc*/, char** /*argv*/) {
   std::time_t time = std::time(nullptr);
   std::tm local_time = *std::localtime(&time);
 
-  // Write a MessageA structure to the stream.
-  MessageA message_out{10,
-                       20.f,
-                       "foo",
-                       {{"bar", {1, 2, 3}}, {"baz", {4, 5, 6}}},
-                       local_time,
-                       EnumA::Baz,
-                       Optional<std::string>{"bif"}};
+  // Write a UserDefinedB structure to the stream.
+  UserDefinedB message_out{10,
+                           20.f,
+                           "foo",
+                           {{"bar", {1, 2, 3}}, {"baz", {4, 5, 6}}},
+                           local_time,
+                           EnumA::Baz,
+                           Optional<std::string>{"bif"}};
   std::cout << "Writing: " << message_out << std::endl << std::endl;
 
   auto status = serializer.Write(message_out);
-  if (!status) {
-    std::cerr << "Serialization failed: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  CHECK_STATUS(status);
 
   // Dump the serialized data as a hex string.
   std::string data = serializer.writer().stream().str();
@@ -167,17 +170,12 @@ int main(int /*argc*/, char** /*argv*/) {
   // Construct a deserializer to read from a std::stringstream.
   Deserializer<StreamReader<std::stringstream>> deserializer{data};
 
-  // Read a MessageA structure from the stream.
-  MessageA message_in;
+  // Read a UserDefinedB structure from the stream.
+  UserDefinedB message_in;
   status = deserializer.Read(&message_in);
-  if (!status) {
-    std::cerr << "Deserialization failed: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  CHECK_STATUS(status);
 
-  // Print the MessageA structure.
+  // Print the UserDefinedB structure.
   std::cout << "Read   : " << message_in << std::endl;
-
   return 0;
 }
