@@ -25,7 +25,7 @@ namespace nop {
 //     Baz = 0b100,
 //     BuzMask = Bar | Baz,
 //   };
-//   NOP_ENUM_FLAGS(SomeType);
+//   NOP_ENUM_FLAGS(SomeFlags);
 //
 //   inline bool IsBuz(SomeFlags value) {
 //     return !!(SomeFlags::BuzMask & value);
