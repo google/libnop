@@ -30,7 +30,7 @@ class BufferReader {
 
   Status<void> Read(EncodingByte* prefix) {
     if (index_ < size_) {
-      *prefix = buffer_[index_];
+      *prefix = static_cast<EncodingByte>(buffer_[index_]);
       index_ += 1;
       return {};
     } else {
