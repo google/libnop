@@ -115,7 +115,7 @@ using Select = std::conditional_t<CondA, SelectA, SelectB>;
 
 // Recursive union type.
 template <typename... Types>
-union Union;
+union Union {};
 
 // Specialization handling a singular type, terminating template recursion.
 template <typename Type>

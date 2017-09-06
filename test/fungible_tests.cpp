@@ -523,3 +523,62 @@ TEST(FungibleTests, Result) {
   EXPECT_FALSE((IsFungible<ResultA<float>, ResultB<int>>::value));
   EXPECT_FALSE((IsFungible<ResultA<float>, ResultB<float>>::value));
 }
+
+namespace {
+
+struct UserDefinedA {
+  std::array<int, 10> a;
+  std::array<float, 20> b;
+  NOP_MEMBERS(UserDefinedA, a, b);
+};
+
+struct UserDefinedB1 {
+  std::array<int, 10> a;
+  float b[20];
+  NOP_MEMBERS(UserDefinedB1, a, b);
+};
+
+struct UserDefinedB2 {
+  int a[10];
+  float b[20];
+  NOP_MEMBERS(UserDefinedB2, a, b);
+};
+
+struct UserDefinedC {
+  int a[10];
+  std::string b;
+  NOP_MEMBERS(UserDefinedC, a, b);
+};
+
+struct UserDefinedD {
+  int a[10];
+  NOP_MEMBERS(UserDefinedD, a);
+};
+
+struct UserDefinedE {
+  int a[10];
+  float b[20];
+  int c;
+  NOP_MEMBERS(UserDefinedE, a, b, c);
+};
+
+} // anonymous namespace
+
+TEST(FungibleTests, UserDefined) {
+  EXPECT_TRUE((IsFungible<UserDefinedA, UserDefinedA>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedA, UserDefinedB1>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedA, UserDefinedB2>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedB1, UserDefinedA>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedB2, UserDefinedA>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedB1, UserDefinedB1>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedB1, UserDefinedB2>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedB2, UserDefinedB1>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedB2, UserDefinedB2>::value));
+
+  EXPECT_FALSE((IsFungible<UserDefinedA, UserDefinedC>::value));
+  EXPECT_FALSE((IsFungible<UserDefinedA, UserDefinedD>::value));
+  EXPECT_FALSE((IsFungible<UserDefinedA, UserDefinedE>::value));
+  EXPECT_FALSE((IsFungible<UserDefinedC, UserDefinedA>::value));
+  EXPECT_FALSE((IsFungible<UserDefinedD, UserDefinedA>::value));
+  EXPECT_FALSE((IsFungible<UserDefinedE, UserDefinedA>::value));
+}

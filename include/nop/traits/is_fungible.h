@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include <nop/base/members.h>
 #include <nop/base/utility.h>
 #include <nop/types/optional.h>
 #include <nop/types/result.h>
@@ -167,6 +168,24 @@ template <typename... A, typename... B>
 struct IsFungible<Variant<A...>, Variant<B...>,
                   std::enable_if_t<sizeof...(A) != sizeof...(B)>>
     : std::false_type {};
+
+// Compares MemberList<A...> and MemberList<B...> to see if every
+// MemberPointer::Type in A is fungible with every MemberPointer::Type in B.
+template <typename... A, typename... B>
+struct IsFungible<MemberList<A...>, MemberList<B...>,
+                  std::enable_if_t<sizeof...(A) == sizeof...(B)>>
+    : And<IsFungible<typename A::Type, typename B::Type>...> {};
+template <typename... A, typename... B>
+struct IsFungible<MemberList<A...>, MemberList<B...>,
+                  std::enable_if_t<sizeof...(A) != sizeof...(B)>>
+    : std::false_type {};
+
+// Compares user-defined types A and B to see if every member is fungible.
+template <typename A, typename B>
+struct IsFungible<
+    A, B, std::enable_if_t<HasMemberList<A>::value && HasMemberList<B>::value>>
+    : IsFungible<typename MemberListTraits<A>::MemberList,
+                 typename MemberListTraits<B>::MemberList> {};
 
 }  // namespace nop
 
