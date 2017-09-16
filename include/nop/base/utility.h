@@ -93,7 +93,7 @@ template <typename A, typename B, typename... Rest>
 struct Or<A, B, Rest...> : Or<A, Or<B, Rest...>> {};
 
 // Utility to determine whether a set of one or more types is a true set,
-// ccontaining no duplicates, according to the given comparison template. The
+// containing no duplicates, according to the given comparison template. The
 // comparison template must accept two type arguments and evaluate to true if
 // its arguments are the same according to the intended criteria.
 //
@@ -104,6 +104,8 @@ struct Or<A, B, Rest...> : Or<A, Or<B, Rest...>> {};
 //
 template <template <typename, typename> class, typename...>
 struct IsUnique;
+template <template <typename, typename> class Same>
+struct IsUnique<Same> : std::true_type {};
 template <template <typename, typename> class Same, typename T>
 struct IsUnique<Same, T> : std::true_type {};
 template <template <typename, typename> class Same, typename First,

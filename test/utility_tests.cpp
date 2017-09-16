@@ -9,9 +9,10 @@
 
 using nop::EnableIfHasMemberList;
 using nop::EnableIfNotHasMemberList;
-using nop::HasMemberList;
 using nop::HasExternalMemberList;
+using nop::HasMemberList;
 using nop::IsIntegral;
+using nop::IsUnique;
 
 namespace {
 
@@ -89,4 +90,29 @@ TEST(Utility, IsIntegral) {
   EXPECT_FALSE((IsIntegral<int, float, float>::value));
   EXPECT_FALSE((IsIntegral<float, float, char>::value));
   EXPECT_FALSE((IsIntegral<float, float, float>::value));
+}
+
+namespace {
+
+template <typename A, typename B>
+using SameUnderlyingType = std::is_same<std::decay_t<A>, std::decay_t<B>>;
+
+}  // anonymous namespace
+
+TEST(Utility, IsUnique) {
+  EXPECT_TRUE((IsUnique<std::is_same>::value));
+  EXPECT_TRUE((IsUnique<std::is_same, int>::value));
+  EXPECT_TRUE((IsUnique<std::is_same, int, float>::value));
+  EXPECT_TRUE((IsUnique<std::is_same, int, float, char>::value));
+  EXPECT_TRUE((IsUnique<std::is_same, int, float, char, short>::value));
+
+  EXPECT_FALSE((IsUnique<std::is_same, int, int>::value));
+  EXPECT_FALSE((IsUnique<std::is_same, int, float, float>::value));
+  EXPECT_FALSE((IsUnique<std::is_same, int, int, float>::value));
+  EXPECT_FALSE((IsUnique<std::is_same, float, int, float>::value));
+  EXPECT_FALSE((IsUnique<std::is_same, int, float, short, short>::value));
+
+  EXPECT_FALSE((IsUnique<SameUnderlyingType, int, const int>::value));
+  EXPECT_FALSE((IsUnique<SameUnderlyingType, int, float, const float>::value));
+  EXPECT_FALSE((IsUnique<SameUnderlyingType, int, volatile int>::value));
 }
