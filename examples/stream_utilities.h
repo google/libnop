@@ -1,13 +1,14 @@
 #ifndef LIBNOP_EXAMPLES_STREAM_UTILITIES_H_
 #define LIBNOP_EXAMPLES_STREAM_UTILITIES_H_
 
+#include <unistd.h>
+
 #include <array>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <vector>
-
-#include <unistd.h>
+#include <utility>
 
 namespace {
 
@@ -61,6 +62,12 @@ std::ostream& operator<<(std::ostream& stream,
   }
 
   stream << "}";
+  return stream;
+}
+
+template <typename T, typename U>
+std::ostream& operator<<(std::ostream& stream, const std::pair<T, U>& pair) {
+  stream << "pair{" << pair.first << ", " << pair.second << "}";
   return stream;
 }
 

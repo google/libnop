@@ -71,6 +71,12 @@ M_OBJS := \
 
 include build/host-executable.mk
 
+M_NAME := variant_example
+M_OBJS := \
+	examples/variant.o
+
+include build/host-executable.mk
+
 clean::
 	@echo clean
 	@rm -rf $(OUT)
