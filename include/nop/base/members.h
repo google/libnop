@@ -49,6 +49,10 @@ template <typename T>
 using ExternalMemberTraits =
     decltype(NOP__GetExternalMemberTraits(std::declval<T*>()));
 
+// Work around access check bug in GCC. Keeping original code here to document
+// the desired behavior. Bug filed with GCC:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82478
+#if 0
 // Determines whether type T has a nested type named NOP__MEMBERS of
 // template type MemberList.
 template <typename, typename = void>
@@ -60,6 +64,30 @@ struct HasInternalMemberList<T, Void<typename T::NOP__MEMBERS>>
   static_assert(std::is_default_constructible<T>::value,
                 "Serializable types must be default constructible.");
 };
+#else
+// Determines whether type T has a nested type named NOP__MEMBERS of
+// template type MemberList.
+template <typename T, typename = void>
+struct HasInternalMemberList {
+ private:
+  template <typename U>
+  static constexpr bool Test(const typename U::NOP__MEMBERS*) {
+    return IsTemplateBaseOf<MemberList, typename U::NOP__MEMBERS>::value;
+  }
+  template <typename U>
+  static constexpr bool Test(...) {
+    return false;
+  }
+
+ public:
+  enum : bool { value = Test<T>(0) };
+
+  // Always true if T does not have a NOP__MEMBERS member type. If T does have
+  // the member type then only true if T is also default constructible.
+  static_assert(!value || std::is_default_constructible<T>::value,
+                "Serializable types must be default constructible.");
+};
+#endif
 
 // Determines whether type T has a properly defined traits type that can be
 // discovered by ExternalMemberTraits above.
