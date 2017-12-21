@@ -4,6 +4,8 @@ libnop is a header-only library for serializing and deserializing C++ data
 types without external code generators or runtime support libraries. The only
 mandatory requirement is a compiler that supports the C++14 standard.
 
+Note: This is not an officially supported Google product at this time.
+
 ## Goals
 
 libnop has the following goals:
