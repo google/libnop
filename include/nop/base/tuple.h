@@ -2,6 +2,7 @@
 #define LIBNOP_INCLUDE_NOP_BASE_TUPLE_H_
 
 #include <tuple>
+#include <type_traits>
 
 #include <nop/base/encoding.h>
 #include <nop/base/utility.h>
@@ -14,15 +15,12 @@ namespace nop {
 // | ARY | INT64:N | N ELEMENTS |
 // +-----+---------+-----//-----+
 //
-// Elements are expected to be valid encodings of each corresponding type in Ts.
+// Elements must be valid encodings of each corresponding type in Ts.
 //
 
 template <typename... Types>
 struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   using Type = std::tuple<Types...>;
-
-  template <std::size_t Index>
-  using ElementType = typename std::tuple_element<Index, Type>::type;
 
   static constexpr EncodingByte Prefix(const Type& value) {
     return EncodingByte::Array;
@@ -62,6 +60,10 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
  private:
+  template <std::size_t Index>
+  using ElementType = std::remove_cv_t<
+      std::remove_reference_t<std::tuple_element_t<Index, Type>>>;
+
   // Terminates template recursion.
   static constexpr std::size_t Size(const Type& value, Index<0>) { return 0; }
 

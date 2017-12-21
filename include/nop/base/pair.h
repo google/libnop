@@ -1,6 +1,7 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_PAIR_H_
 #define LIBNOP_INCLUDE_NOP_BASE_PAIR_H_
 
+#include <type_traits>
 #include <utility>
 
 #include <nop/base/encoding.h>
@@ -27,7 +28,8 @@ struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
 
   static constexpr std::size_t Size(const Type& value) {
     return BaseEncodingSize(Prefix(value)) + Encoding<std::uint64_t>::Size(2u) +
-           Encoding<T>::Size(value.first) + Encoding<U>::Size(value.second);
+           Encoding<First>::Size(value.first) +
+           Encoding<Second>::Size(value.second);
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -41,11 +43,11 @@ struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
     if (!status)
       return status;
 
-    status = Encoding<T>::Write(value.first, writer);
+    status = Encoding<First>::Write(value.first, writer);
     if (!status)
       return status;
 
-    return Encoding<U>::Write(value.second, writer);
+    return Encoding<Second>::Write(value.second, writer);
   }
 
   template <typename Reader>
@@ -58,12 +60,16 @@ struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
     else if (size != 2u)
       return ErrorStatus::InvalidContainerLength;
 
-    status = Encoding<T>::Read(&value->first, reader);
+    status = Encoding<First>::Read(&value->first, reader);
     if (!status)
       return status;
 
-    return Encoding<U>::Read(&value->second, reader);
+    return Encoding<Second>::Read(&value->second, reader);
   }
+
+ private:
+  using First = std::remove_cv_t<std::remove_reference_t<T>>;
+  using Second = std::remove_cv_t<std::remove_reference_t<U>>;
 };
 
 }  // namespace nop
