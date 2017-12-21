@@ -109,6 +109,35 @@ struct TestG {
   NOP_MEMBERS(TestG, a, b);
 };
 
+struct TestH {
+  char data[128];
+  unsigned char size;
+};
+NOP_STRUCTURE(TestH, (data, size));
+
+struct TestH2 {
+  std::array<char, 128> data;
+  unsigned char size;
+};
+NOP_STRUCTURE(TestH2, (data, size));
+
+struct TestI {
+  std::string names[5];
+  std::size_t size;
+
+  bool operator==(const TestI& other) const {
+    if (size != other.size)
+      return false;
+    for (std::size_t i = 0; i < size; i++) {
+      if (names[i] != other.names[i])
+        return false;
+    }
+    return true;
+  }
+
+  NOP_MEMBERS(TestI, (names, size));
+};
+
 }  // anonymous namespace
 
 #if 0
@@ -927,6 +956,40 @@ TEST(Serializer, Members) {
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
+
+  {
+    TestH value{{1, 2, 3}, 3};
+
+    ASSERT_TRUE(serializer.Write(value));
+
+    expected =
+        Compose(EncodingByte::Structure, 1, EncodingByte::Binary, 3, 1, 2, 3);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    TestH2 value{{{1, 2, 3}}, 3};
+
+    ASSERT_TRUE(serializer.Write(value));
+
+    expected =
+        Compose(EncodingByte::Structure, 1, EncodingByte::Binary, 3, 1, 2, 3);
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    TestI value{{"abc", "xyzw"}, 2};
+
+    ASSERT_TRUE(serializer.Write(value));
+
+    expected = Compose(EncodingByte::Structure, 1, EncodingByte::Array, 2,
+                       EncodingByte::String, 3, "abc", EncodingByte::String, 4,
+                       "xyzw");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
 }
 
 TEST(Deserializer, Members) {
@@ -1016,6 +1079,40 @@ TEST(Deserializer, Members) {
     ASSERT_TRUE(deserializer.Read(&value));
 
     TestG expected{10, {20, "foo"}};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    TestH value{{0}, 0};
+
+    reader.Set(
+        Compose(EncodingByte::Structure, 1, EncodingByte::Binary, 3, 1, 2, 3));
+    ASSERT_TRUE(deserializer.Read(&value));
+
+    TestH expected{{1, 2, 3}, 3};
+    EXPECT_EQ(0, std::memcmp(&expected, &value, sizeof(TestH)));
+  }
+
+  {
+    TestH2 value{{{0}}, 0};
+
+    reader.Set(
+        Compose(EncodingByte::Structure, 1, EncodingByte::Binary, 3, 1, 2, 3));
+    ASSERT_TRUE(deserializer.Read(&value));
+
+    TestH2 expected{{{1, 2, 3}}, 3};
+    EXPECT_EQ(0, std::memcmp(&expected, &value, sizeof(TestH2)));
+  }
+
+  {
+    TestI value{{}, 0};
+
+    reader.Set(Compose(EncodingByte::Structure, 1, EncodingByte::Array, 2,
+                       EncodingByte::String, 3, "abc", EncodingByte::String, 4,
+                       "xyzw"));
+    ASSERT_TRUE(deserializer.Read(&value));
+
+    TestI expected{{"abc", "xyzw"}, 2};
     EXPECT_EQ(expected, value);
   }
 }

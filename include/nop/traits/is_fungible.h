@@ -9,7 +9,9 @@
 #include <utility>
 #include <vector>
 
+#include <nop/base/logical_buffer.h>
 #include <nop/base/members.h>
+#include <nop/base/table.h>
 #include <nop/base/utility.h>
 #include <nop/types/optional.h>
 #include <nop/types/result.h>
@@ -39,7 +41,8 @@ using EnableIfFungible =
 // fungible.
 template <typename ReturnA, typename ReturnB, typename... ArgsA,
           typename... ArgsB>
-struct IsFungible<ReturnA(ArgsA...), ReturnB(ArgsB...)>
+struct IsFungible<ReturnA(ArgsA...), ReturnB(ArgsB...),
+                  std::enable_if_t<sizeof...(ArgsA) == sizeof...(ArgsB)>>
     : And<IsFungible<std::decay_t<ReturnA>, std::decay_t<ReturnB>>,
           IsFungible<std::decay_t<ArgsA>, std::decay_t<ArgsB>>...> {};
 
@@ -158,6 +161,11 @@ template <typename A, typename B>
 struct IsFungible<Optional<A>, Optional<B>>
     : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
 
+// Compares Entry<A> and Entry<B> to see if A and B are fungible.
+template <typename A, typename B, std::uint64_t Id, typename Type>
+struct IsFungible<Entry<A, Id, Type>, Entry<B, Id, Type>>
+    : IsFungible<std::decay_t<A>, std::decay_t<B>> {};
+
 // Compares Variant<A...> and Variant<B...> to see if every member of A is
 // fungible with every corresponding member of B.
 template <typename... A, typename... B>
@@ -168,6 +176,19 @@ template <typename... A, typename... B>
 struct IsFungible<Variant<A...>, Variant<B...>,
                   std::enable_if_t<sizeof...(A) != sizeof...(B)>>
     : std::false_type {};
+
+// Compares two LogicalBuffers to see if they are fungible.
+template <typename A, typename B, typename SizeTypeA, typename SizeTypeB>
+struct IsFungible<LogicalBuffer<A, SizeTypeA>, LogicalBuffer<B, SizeTypeB>>
+    : IsFungible<A, B> {};
+
+// Compares a std::vector and a LogicalBuffer to see if they are fungible.
+template <typename A, typename B, typename AllocatorA, typename SizeTypeB>
+struct IsFungible<std::vector<A, AllocatorA>, LogicalBuffer<B, SizeTypeB>>
+    : IsFungible<std::vector<A, AllocatorA>, B> {};
+template <typename A, typename B, typename SizeTypeA, typename AllocatorB>
+struct IsFungible<LogicalBuffer<A, SizeTypeA>, std::vector<B, AllocatorB>>
+    : IsFungible<A, std::vector<B, AllocatorB>> {};
 
 // Compares MemberList<A...> and MemberList<B...> to see if every
 // MemberPointer::Type in A is fungible with every MemberPointer::Type in B.
@@ -186,6 +207,23 @@ struct IsFungible<
     A, B, std::enable_if_t<HasMemberList<A>::value && HasMemberList<B>::value>>
     : IsFungible<typename MemberListTraits<A>::MemberList,
                  typename MemberListTraits<B>::MemberList> {};
+
+template <typename Hash, typename... A, typename... B>
+struct IsFungible<EntryList<Hash, A...>, EntryList<Hash, B...>,
+                  std::enable_if_t<sizeof...(A) == sizeof...(B)>>
+    : And<IsFungible<typename A::Type, typename B::Type>...> {};
+template <typename HashA, typename HashB, typename... A, typename... B>
+struct IsFungible<EntryList<HashA, A...>, EntryList<HashB, B...>,
+                  std::enable_if_t<!std::is_same<HashA, HashB>::value ||
+                                   sizeof...(A) != sizeof...(B)>>
+    : std::false_type {};
+
+// Compares table types A and B to see if every member is fungible.
+template <typename A, typename B>
+struct IsFungible<
+    A, B, std::enable_if_t<HasEntryList<A>::value && HasEntryList<B>::value>>
+    : IsFungible<typename EntryListTraits<A>::EntryList,
+                 typename EntryListTraits<B>::EntryList> {};
 
 }  // namespace nop
 

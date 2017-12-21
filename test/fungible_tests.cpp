@@ -2,12 +2,15 @@
 
 #include <array>
 
+#include <nop/base/logical_buffer.h>
 #include <nop/traits/is_fungible.h>
 #include <nop/types/optional.h>
 #include <nop/types/result.h>
 #include <nop/types/variant.h>
 
+using nop::Entry;
 using nop::IsFungible;
+using nop::LogicalBuffer;
 using nop::Optional;
 using nop::Result;
 using nop::Variant;
@@ -483,6 +486,26 @@ TEST(FungibleTests, Signature) {
       (IsFungible<IntArray(IntArray), FloatVector(FloatVector)>::value));
 }
 
+TEST(FungibleTests, LogicalBuffer) {
+  using A = LogicalBuffer<int[10], std::size_t>;
+  using B = std::vector<int>;
+  using C = LogicalBuffer<float[10], std::size_t>;
+  using D = std::vector<float>;
+  using E = LogicalBuffer<std::array<int, 10>, std::size_t>;
+
+  EXPECT_TRUE((IsFungible<A, A>::value));
+  EXPECT_TRUE((IsFungible<A, B>::value));
+  EXPECT_TRUE((IsFungible<B, A>::value));
+  EXPECT_TRUE((IsFungible<B, B>::value));
+  EXPECT_TRUE((IsFungible<A, E>::value));
+  EXPECT_TRUE((IsFungible<E, A>::value));
+
+  EXPECT_FALSE((IsFungible<A, C>::value));
+  EXPECT_FALSE((IsFungible<C, A>::value));
+  EXPECT_FALSE((IsFungible<A, D>::value));
+  EXPECT_FALSE((IsFungible<D, A>::value));
+}
+
 namespace {
 
 enum class ErrorA {
@@ -562,7 +585,24 @@ struct UserDefinedE {
   NOP_MEMBERS(UserDefinedE, a, b, c);
 };
 
-} // anonymous namespace
+struct UserDefinedF1 {
+  std::vector<int> a;
+  NOP_MEMBERS(UserDefinedF1, a);
+};
+
+struct UserDefinedF2 {
+  int a[10];
+  int b;
+  NOP_MEMBERS(UserDefinedF2, (a, b));
+};
+
+struct UserDefinedF3 {
+  std::array<int, 10> a;
+  int b;
+  NOP_MEMBERS(UserDefinedF3, (a, b));
+};
+
+}  // anonymous namespace
 
 TEST(FungibleTests, UserDefined) {
   EXPECT_TRUE((IsFungible<UserDefinedA, UserDefinedA>::value));
@@ -574,6 +614,15 @@ TEST(FungibleTests, UserDefined) {
   EXPECT_TRUE((IsFungible<UserDefinedB1, UserDefinedB2>::value));
   EXPECT_TRUE((IsFungible<UserDefinedB2, UserDefinedB1>::value));
   EXPECT_TRUE((IsFungible<UserDefinedB2, UserDefinedB2>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF1, UserDefinedF1>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF1, UserDefinedF2>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF1, UserDefinedF3>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF2, UserDefinedF1>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF2, UserDefinedF2>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF2, UserDefinedF3>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF3, UserDefinedF1>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF3, UserDefinedF2>::value));
+  EXPECT_TRUE((IsFungible<UserDefinedF3, UserDefinedF3>::value));
 
   EXPECT_FALSE((IsFungible<UserDefinedA, UserDefinedC>::value));
   EXPECT_FALSE((IsFungible<UserDefinedA, UserDefinedD>::value));
@@ -581,4 +630,136 @@ TEST(FungibleTests, UserDefined) {
   EXPECT_FALSE((IsFungible<UserDefinedC, UserDefinedA>::value));
   EXPECT_FALSE((IsFungible<UserDefinedD, UserDefinedA>::value));
   EXPECT_FALSE((IsFungible<UserDefinedE, UserDefinedA>::value));
+}
+
+TEST(FungibleTests, Entry) {
+  using A0 = Entry<int, 0>;
+  using A1 = Entry<int, 1>;
+  using B0 = Entry<float, 0>;
+  using B1 = Entry<float, 1>;
+  using C0 = Entry<std::vector<int>, 0>;
+  using C1 = Entry<std::vector<int>, 1>;
+  using D0 = Entry<std::array<int, 2>, 0>;
+  using D1 = Entry<std::array<int, 2>, 1>;
+
+  EXPECT_TRUE((IsFungible<A0, A0>::value));
+  EXPECT_FALSE((IsFungible<A0, A1>::value));
+  EXPECT_FALSE((IsFungible<A0, B0>::value));
+  EXPECT_FALSE((IsFungible<A0, B1>::value));
+  EXPECT_FALSE((IsFungible<A0, C0>::value));
+  EXPECT_FALSE((IsFungible<A0, C1>::value));
+  EXPECT_FALSE((IsFungible<A0, D0>::value));
+  EXPECT_FALSE((IsFungible<A0, D1>::value));
+
+  EXPECT_FALSE((IsFungible<A1, A0>::value));
+  EXPECT_TRUE((IsFungible<A1, A1>::value));
+  EXPECT_FALSE((IsFungible<A1, B0>::value));
+  EXPECT_FALSE((IsFungible<A1, B1>::value));
+  EXPECT_FALSE((IsFungible<A1, C0>::value));
+  EXPECT_FALSE((IsFungible<A1, C1>::value));
+  EXPECT_FALSE((IsFungible<A1, D0>::value));
+  EXPECT_FALSE((IsFungible<A1, D1>::value));
+
+  EXPECT_FALSE((IsFungible<B0, A0>::value));
+  EXPECT_FALSE((IsFungible<B0, A1>::value));
+  EXPECT_TRUE((IsFungible<B0, B0>::value));
+  EXPECT_FALSE((IsFungible<B0, B1>::value));
+  EXPECT_FALSE((IsFungible<B0, C0>::value));
+  EXPECT_FALSE((IsFungible<B0, C1>::value));
+  EXPECT_FALSE((IsFungible<B0, D0>::value));
+  EXPECT_FALSE((IsFungible<B0, D1>::value));
+
+  EXPECT_FALSE((IsFungible<B1, A0>::value));
+  EXPECT_FALSE((IsFungible<B1, A1>::value));
+  EXPECT_FALSE((IsFungible<B1, B0>::value));
+  EXPECT_TRUE((IsFungible<B1, B1>::value));
+  EXPECT_FALSE((IsFungible<B1, C0>::value));
+  EXPECT_FALSE((IsFungible<B1, C1>::value));
+  EXPECT_FALSE((IsFungible<B1, D0>::value));
+  EXPECT_FALSE((IsFungible<B1, D1>::value));
+
+  EXPECT_FALSE((IsFungible<C0, A0>::value));
+  EXPECT_FALSE((IsFungible<C0, A1>::value));
+  EXPECT_FALSE((IsFungible<C0, B0>::value));
+  EXPECT_FALSE((IsFungible<C0, B1>::value));
+  EXPECT_TRUE((IsFungible<C0, C0>::value));
+  EXPECT_FALSE((IsFungible<C0, C1>::value));
+  EXPECT_TRUE((IsFungible<C0, D0>::value));
+  EXPECT_FALSE((IsFungible<C0, D1>::value));
+
+  EXPECT_FALSE((IsFungible<C1, A0>::value));
+  EXPECT_FALSE((IsFungible<C1, A1>::value));
+  EXPECT_FALSE((IsFungible<C1, B0>::value));
+  EXPECT_FALSE((IsFungible<C1, B1>::value));
+  EXPECT_FALSE((IsFungible<C1, C0>::value));
+  EXPECT_TRUE((IsFungible<C1, C1>::value));
+  EXPECT_FALSE((IsFungible<C1, D0>::value));
+  EXPECT_TRUE((IsFungible<C1, D1>::value));
+
+  EXPECT_FALSE((IsFungible<D0, A0>::value));
+  EXPECT_FALSE((IsFungible<D0, A1>::value));
+  EXPECT_FALSE((IsFungible<D0, B0>::value));
+  EXPECT_FALSE((IsFungible<D0, B1>::value));
+  EXPECT_TRUE((IsFungible<D0, C0>::value));
+  EXPECT_FALSE((IsFungible<D0, C1>::value));
+  EXPECT_TRUE((IsFungible<D0, D0>::value));
+  EXPECT_FALSE((IsFungible<D0, D1>::value));
+
+  EXPECT_FALSE((IsFungible<D1, A0>::value));
+  EXPECT_FALSE((IsFungible<D1, A1>::value));
+  EXPECT_FALSE((IsFungible<D1, B0>::value));
+  EXPECT_FALSE((IsFungible<D1, B1>::value));
+  EXPECT_FALSE((IsFungible<D1, C0>::value));
+  EXPECT_TRUE((IsFungible<D1, C1>::value));
+  EXPECT_FALSE((IsFungible<D1, D0>::value));
+  EXPECT_TRUE((IsFungible<D1, D1>::value));
+}
+
+namespace {
+
+struct TableA0 {
+  Entry<int, 0> a;
+  Entry<std::vector<int>, 1> b;
+  NOP_TABLE("TableA", TableA0, a, b);
+};
+
+struct TableA1 {
+  Entry<int, 0> a;
+  Entry<std::array<int, 10>, 1> b;
+  NOP_TABLE("TableA", TableA1, a, b);
+};
+
+struct TableA2 {
+  Entry<int, 0> a;
+  Entry<std::vector<int>, 1> b;
+  NOP_TABLE("DifferentLabel", TableA2, a, b);
+};
+
+struct TableA3 {
+  Entry<int, 0> a;
+  Entry<std::array<int, 10>, 1> b;
+  Entry<float, 2> c;
+  NOP_TABLE("TableA", TableA3, a, b, c);
+};
+
+}  // anonymous namespace
+
+TEST(FungibleTests, Table) {
+  EXPECT_TRUE((IsFungible<TableA0, TableA0>::value));
+  EXPECT_TRUE((IsFungible<TableA0, TableA1>::value));
+  EXPECT_TRUE((IsFungible<TableA1, TableA0>::value));
+  EXPECT_TRUE((IsFungible<TableA1, TableA1>::value));
+  EXPECT_TRUE((IsFungible<TableA2, TableA2>::value));
+  EXPECT_TRUE((IsFungible<TableA3, TableA3>::value));
+
+  EXPECT_FALSE((IsFungible<TableA0, TableA2>::value));
+  EXPECT_FALSE((IsFungible<TableA0, TableA3>::value));
+  EXPECT_FALSE((IsFungible<TableA1, TableA2>::value));
+  EXPECT_FALSE((IsFungible<TableA1, TableA3>::value));
+  EXPECT_FALSE((IsFungible<TableA2, TableA0>::value));
+  EXPECT_FALSE((IsFungible<TableA2, TableA1>::value));
+  EXPECT_FALSE((IsFungible<TableA2, TableA3>::value));
+  EXPECT_FALSE((IsFungible<TableA3, TableA0>::value));
+  EXPECT_FALSE((IsFungible<TableA3, TableA1>::value));
+  EXPECT_FALSE((IsFungible<TableA3, TableA2>::value));
 }

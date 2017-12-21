@@ -5,13 +5,15 @@
 #include <type_traits>
 
 #include <nop/base/encoding.h>
+#include <nop/base/logical_buffer.h>
 #include <nop/base/macros.h>
 #include <nop/base/utility.h>
 
 namespace nop {
 
 // Captures the type and value of a pointer to member.
-template <typename T, T>
+template <typename T, T, typename U = void*, U = nullptr,
+          typename Enable = void>
 struct MemberPointer;
 
 template <typename T, typename Class, T Class::*Pointer>
@@ -27,6 +29,54 @@ struct MemberPointer<T Class::*, Pointer> {
   static Type* Resolve(Class* instance) { return &(instance->*Pointer); }
   static const Type& Resolve(const Class& instance) {
     return (instance.*Pointer);
+  }
+
+  static std::size_t Size(const Class& instance) {
+    return Encoding<T>::Size(Resolve(instance));
+  }
+
+  template <typename Writer>
+  static Status<void> Write(const Class& instance, Writer* writer) {
+    return Encoding<T>::Write(Resolve(instance), writer);
+  }
+
+  template <typename Reader>
+  static Status<void> Read(Class* instance, Reader* reader) {
+    return Encoding<T>::Read(Resolve(instance), reader);
+  }
+};
+
+// Member pointer type for logical buffers formed by an array and size member
+// pair.
+template <typename Class, typename First, typename Second,
+          First Class::*FirstPointer, Second Class::*SecondPointer>
+struct MemberPointer<First Class::*, FirstPointer, Second Class::*,
+                     SecondPointer, EnableIfLogicalBufferPair<First, Second>> {
+  using Type = LogicalBuffer<First, Second>;
+  using ConstType = LogicalBuffer<const First, const Second>;
+
+  static ConstType Resolve(const Class& instance) {
+    return {instance.*FirstPointer, instance.*SecondPointer};
+  }
+
+  static Type Resolve(Class* instance) {
+    return {instance->*FirstPointer, instance->*SecondPointer};
+  }
+
+  static std::size_t Size(const Class& instance) {
+    return Resolve(instance).size();
+  }
+
+  template <typename Writer>
+  static Status<void> Write(const Class& instance, Writer* writer) {
+    ConstType pair = Resolve(instance);
+    return Encoding<ConstType>::Write(pair, writer);
+  }
+
+  template <typename Reader>
+  static Status<void> Read(Class* instance, Reader* reader) {
+    Type pair = Resolve(instance);
+    return Encoding<Type>::Read(&pair, reader);
   }
 };
 
@@ -137,13 +187,34 @@ struct MemberListTraits<T, EnableIfHasExternalMemberList<T>> {
   using MemberList = typename ExternalMemberTraits<T>::MemberList;
 };
 
-// Utility macro to define a MemberPointer type from a type and member name.
-#define NOP_MEMBER_POINTER(type, member) \
-  ::nop::MemberPointer<decltype(&type::member), &type::member>
+// Generates a pair of template arguments (member pointer type and value) to be
+// passed to MemberPointer<MemberPointerType, MemberPointerValue, ...> from the
+// given type name and member name.
+#define _NOP_MEMBER_POINTER(type, member) decltype(&type::member), &type::member
+
+// Generates a MemberPointer type definition, given a type name and a variable
+// number of member names. The first member name is handled here, while the
+// remaining member names are passed to _NOP_MEMBER_POINTER_NEXT for recursive
+// expansion.
+#define _NOP_MEMBER_POINTER_FIRST(type, ...)                                  \
+  ::nop::MemberPointer<_NOP_MEMBER_POINTER(type, _NOP_FIRST_ARG(__VA_ARGS__)) \
+                           _NOP_MEMBER_POINTER_NEXT(                          \
+                               type, _NOP_REST_ARG(__VA_ARGS__))>
+
+// Recursively handles the remaining member names in the template argument list
+// for MemberPointer.
+#define _NOP_MEMBER_POINTER_NEXT(type, ...)                 \
+  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__))                  \
+  (, _NOP_MEMBER_POINTER(type, _NOP_FIRST_ARG(__VA_ARGS__)) \
+         _NOP_DEFER2(__NOP_MEMBER_POINTER_NEXT)()(          \
+             type, _NOP_REST_ARG(__VA_ARGS__)))(/*done*/)
+
+// Indirection to enable recursive macro expansion of _NOP_MEMBER_POINTER_NEXT.
+#define __NOP_MEMBER_POINTER_NEXT() _NOP_MEMBER_POINTER_NEXT
 
 // Defines a list of MemberPointer types given a type and list of member names.
-#define NOP_MEMBER_LIST(type, ... /*members*/) \
-  NOP_FOR_EACH_BINARY_LIST(NOP_MEMBER_POINTER, type, __VA_ARGS__)
+#define NOP_MEMBER_LIST(type, ...) \
+  NOP_MAP_ARGS(_NOP_MEMBER_POINTER_FIRST, (type), __VA_ARGS__)
 
 // Defines the set of members belonging to a type that should be
 // serialized/deserialized. This macro should be called once within the
@@ -191,7 +262,7 @@ struct MemberListTraits<T, EnableIfHasExternalMemberList<T>> {
 // | STC | INT64:N | N MEMBERS |
 // +-----+---------+-----//----+
 //
-// Members are expected to be valid encodings of their member type.
+// Members must be valid encodings of their member type.
 //
 
 template <typename T>
@@ -222,7 +293,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte prefix, T* value,
                                   Reader* reader) {
-    std::uint64_t size;
+    std::uint64_t size = 0;
     auto status = Encoding<std::uint64_t>::Read(&size, reader);
     if (!status)
       return status;
@@ -243,10 +314,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
 
   template <std::size_t index>
   static constexpr std::size_t Size(const T& value, Index<index>) {
-    using Pointer = PointerAt<index - 1>;
-    using Type = typename Pointer::Type;
-    return Size(value, Index<index - 1>{}) +
-           Encoding<Type>::Size(Pointer::Resolve(value));
+    return Size(value, Index<index - 1>{}) + PointerAt<index - 1>::Size(value);
   }
 
   template <typename Writer>
@@ -261,10 +329,8 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
     auto status = WriteMembers(value, writer, Index<index - 1>{});
     if (!status)
       return status;
-
-    using Pointer = PointerAt<index - 1>;
-    using Type = typename Pointer::Type;
-    return Encoding<Type>::Write(Pointer::Resolve(value), writer);
+    else
+      return PointerAt<index - 1>::Write(value, writer);
   }
 
   template <typename Reader>
@@ -277,10 +343,8 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
     auto status = ReadMembers(value, reader, Index<index - 1>{});
     if (!status)
       return status;
-
-    using Pointer = PointerAt<index - 1>;
-    using Type = typename Pointer::Type;
-    return Encoding<Type>::Read(Pointer::Resolve(value), reader);
+    else
+      return PointerAt<index - 1>::Read(value, reader);
   }
 };
 
