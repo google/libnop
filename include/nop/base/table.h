@@ -51,7 +51,7 @@ namespace nop {
 //
 // Table entries may be public, private, or protected, depending on how the
 // table type will be used. If the entries are non-public, call NOP_TABLE() in a
-// private section to avoid leaking member pointers to arbitrary code.
+// private section to avoid exposing member pointers to arbitrary code.
 //
 // Use the following rules to maximize compatability between different versions
 // of a table type:
@@ -110,6 +110,10 @@ struct EntryList : MemberList<MemberPointers...> {
   enum : std::uint64_t { Hash = HashValue::Value };
 };
 
+// Work around access check bug in GCC. Keeping original code here to document
+// the desired behavior. Bug filed with GCC:
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82478
+#if 0
 // Determines whether the given type T has a nested type named NOP__ENTRIES that
 // is a subtype of EntryList. This type evaluates to std::true_type for a
 // properly defined table type, std::false_type otherwise.
@@ -120,8 +124,27 @@ struct HasEntryList<T, Void<typename T::NOP__ENTRIES>>
     : std::integral_constant<
           bool, IsTemplateBaseOf<EntryList, typename T::NOP__ENTRIES>::value> {
 };
+#else
+// Determines whether the given type T has a nested type named NOP__ENTRIES that
+// is a subtype of EntryList.
+template <typename T, typename = void>
+struct HasEntryList {
+ private:
+  template <typename U>
+  static constexpr bool Test(const typename U::NOP__ENTRIES*) {
+    return IsTemplateBaseOf<EntryList, typename U::NOP__ENTRIES>::value;
+  }
+  template <typename U>
+  static constexpr bool Test(...) {
+    return false;
+  }
 
-// Enable if HasEntryType<T> evaluates to std::true_type.
+ public:
+  enum : bool { value = Test<T>(0) };
+};
+#endif
+
+// Enable if HasEntryType<T> evaluates to true.
 template <typename T>
 using EnableIfHasEntryList =
     typename std::enable_if<HasEntryList<T>::value>::type;
