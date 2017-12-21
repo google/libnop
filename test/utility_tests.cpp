@@ -12,6 +12,7 @@ using nop::EnableIfNotHasMemberList;
 using nop::HasExternalMemberList;
 using nop::HasMemberList;
 using nop::IsIntegral;
+using nop::IsSame;
 using nop::IsUnique;
 
 namespace {
@@ -115,4 +116,16 @@ TEST(Utility, IsUnique) {
   EXPECT_FALSE((IsUnique<SameUnderlyingType, int, const int>::value));
   EXPECT_FALSE((IsUnique<SameUnderlyingType, int, float, const float>::value));
   EXPECT_FALSE((IsUnique<SameUnderlyingType, int, volatile int>::value));
+}
+
+TEST(Utility, IsSame) {
+  EXPECT_TRUE((IsSame<std::is_same>::value));
+  EXPECT_TRUE((IsSame<std::is_same, int>::value));
+  EXPECT_TRUE((IsSame<std::is_same, int, int>::value));
+  EXPECT_TRUE((IsSame<std::is_same, int, int, int>::value));
+
+  EXPECT_FALSE((IsSame<std::is_same, int, float>::value));
+  EXPECT_FALSE((IsSame<std::is_same, float, int, int>::value));
+  EXPECT_FALSE((IsSame<std::is_same, int, float, int>::value));
+  EXPECT_FALSE((IsSame<std::is_same, int, int, float>::value));
 }

@@ -62,6 +62,40 @@ using EnableIfConvertible =
 template <typename... Ts>
 using Void = void;
 
+// Utility type to retrieve the first type in a parameter pack.
+template <typename...>
+struct FirstType {};
+template <typename First, typename... Rest>
+struct FirstType<First, Rest...> {
+  using Type = First;
+};
+template <typename... Ts>
+using First = typename FirstType<Ts...>::Type;
+
+// Determines the value type and extent of C/C++ array types.
+template <typename T>
+struct ArrayTraits {
+  static_assert(sizeof(T) != sizeof(T), "Unsupported array type.");
+};
+template <typename T, std::size_t Length_>
+struct ArrayTraits<T[Length_]> {
+  enum : std::size_t { Length = Length_ };
+  using ElementType = T;
+  using Type = T[Length];
+};
+template <typename T, std::size_t Length_>
+struct ArrayTraits<std::array<T, Length_>> {
+  enum : std::size_t { Length = Length_ };
+  using ElementType = T;
+  using Type = std::array<T, Length>;
+};
+template <typename T, std::size_t Length_>
+struct ArrayTraits<const std::array<T, Length_>> {
+  enum : std::size_t { Length = Length_ };
+  using ElementType = T;
+  using Type = const std::array<T, Length>;
+};
+
 // Utility to deduce the template type from a derived type.
 template <template <typename...> class TT, typename... Ts>
 std::true_type DeduceTemplateType(const TT<Ts...>*);
@@ -117,6 +151,24 @@ template <template <typename, typename> class Same, typename First,
 struct IsUnique<Same, First, Second, Rest...>
     : And<IsUnique<Same, First, Second>, IsUnique<Same, First, Rest...>,
           IsUnique<Same, Second, Rest...>> {};
+
+// Utility to determine whether all types in a set compare the same using the
+// given comparison.
+//
+// An example using integer types and std::is_same for comparison:
+//
+//  static_assert(IsSame<std::is_same, int, short, int>::value,
+//                "Types in set are not the same!");
+//
+template <template <typename, typename> class, typename...>
+struct IsSame;
+template <template <typename, typename> class Same>
+struct IsSame<Same> : std::true_type {};
+template <template <typename, typename> class Same, typename T>
+struct IsSame<Same, T> : std::true_type {};
+template <template <typename, typename> class Same, typename First,
+          typename... Rest>
+struct IsSame<Same, First, Rest...> : And<Same<First, Rest>...> {};
 
 }  // namespace nop
 
