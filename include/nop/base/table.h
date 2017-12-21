@@ -202,13 +202,13 @@ enum : std::uint64_t {
 //
 // Table encoding format:
 //
-// +-----+---------+-----------+
-// | TAB | INT64:N | N ENTRIES |
-// +-----+---------+-----------+
+// +-----+------------+---------+-----------+
+// | TAB | INT64:HASH | INT64:N | N ENTRIES |
+// +-----+------------+---------+-----------+
 //
-// Where N is the number of non-empty, active entries in the table. Older code
-// may encounter unknown entry ids when reading data from newer table
-// definitions.
+// Where HASH is derived from the table label and N is the number of non-empty,
+// active entries in the table. Older code may encounter unknown entry ids when
+// reading data from newer table definitions.
 //
 
 template <typename Table>
