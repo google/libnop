@@ -14,11 +14,11 @@ namespace nop {
 // Function type traits type that captures and compares function signature
 // types.
 //
-// Function traits used by the serialization engine to store and manipulate
+// Function traits are used by the serialization engine to store and manipulate
 // function signature types and other traits.
 //
 
-template <typename T>
+template <typename T, typename Enabled = void>
 struct FunctionTraits;
 
 template <typename Return_, typename... Args_>
@@ -67,7 +67,89 @@ struct FunctionTraits<Return_(Args_...)> {
   template <typename T, typename ReturnType = void>
   using EnableIfCompatible =
       typename std::enable_if<IsCompatible<T>::value, ReturnType>::type;
+
+ private:
+  // Skips the first N arguments in the signature type Original and defines a
+  // new member type Type with the same return value and remaining arguments.
+  template <std::size_t N, typename Original, typename Enabled = void>
+  struct SkipArgs;
+
+  // Terminating case. Defines a member Type with the new signature type.
+  template <typename Return, typename... Args>
+  struct SkipArgs<0, Return(Args...)> {
+    using Type = Identity<Return(Args...)>;
+  };
+
+  // Recursively skips the first argument until N = 0.
+  template <std::size_t N, typename Return, typename First, typename... Rest>
+  struct SkipArgs<N, Return(First, Rest...), std::enable_if_t<(N > 0)>>
+      : SkipArgs<N - 1, Return(Rest...)> {};
+
+  template <typename A, typename B>
+  using IsConformingType = Or<IsFungible<A, B>, std::is_constructible<A, B>>;
+
+  template <typename A, typename B>
+  using ConformType = std::conditional_t<
+      std::is_constructible<A, B>::value || !IsFungible<A, B>::value, A, B>;
+
+  template <typename T, typename Enable = void>
+  struct ConformSignature;
+
+  template <typename OtherReturn, typename... OtherArgs>
+  struct ConformSignature<OtherReturn(OtherArgs...),
+                          std::enable_if_t<Arity == sizeof...(OtherArgs)>> {
+    using Type = Identity<OtherReturn(ConformType<Args_, OtherArgs>...)>;
+  };
+
+ public:
+  // Returns the signature after trimming the first N leading arguments.
+  template <std::size_t N>
+  using TrimLeadingArgs = typename SkipArgs<N, Signature>::Type;
+
+  // Nested trait to determine whether the given signature is conforming to the
+  // signature of this trait. A conforming signature has types that are either
+  // fungible with the types in this signature or can be used to construct types
+  // in this signature.
+  template <typename T, typename Enable = void>
+  struct IsConforming;
+
+  template <typename OtherReturn, typename... OtherArgs>
+  struct IsConforming<OtherReturn(OtherArgs...),
+                      std::enable_if_t<Arity == sizeof...(OtherArgs)>>
+      : And<IsFungible<Return, OtherReturn>,
+            IsConformingType<Args_, OtherArgs>...> {};
+
+  // Enable if T is conforming to the signature of this function trait.
+  template <typename T, typename ReturnType = void>
+  using EnableIfConforming =
+      typename std::enable_if<IsConforming<T>::value, ReturnType>::type;
+
+  template <typename OtherSignature>
+  using ConformingSignature = typename ConformSignature<OtherSignature>::Type;
 };
+
+// Specialization for function pointer types.
+template <typename Return, typename... Args>
+struct FunctionTraits<Return (*)(Args...)> : FunctionTraits<Return(Args...)> {};
+
+// Specialization for function reference types.
+template <typename Return, typename... Args>
+struct FunctionTraits<Return (&)(Args...)> : FunctionTraits<Return(Args...)> {};
+
+// Specilization for method pointer types.
+template <typename Class, typename Return, typename... Args>
+struct FunctionTraits<Return (Class::*)(Args...)>
+    : FunctionTraits<Return(Args...)> {};
+
+// Specialization for const method pointer types.
+template <typename Class, typename Return, typename... Args>
+struct FunctionTraits<Return (Class::*)(Args...) const>
+    : FunctionTraits<Return(Args...)> {};
+
+// Specialization for functor types.
+template <typename Op>
+struct FunctionTraits<Op, Void<decltype(&Op::operator())>>
+    : FunctionTraits<decltype(&Op::operator())> {};
 
 }  // namespace nop
 

@@ -12,6 +12,8 @@
 #include <vector>
 
 #include <nop/rpc/interface.h>
+#include <nop/rpc/simple_method_receiver.h>
+#include <nop/rpc/simple_method_sender.h>
 #include <nop/serializer.h>
 #include <nop/types/result.h>
 #include <nop/types/variant.h>
@@ -25,8 +27,11 @@ using nop::Deserializer;
 using nop::ErrorStatus;
 using nop::Interface;
 using nop::InterfaceBindings;
-using nop::Result;
+using nop::InterfaceDispatcher;
+using nop::MakeSimpleMethodReceiver;
+using nop::MakeSimpleMethodSender;
 using nop::Serializer;
+using nop::SimpleMethodReceiver;
 using nop::Status;
 using nop::StreamReader;
 using nop::StreamWriter;
@@ -155,7 +160,7 @@ using CustomerId = std::uint64_t;
 
 // Enumeration of error values to return from methods.
 enum class CustomerError {
-  // Required by Result<>.
+  // Required by nop::Result<>.
   None,
 
   // Application errors.
@@ -166,11 +171,13 @@ enum class CustomerError {
   IoError,
 };
 
+// Defines a local result type that either stores type T or CustomerError.
 template <typename T>
-struct Return : public Result<CustomerError, T> {
-  using Base = Result<CustomerError, T>;
+struct Result : public nop::Result<CustomerError, T> {
+  using Base = nop::Result<CustomerError, T>;
   using Base::Base;
 
+  // Returns a string representation of the error.
   std::string GetErrorMessage() const {
     switch (this->error()) {
       case CustomerError::None:
@@ -191,10 +198,10 @@ struct Return : public Result<CustomerError, T> {
 struct CustomerInterface : public Interface<CustomerInterface> {
   NOP_INTERFACE("io.github.eieio.examples.interface.Customer");
 
-  NOP_METHOD(Add, Return<CustomerId>(const Customer&));
+  NOP_METHOD(Add, Result<CustomerId>(const Customer&));
   NOP_METHOD(Remove, CustomerError(CustomerId));
   NOP_METHOD(Update, CustomerError(CustomerId, const Customer&));
-  NOP_METHOD(Get, Return<Customer>(CustomerId));
+  NOP_METHOD(Get, Result<Customer>(CustomerId));
 
   NOP_API(Add, Remove, Update, Get);
 };
@@ -203,25 +210,29 @@ struct CustomerInterface : public Interface<CustomerInterface> {
 // and writer types to support pipe communication.
 using Reader = StreamReader<FdInputStream>;
 using Writer = StreamWriter<FdOutputStream>;
+using Receiver = SimpleMethodReceiver<Serializer<std::unique_ptr<Writer>>,
+                                      Deserializer<std::unique_ptr<Reader>>>;
 
 class CustomerService {
  public:
   CustomerService(std::unique_ptr<Reader> reader,
                   std::unique_ptr<Writer> writer)
-      : serializer_{std::move(writer)}, deserializer_{std::move(reader)} {}
+      : serializer_{std::move(writer)}, deserializer_{std::move(reader)} {
+    // Build a dispatch table with the handlers for each method.
+    callback_ = BindInterface<CustomerService*>(
+        CustomerInterface::Add::Bind(&CustomerService::OnAdd),
+        CustomerInterface::Remove::Bind(&CustomerService::OnRemove),
+        CustomerInterface::Update::Bind(&CustomerService::OnUpdate),
+        CustomerInterface::Get::Bind(&CustomerService::OnGet));
+  }
 
   ~CustomerService() { Quit(); }
 
   void HandleMessages() {
-    // Build a dispatch table with the handlers for each method.
-    auto dispatch = BindInterface(
-        CustomerInterface::Add::Bind(this, &CustomerService::OnAdd),
-        CustomerInterface::Remove::Bind(this, &CustomerService::OnRemove),
-        CustomerInterface::Update::Bind(this, &CustomerService::OnUpdate),
-        CustomerInterface::Get::Bind(this, &CustomerService::OnGet));
+    auto receiver = MakeSimpleMethodReceiver(&serializer_, &deserializer_);
 
     while (!quit_) {
-      auto status = dispatch.Dispatch(&deserializer_, &serializer_);
+      auto status = callback_(&receiver, this);
       if (!status && !quit_) {
         std::cerr << "Failed to handle message: " << status.GetErrorMessage()
                   << std::endl;
@@ -232,7 +243,7 @@ class CustomerService {
   void Quit() { quit_ = true; }
 
  private:
-  Return<CustomerId> OnAdd(const Customer& customer) {
+  Result<CustomerId> OnAdd(const Customer& customer) {
     for (const auto& search : customers_) {
       if (search.second == customer)
         return CustomerError::CustomerExists;
@@ -262,7 +273,7 @@ class CustomerService {
     return CustomerError::None;
   }
 
-  Return<Customer> OnGet(CustomerId customer_id) {
+  Result<Customer> OnGet(CustomerId customer_id) {
     auto search = customers_.find(customer_id);
     if (search == customers_.end())
       return CustomerError::InvalidCustomerId;
@@ -272,7 +283,7 @@ class CustomerService {
 
   Serializer<std::unique_ptr<Writer>> serializer_;
   Deserializer<std::unique_ptr<Reader>> deserializer_;
-
+  InterfaceDispatcher<Receiver, CustomerService*> callback_;
   std::unordered_map<CustomerId, Customer> customers_;
   CustomerId customer_id_counter_{0};
   std::atomic<bool> quit_{false};
@@ -286,18 +297,18 @@ class CustomerClient {
   CustomerClient(std::unique_ptr<Reader> reader, std::unique_ptr<Writer> writer)
       : serializer_{std::move(writer)}, deserializer_{std::move(reader)} {}
 
-  Return<CustomerId> Add(const Customer& customer) {
-    auto status = CustomerInterface::Add::InvokeAndReturn(
-        &serializer_, &deserializer_, customer);
+  Result<CustomerId> Add(const Customer& customer) {
+    auto sender = MakeSimpleMethodSender(&serializer_, &deserializer_);
+    auto status = CustomerInterface::Add::Invoke(&sender, customer);
     if (!status)
       return CustomerError::IoError;
 
     return status.take();
   }
 
-  Return<Customer> Get(CustomerId customer_id) {
-    auto status = CustomerInterface::Get::InvokeAndReturn(
-        &serializer_, &deserializer_, customer_id);
+  Result<Customer> Get(CustomerId customer_id) {
+    auto sender = MakeSimpleMethodSender(&serializer_, &deserializer_);
+    auto status = CustomerInterface::Get::Invoke(&sender, customer_id);
     if (!status)
       return CustomerError::IoError;
 
