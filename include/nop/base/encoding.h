@@ -850,15 +850,107 @@ struct Encoding<double> : EncodingIO<double> {
 //
 
 template <typename T>
-struct Encoding<T, typename std::enable_if<
-                       std::is_same<T, std::size_t>::value &&
-                       sizeof(std::size_t) == sizeof(std::uint64_t)>::type>
-    : Encoding<std::uint64_t> {};
+struct Encoding<T,
+                std::enable_if_t<std::is_same<T, std::size_t>::value &&
+                                 sizeof(std::size_t) == sizeof(std::uint64_t)>>
+    : EncodingIO<std::size_t> {
+  static constexpr EncodingByte Prefix(std::size_t value) {
+    return Encoding<std::uint64_t>::Prefix(value);
+  }
+
+  static constexpr std::size_t Size(std::size_t value) {
+    return BaseEncodingSize(Prefix(value));
+  }
+
+  static constexpr bool Match(EncodingByte prefix) {
+    return Encoding<std::uint64_t>::Match(prefix);
+  }
+
+  template <typename Writer>
+  static Status<void> WritePayload(EncodingByte prefix, std::size_t value,
+                                   Writer* writer) {
+    if (prefix == EncodingByte::U8)
+      return Write<std::uint8_t>(value, writer);
+    else if (prefix == EncodingByte::U16)
+      return Write<std::uint16_t>(value, writer);
+    else if (prefix == EncodingByte::U32)
+      return Write<std::uint32_t>(value, writer);
+    else if (prefix == EncodingByte::U64)
+      return Write<std::uint64_t>(value, writer);
+    else
+      return {};
+  }
+
+  template <typename Reader>
+  static Status<void> ReadPayload(EncodingByte prefix, std::size_t* value,
+                                  Reader* reader) {
+    if (prefix == EncodingByte::U8) {
+      return Read<std::uint8_t>(value, reader);
+    } else if (prefix == EncodingByte::U16) {
+      return Read<std::uint16_t>(value, reader);
+    } else if (prefix == EncodingByte::U32) {
+      return Read<std::uint32_t>(value, reader);
+    } else if (prefix == EncodingByte::U64) {
+      return Read<std::uint64_t>(value, reader);
+    } else {
+      *value = static_cast<std::uint8_t>(prefix);
+      return {};
+    }
+  }
+};
+
 template <typename T>
-struct Encoding<T, typename std::enable_if<
-                       std::is_same<T, std::size_t>::value &&
-                       sizeof(std::size_t) == sizeof(std::uint32_t)>::type>
-    : Encoding<std::uint32_t> {};
+struct Encoding<T,
+                std::enable_if_t<std::is_same<T, std::size_t>::value &&
+                                 sizeof(std::size_t) == sizeof(std::uint32_t)>>
+    : EncodingIO<std::size_t> {
+  static constexpr EncodingByte Prefix(std::size_t value) {
+    return Encoding<std::uint32_t>::Prefix(value);
+  }
+
+  static constexpr std::size_t Size(std::size_t value) {
+    return BaseEncodingSize(Prefix(value));
+  }
+
+  static constexpr bool Match(EncodingByte prefix) {
+    return Encoding<std::uint32_t>::Match(prefix);
+  }
+
+  template <typename Writer>
+  static Status<void> WritePayload(EncodingByte prefix, std::size_t value,
+                                   Writer* writer) {
+    if (prefix == EncodingByte::U8)
+      return Write<std::uint8_t>(value, writer);
+    else if (prefix == EncodingByte::U16)
+      return Write<std::uint16_t>(value, writer);
+    else if (prefix == EncodingByte::U32)
+      return Write<std::uint32_t>(value, writer);
+    else
+      return {};
+  }
+
+  template <typename Reader>
+  static Status<void> ReadPayload(EncodingByte prefix, std::size_t* value,
+                                  Reader* reader) {
+    if (prefix == EncodingByte::U8) {
+      return Read<std::uint8_t>(value, reader);
+    } else if (prefix == EncodingByte::U16) {
+      return Read<std::uint16_t>(value, reader);
+    } else if (prefix == EncodingByte::U32) {
+      return Read<std::uint32_t>(value, reader);
+    } else {
+      *value = static_cast<std::uint8_t>(prefix);
+      return {};
+    }
+  }
+};
+
+// Work around GCC bug that somtimes fails to match Endoding<int> to
+// Encoding<std::int32_t>.
+template <typename T>
+struct Encoding<T, std::enable_if_t<std::is_same<T, int>::value &&
+                                    sizeof(int) == sizeof(std::int32_t)>>
+    : Encoding<std::int32_t> {};
 
 }  // namespace nop
 
