@@ -58,12 +58,12 @@ class PhoneNumber {
   };
 
   PhoneNumber() = default;
-  PhoneNumber(const std::string& number, Type type = Type::Other)
-      : number_{number}, type_{type} {}
+  PhoneNumber(std::string number, Type type = Type::Other)
+      : number_{std::move(number)}, type_{type} {}
   PhoneNumber(const PhoneNumber&) = default;
   PhoneNumber& operator=(const PhoneNumber&) = default;
 
-  std::string number() const { return number_; }
+  std::string const& number() const { return number_; }
   Type type() const { return type_; }
 
   // Prints the phone number type to the debug stream as a string.
@@ -108,22 +108,22 @@ class PhoneNumber {
 class Customer {
  public:
   Customer() = default;
-  Customer(const std::string& first_name, const std::string& last_name,
-           const std::string& middle_name, const std::string& address,
+  Customer(std::string first_name, std::string last_name,
+           std::string middle_name, std::string address,
            std::vector<PhoneNumber> phone_numbers)
-      : last_name_{last_name},
-        first_name_{first_name},
-        middle_name_{middle_name},
-        address_{address},
-        phone_numbers_{phone_numbers} {}
+      : last_name_{std::move(last_name)},
+        first_name_{std::move(first_name)},
+        middle_name_{std::move(middle_name)},
+        address_{std::move(address)},
+        phone_numbers_{std::move(phone_numbers)} {}
   Customer(const Customer&) = default;
   Customer& operator=(const Customer&) = default;
 
-  std::string last_name() const { return last_name_; }
-  std::string first_name() const { return first_name_; }
-  std::string middle_name() const { return middle_name_; }
-  std::string address() const { return address_; }
-  const std::vector<PhoneNumber>& phone_numbers() const {
+  std::string const& last_name() const { return last_name_; }
+  std::string const& first_name() const { return first_name_; }
+  std::string const& middle_name() const { return middle_name_; }
+  std::string const& address() const { return address_; }
+  std::vector<PhoneNumber> const& phone_numbers() const {
     return phone_numbers_;
   }
 
