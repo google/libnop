@@ -58,7 +58,7 @@ struct TestInterface : Interface<TestInterface> {
   NOP_METHOD(Length, std::size_t(const std::string& string));
   NOP_METHOD(Match, bool(const Variant<MessageA, MessageB>& message));
 
-  NOP_API(Sum, Product, Length, Match);
+  NOP_INTERFACE_API(Sum, Product, Length, Match);
 };
 
 using MethodSelectorType = InterfaceType<TestInterface>::MethodSelector;
@@ -95,7 +95,7 @@ class AbstractClass : private Interface<AbstractClass> {
   NOP_INTERFACE("io.github.eieio.AbstractClass");
   NOP_METHOD(Sum, int(int a, int b));
   NOP_METHOD(Length, std::size_t(const std::string& string));
-  NOP_API(Sum, Length);
+  NOP_INTERFACE_API(Sum, Length);
 };
 
 struct ConcreteClass : AbstractClass {

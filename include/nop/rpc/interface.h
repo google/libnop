@@ -549,7 +549,7 @@ inline constexpr MethodSelector ComputeMethodSelector(
 // Defines the collection of remote methods that comprise the remote interface.
 // The arguments to this function must be the symbol names passed to
 // NOP_METHOD() within the same class or structure definition.
-#define NOP_API(... /* methods */)                             \
+#define NOP_INTERFACE_API(... /* methods */)                   \
   using NOP__INTERFACE_API = ::nop::InterfaceAPI<__VA_ARGS__>; \
   static_assert(sizeof(NOP__INTERFACE_API) == sizeof(NOP__INTERFACE_API), "")
 

@@ -203,7 +203,7 @@ struct CustomerInterface : public Interface<CustomerInterface> {
   NOP_METHOD(Update, CustomerError(CustomerId, const Customer&));
   NOP_METHOD(Get, Result<Customer>(CustomerId));
 
-  NOP_API(Add, Remove, Update, Get);
+  NOP_INTERFACE_API(Add, Remove, Update, Get);
 };
 
 // This example uses pipes to connect the service and client. Define the reader
