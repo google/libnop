@@ -22,10 +22,15 @@ libnop has the following goals:
   * Produce optimized code that is easy to analyze and profile.
   * Avoid internal dynamic memory allocation when possible.
 
+## Getting Started
+
+Take a look at [Getting Started](docs/getting-started.md) for an introduction to
+the library.
+
 ## Quick Examples
 
 Here is a quick series of examples to demonstrate how libnop is used. You can
-find more examples in the repository under *examples/*.
+find more examples in the repository under [examples/](examples/).
 
 ### Writing STL Containers to a Stream
 
