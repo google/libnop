@@ -319,7 +319,7 @@ struct Encoding<std::uint8_t> : EncodingIO<std::uint8_t> {
 template <>
 struct Encoding<std::int8_t> : EncodingIO<std::int8_t> {
   static constexpr EncodingByte Prefix(std::int8_t value) {
-    if (value >= -32)
+    if (value >= -64)
       return static_cast<EncodingByte>(value);
     else
       return EncodingByte::I8;
@@ -441,7 +441,7 @@ struct Encoding<std::uint16_t> : EncodingIO<std::uint16_t> {
 template <>
 struct Encoding<std::int16_t> : EncodingIO<std::int16_t> {
   static constexpr EncodingByte Prefix(std::int16_t value) {
-    if (value >= -32 && value <= 127)
+    if (value >= -64 && value <= 127)
       return static_cast<EncodingByte>(value);
     else if (value >= -128 && value <= 127)
       return EncodingByte::I8;
@@ -580,7 +580,7 @@ struct Encoding<std::uint32_t> : EncodingIO<std::uint32_t> {
 template <>
 struct Encoding<std::int32_t> : EncodingIO<std::int32_t> {
   static constexpr EncodingByte Prefix(std::int32_t value) {
-    if (value >= -32 && value <= 127)
+    if (value >= -64 && value <= 127)
       return static_cast<EncodingByte>(value);
     else if (value >= -128 && value <= 127)
       return EncodingByte::I8;
@@ -739,9 +739,9 @@ struct Encoding<std::uint64_t> : EncodingIO<std::uint64_t> {
 template <>
 struct Encoding<std::int64_t> : EncodingIO<std::int64_t> {
   static constexpr EncodingByte Prefix(std::int64_t value) {
-    if (value >= -32 && value <= 127)
+    if (value >= -64 && value <= 127)
       return static_cast<EncodingByte>(value);
-    else if (value >= -128 && value <= 127)  // Effectively [-128, -32).
+    else if (value >= -128 && value <= 127)  // Effectively [-128, -64).
       return EncodingByte::I8;
     else if (value >= -32768 && value <= 32767)
       return EncodingByte::I16;
