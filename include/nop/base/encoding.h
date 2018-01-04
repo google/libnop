@@ -870,13 +870,19 @@ struct Encoding<double> : EncodingIO<double> {
 // platform. Simply forward to either std::uint32_t or std::uint64_t.
 //
 
-template <typename T>
-struct Encoding<T,
-                std::enable_if_t<std::is_same<T, std::size_t>::value &&
-                                 sizeof(std::size_t) == sizeof(std::uint64_t)>>
-    : EncodingIO<std::size_t> {
+template <>
+struct Encoding<std::size_t> : EncodingIO<std::size_t> {
+  // Check that std::size_t is either 32 or 64-bit.
+  static_assert(sizeof(std::size_t) == sizeof(std::uint32_t) ||
+                    sizeof(std::size_t) == sizeof(std::uint64_t),
+                "std::size_t must be either 32 or 64-bit!");
+
+  using BaseType =
+      std::conditional_t<sizeof(std::size_t) == sizeof(std::uint32_t),
+                         std::uint32_t, std::uint64_t>;
+
   static constexpr EncodingByte Prefix(std::size_t value) {
-    return Encoding<std::uint64_t>::Prefix(value);
+    return Encoding<BaseType>::Prefix(value);
   }
 
   static constexpr std::size_t Size(std::size_t value) {
@@ -884,85 +890,25 @@ struct Encoding<T,
   }
 
   static constexpr bool Match(EncodingByte prefix) {
-    return Encoding<std::uint64_t>::Match(prefix);
+    return Encoding<BaseType>::Match(prefix);
   }
 
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte prefix, std::size_t value,
                                    Writer* writer) {
-    if (prefix == EncodingByte::U8)
-      return Write<std::uint8_t>(value, writer);
-    else if (prefix == EncodingByte::U16)
-      return Write<std::uint16_t>(value, writer);
-    else if (prefix == EncodingByte::U32)
-      return Write<std::uint32_t>(value, writer);
-    else if (prefix == EncodingByte::U64)
-      return Write<std::uint64_t>(value, writer);
-    else
-      return {};
+    return Encoding<BaseType>::WritePayload(prefix, value, writer);
   }
 
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte prefix, std::size_t* value,
                                   Reader* reader) {
-    if (prefix == EncodingByte::U8) {
-      return Read<std::uint8_t>(value, reader);
-    } else if (prefix == EncodingByte::U16) {
-      return Read<std::uint16_t>(value, reader);
-    } else if (prefix == EncodingByte::U32) {
-      return Read<std::uint32_t>(value, reader);
-    } else if (prefix == EncodingByte::U64) {
-      return Read<std::uint64_t>(value, reader);
-    } else {
-      *value = static_cast<std::uint8_t>(prefix);
-      return {};
-    }
-  }
-};
+    BaseType base_value;
+    auto status = Encoding<BaseType>::ReadPayload(prefix, &base_value, reader);
+    if (!status)
+      return status;
 
-template <typename T>
-struct Encoding<T,
-                std::enable_if_t<std::is_same<T, std::size_t>::value &&
-                                 sizeof(std::size_t) == sizeof(std::uint32_t)>>
-    : EncodingIO<std::size_t> {
-  static constexpr EncodingByte Prefix(std::size_t value) {
-    return Encoding<std::uint32_t>::Prefix(value);
-  }
-
-  static constexpr std::size_t Size(std::size_t value) {
-    return BaseEncodingSize(Prefix(value));
-  }
-
-  static constexpr bool Match(EncodingByte prefix) {
-    return Encoding<std::uint32_t>::Match(prefix);
-  }
-
-  template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, std::size_t value,
-                                   Writer* writer) {
-    if (prefix == EncodingByte::U8)
-      return Write<std::uint8_t>(value, writer);
-    else if (prefix == EncodingByte::U16)
-      return Write<std::uint16_t>(value, writer);
-    else if (prefix == EncodingByte::U32)
-      return Write<std::uint32_t>(value, writer);
-    else
-      return {};
-  }
-
-  template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, std::size_t* value,
-                                  Reader* reader) {
-    if (prefix == EncodingByte::U8) {
-      return Read<std::uint8_t>(value, reader);
-    } else if (prefix == EncodingByte::U16) {
-      return Read<std::uint16_t>(value, reader);
-    } else if (prefix == EncodingByte::U32) {
-      return Read<std::uint32_t>(value, reader);
-    } else {
-      *value = static_cast<std::uint8_t>(prefix);
-      return {};
-    }
+    *value = base_value;
+    return {};
   }
 };
 
