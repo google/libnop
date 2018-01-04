@@ -147,8 +147,13 @@ struct Encoding<const T&> : Encoding<T> {};
 
 //
 // Encodings for atrithmetic types. Most encodings depend on these for size and
-// type ids.
+// type ids. These encodings assume two's complement hardware. This might change
+// if there is a good use case to support one's complement hardware.
 //
+
+// Assert that the hardware uses two's complement for signed integers.
+static_assert(-1 == ~0,
+              "One's complement hardware is not currently supported!");
 
 //
 // bool encoding formats:
