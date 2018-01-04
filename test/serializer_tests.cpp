@@ -535,7 +535,7 @@ TEST(Serializer, uint8_t) {
   TestWriter writer;
   Serializer<TestWriter*> serializer{&writer};
   Status<void> status;
-  uint8_t value;
+  std::uint8_t value;
 
   // Min FIXINT.
   value = 0;
@@ -568,6 +568,1008 @@ TEST(Serializer, uint8_t) {
   expected = Compose(EncodingByte::U8, 0xff);
   EXPECT_EQ(expected, writer.data());
   writer.clear();
+}
+
+TEST(Deserializer, uint8_t) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+  std::uint8_t value;
+
+  // Min FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127U, value);
+
+  // Min U8.
+  reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U8.
+  reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0xff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffU, value);
+
+  // TODO(eieio): Test rejection of all other encoding prefix bytes.
+}
+
+TEST(Serializer, uint16_t) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+  std::uint16_t value;
+
+  // Min FIXINT.
+  value = 0;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max FIXINT.
+  value = (1 << 7) - 1;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U8.
+  value = (1 << 7);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U8, Integer<std::uint8_t>(1 << 7));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U8.
+  value = 0xff;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U8, 0xff);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U16.
+  value = (1 << 8);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U16, Integer<std::uint16_t>(1 << 8));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U16.
+  value = 0xffff;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U16, Integer<std::uint16_t>(0xffff));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+}
+
+TEST(Deserializer, uint16_t) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+  std::uint16_t value;
+
+  // Min FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127U, value);
+
+  // Min U8.
+  reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U8.
+  reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0xff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffU, value);
+
+  // Min U16.
+  reader.Set(Compose(EncodingByte::U16, Integer<std::uint16_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U16.
+  reader.Set(Compose(EncodingByte::U16, Integer<std::uint16_t>(0xffff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffffU, value);
+
+  // TODO(eieio): Test rejection of all other encoding prefix bytes.
+}
+
+TEST(Serializer, uint32_t) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+  std::uint32_t value;
+
+  // Min FIXINT.
+  value = 0;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max FIXINT.
+  value = (1 << 7) - 1;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U8.
+  value = (1 << 7);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U8, Integer<std::uint8_t>(1 << 7));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U8.
+  value = 0xff;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U8, 0xff);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U16.
+  value = (1 << 8);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U16, Integer<std::uint16_t>(1 << 8));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U16.
+  value = 0xffff;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U16, Integer<std::uint16_t>(0xffff));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U32.
+  value = (1 << 16);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U32, Integer<std::uint32_t>(1 << 16));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U32.
+  value = 0xffffffff;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U32, Integer<std::uint32_t>(0xffffffff));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+}
+
+TEST(Deserializer, uint32_t) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+  std::uint32_t value;
+
+  // Min FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127U, value);
+
+  // Min U8.
+  reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U8.
+  reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0xff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffU, value);
+
+  // Min U16.
+  reader.Set(Compose(EncodingByte::U16, Integer<std::uint16_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U16.
+  reader.Set(Compose(EncodingByte::U16, Integer<std::uint16_t>(0xffff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffffU, value);
+
+  // Min U32.
+  reader.Set(Compose(EncodingByte::U32, Integer<std::uint32_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U32.
+  reader.Set(Compose(EncodingByte::U32, Integer<std::uint32_t>(0xffffffff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffffffffU, value);
+
+  // TODO(eieio): Test rejection of all other encoding prefix bytes.
+}
+
+TEST(Serializer, uint64_t) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+  std::uint64_t value;
+
+  // Min FIXINT.
+  value = 0;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max FIXINT.
+  value = (1 << 7) - 1;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U8.
+  value = (1 << 7);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U8, Integer<std::uint8_t>(1 << 7));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U8.
+  value = 0xff;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U8, 0xff);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U16.
+  value = (1 << 8);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U16, Integer<std::uint16_t>(1 << 8));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U16.
+  value = 0xffff;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U16, Integer<std::uint16_t>(0xffff));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U32.
+  value = (1 << 16);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U32, Integer<std::uint32_t>(1 << 16));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U32.
+  value = 0xffffffff;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U32, Integer<std::uint32_t>(0xffffffff));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min U64.
+  value = (1LLU << 32);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U64, Integer<std::uint64_t>(1LLU << 32));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max U64.
+  value = 0xffffffffffffffffLLU;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected =
+      Compose(EncodingByte::U64, Integer<std::uint64_t>(0xffffffffffffffffLLU));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+}
+
+TEST(Deserializer, uint64_t) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+  std::uint64_t value;
+
+  // Min FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127U, value);
+
+  // Min U8.
+  reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U8.
+  reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0xff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffU, value);
+
+  // Min U16.
+  reader.Set(Compose(EncodingByte::U16, Integer<std::uint16_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U16.
+  reader.Set(Compose(EncodingByte::U16, Integer<std::uint16_t>(0xffff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffffU, value);
+
+  // Min U32.
+  reader.Set(Compose(EncodingByte::U32, Integer<std::uint32_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U32.
+  reader.Set(Compose(EncodingByte::U32, Integer<std::uint32_t>(0xffffffff)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffffffffU, value);
+
+  // Min U64.
+  reader.Set(Compose(EncodingByte::U64, Integer<std::uint64_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
+
+  // Max U64.
+  reader.Set(Compose(EncodingByte::U64,
+                     Integer<std::uint64_t>(0xffffffffffffffffLLU)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffffffffffffffffLLU, value);
+
+  // TODO(eieio): Test rejection of all other encoding prefix bytes.
+}
+
+TEST(Serializer, int8_t) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+  std::int8_t value;
+
+  // Min NEGATIVE FIXINT.
+  value = -64;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::NegativeFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max NEGATIVE FIXINT.
+  value = -1;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::NegativeFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min FIXINT.
+  value = 0;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max FIXINT.
+  value = 127;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I8.
+  value = -128;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I8, Integer<std::int8_t>(-128));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I8.
+  value = -65;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I8, Integer<std::int8_t>(-65));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+}
+
+TEST(Deserializer, int8_t) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+  std::int8_t value;
+
+  // Min NEGATIVE FIXINT.
+  reader.Set(Compose(EncodingByte::NegativeFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-64, value);
+
+  // Max NEGATIVE FIXINT.
+  reader.Set(Compose(EncodingByte::NegativeFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-1, value);
+
+  // Min FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0, value);
+
+  // Max FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127, value);
+
+  // Min I8.
+  reader.Set(Compose(EncodingByte::I8, Integer<std::int8_t>(-128)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-128, value);
+
+  // Max I8.
+  reader.Set(Compose(EncodingByte::I8, Integer<std::int8_t>(127)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127, value);
+
+  // TODO(eieio): Test rejection of all other encoding prefix bytes.
+}
+
+TEST(Serializer, int16_t) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+  std::int16_t value;
+
+  // Min NEGATIVE FIXINT.
+  value = -64;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::NegativeFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max NEGATIVE FIXINT.
+  value = -1;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::NegativeFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min FIXINT.
+  value = 0;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max FIXINT.
+  value = 127;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I8.
+  value = -128;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I8, Integer<std::int8_t>(-128));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I8.
+  value = -65;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I8, Integer<std::int8_t>(-65));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I16.
+  value = -32768;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(-32768));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I16.
+  value = 32767;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(32767));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+}
+
+TEST(Deserializer, int16_t) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+  std::int16_t value;
+
+  // Min NEGATIVE FIXINT.
+  reader.Set(Compose(EncodingByte::NegativeFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-64, value);
+
+  // Max NEGATIVE FIXINT.
+  reader.Set(Compose(EncodingByte::NegativeFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-1, value);
+
+  // Min FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0, value);
+
+  // Max FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127, value);
+
+  // Min I8.
+  reader.Set(Compose(EncodingByte::I8, Integer<std::int8_t>(-128)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-128, value);
+
+  // Max I8.
+  reader.Set(Compose(EncodingByte::I8, Integer<std::int8_t>(127)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127, value);
+
+  // Min I16.
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(-32768)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-32768, value);
+
+  // Max I16.
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(32767)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(32767, value);
+
+  // TODO(eieio): Test rejection of all other encoding prefix bytes.
+}
+
+TEST(Serializer, int32_t) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+  std::int32_t value;
+
+  // Min NEGATIVE FIXINT.
+  value = -64;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::NegativeFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max NEGATIVE FIXINT.
+  value = -1;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::NegativeFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min FIXINT.
+  value = 0;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max FIXINT.
+  value = 127;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I8.
+  value = -128;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I8, Integer<std::int8_t>(-128));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I8.
+  value = -65;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I8, Integer<std::int8_t>(-65));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I16.
+  value = -32768;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(-32768));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I16.
+  value = 32767;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(32767));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I32.
+  value = -2147483648;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(-2147483648));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I32.
+  value = 2147483647;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(2147483647));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+}
+
+TEST(Deserializer, int32_t) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+  std::int32_t value;
+
+  // Min NEGATIVE FIXINT.
+  reader.Set(Compose(EncodingByte::NegativeFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-64, value);
+
+  // Max NEGATIVE FIXINT.
+  reader.Set(Compose(EncodingByte::NegativeFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-1, value);
+
+  // Min FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0, value);
+
+  // Max FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127, value);
+
+  // Min I8.
+  reader.Set(Compose(EncodingByte::I8, Integer<std::int8_t>(-128)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-128, value);
+
+  // Max I8.
+  reader.Set(Compose(EncodingByte::I8, Integer<std::int8_t>(127)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127, value);
+
+  // Min I16.
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(-32768)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-32768, value);
+
+  // Max I16.
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(32767)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(32767, value);
+
+  // Min I32.
+  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(-2147483648)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-2147483648, value);
+
+  // Max I32.
+  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(2147483647)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(2147483647, value);
+
+  // TODO(eieio): Test rejection of all other encoding prefix bytes.
+}
+
+TEST(Serializer, int64_t) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+  std::int64_t value;
+
+  // Min NEGATIVE FIXINT.
+  value = -64;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::NegativeFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max NEGATIVE FIXINT.
+  value = -1;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::NegativeFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min FIXINT.
+  value = 0;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMin);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max FIXINT.
+  value = 127;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::PositiveFixIntMax);
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I8.
+  value = -128;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I8, Integer<std::int8_t>(-128));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I8.
+  value = -65;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I8, Integer<std::int8_t>(-65));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I16.
+  value = -32768;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(-32768));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I16.
+  value = 32767;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(32767));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I32.
+  value = -2147483648;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(-2147483648));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I32.
+  value = 2147483647;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(2147483647));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Min I64.
+  value = -9223372036854775807LL - 1;
+  // Believe it or not, this is actually the correct way to specify the most
+  // negative signed long long.
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::I64,
+                     Integer<std::int64_t>(-9223372036854775807LL - 1));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+
+  // Max I64.
+  value = 9223372036854775807LL;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected =
+      Compose(EncodingByte::I64, Integer<std::int64_t>(9223372036854775807LL));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+}
+
+TEST(Deserializer, int64_t) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+  std::int64_t value;
+
+  // Min NEGATIVE FIXINT.
+  reader.Set(Compose(EncodingByte::NegativeFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-64, value);
+
+  // Max NEGATIVE FIXINT.
+  reader.Set(Compose(EncodingByte::NegativeFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-1, value);
+
+  // Min FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMin));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0, value);
+
+  // Max FIXINT.
+  reader.Set(Compose(EncodingByte::PositiveFixIntMax));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127, value);
+
+  // Min I8.
+  reader.Set(Compose(EncodingByte::I8, Integer<std::int8_t>(-128)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-128, value);
+
+  // Max I8.
+  reader.Set(Compose(EncodingByte::I8, Integer<std::int8_t>(127)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(127, value);
+
+  // Min I16.
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(-32768)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-32768, value);
+
+  // Max I16.
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(32767)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(32767, value);
+
+  // Min I32.
+  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(-2147483648)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-2147483648, value);
+
+  // Max I32.
+  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(2147483647)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(2147483647, value);
+
+  // Min I64.
+  reader.Set(Compose(EncodingByte::I64,
+                     Integer<std::int64_t>(-9223372036854775807LL - 1)));
+  // Believe it or not, this is actually the correct way to specify the most
+  // negative signed long long.
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(-9223372036854775807LL - 1, value);
+
+  // Max I64.
+  reader.Set(
+      Compose(EncodingByte::I64, Integer<std::int64_t>(9223372036854775807LL)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(9223372036854775807LL, value);
+
+  // TODO(eieio): Test rejection of all other encoding prefix bytes.
 }
 
 TEST(Serializer, String) {

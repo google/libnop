@@ -611,7 +611,7 @@ struct Encoding<std::int32_t> : EncodingIO<std::int32_t> {
     else if (prefix == EncodingByte::I16)
       return Write<std::int16_t>(value, writer);
     else if (prefix == EncodingByte::I32)
-      return Write<std::int16_t>(value, writer);
+      return Write<std::int32_t>(value, writer);
     else
       return {};
   }
