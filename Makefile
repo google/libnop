@@ -21,8 +21,8 @@ ALL :=
 DEPS :=
 
 M_NAME := test
-M_CFLAGS := -I$(GTEST_INCLUDE)
-M_LDFLAGS := -L$(GTEST_LIB) -lgtest -lgtest_main
+M_CFLAGS := -I$(GTEST_INCLUDE) --coverage -O0 -g
+M_LDFLAGS := -L$(GTEST_LIB) -lgtest
 M_OBJS := \
 	test/nop_tests.o \
 	test/encoding_tests.o \
@@ -80,6 +80,16 @@ include build/host-executable.mk
 clean::
 	@echo clean
 	@rm -rf $(OUT)
+
+# Generate coverage report with lcov and genhtml. A bit hacky but works okay.
+$(OUT)/coverage.info: $(OUT)/test
+	$(QUIET)find $(OUT) -name "*.gcda" -exec rm {} \+
+	$(QUIET)$(OUT)/test
+	lcov --capture --directory $(OUT_HOST_OBJ)/test/test/ --output-file $@ --no-external --base-directory .
+	mkdir -p $(OUT)/coverage
+	genhtml -o $(OUT)/coverage $@
+
+coverage:: $(OUT)/coverage.info
 
 all:: $(ALL)
 
