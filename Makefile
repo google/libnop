@@ -22,7 +22,7 @@ DEPS :=
 
 M_NAME := test
 M_CFLAGS := -I$(GTEST_INCLUDE) --coverage -O0 -g
-M_LDFLAGS := -L$(GTEST_LIB) -lgtest
+M_LDFLAGS := -L$(GTEST_LIB) -lgtest -lgmock
 M_OBJS := \
 	test/nop_tests.o \
 	test/encoding_tests.o \

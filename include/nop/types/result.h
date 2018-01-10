@@ -72,8 +72,12 @@ class Result {
   Result() : error_{ErrorEnum::None}, state_{State::Empty} {}
   Result(const T& value) : value_{value}, state_{State::Value} {}
   Result(T&& value) : value_{std::move(value)}, state_{State::Value} {}
-  Result(const Result& other) { *this = other; }
-  Result(Result&& other) { *this = std::move(other); }
+  Result(const Result& other) : error_{ErrorEnum::None}, state_{State::Empty} {
+    *this = other;
+  }
+  Result(Result&& other) : error_{ErrorEnum::None}, state_{State::Empty} {
+    *this = std::move(other);
+  }
   Result(ErrorEnum error)
       : error_{error},
         state_{error == ErrorEnum::None ? State::Empty : State::Error} {}
@@ -191,11 +195,24 @@ class Result<ErrorEnum, void> {
  public:
   Result() : error_{ErrorEnum::None} {}
   Result(ErrorEnum error) : error_{error} {}
-  Result(const Result& other) = default;
+  Result(const Result& other) { *this = other; }
+  Result(Result&& other) { *this = std::move(other); }
 
-  ~Result() = default;
+  ~Result() {}
 
-  Result& operator=(const Result& other) = default;
+  Result& operator=(const Result& other) {
+    if (this != &other) {
+      error_ = other.error_;
+    }
+    return *this;
+  }
+  Result& operator=(Result&& other) {
+    if (this != &other) {
+      error_ = other.error_;
+      other.clear();
+    }
+    return *this;
+  }
 
   bool has_error() const { return error_ != ErrorEnum::None; }
   explicit operator bool() const { return !has_error(); }
