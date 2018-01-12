@@ -18,6 +18,7 @@
 #include <nop/serializer.h>
 #include <nop/status.h>
 #include <nop/types/variant.h>
+#include <nop/utility/die.h>
 #include <nop/utility/stream_reader.h>
 #include <nop/utility/stream_writer.h>
 
@@ -79,6 +80,10 @@ std::ostream& operator<<(std::ostream& stream, EmptyVariant) {
   return stream;
 }
 
+// Prints an error message to std::cerr when the Status<T> || Die() expression
+// evaluates to false.
+auto Die() { return nop::Die(std::cerr); }
+
 }  // anonymous namespace
 
 int main(int /*argc*/, char** /*argv*/) {
@@ -94,13 +99,11 @@ int main(int /*argc*/, char** /*argv*/) {
   std::cout << "sizeof(Messages): " << sizeof(Messages) << std::endl;
 
   // Serialize a MessageA value.
-  auto status = serializer.Write(Messages{MessageA{1, "foo", {1, 2, 3, 4}}});
-  CHECK_STATUS(status);
+  serializer.Write(Messages{MessageA{1, "foo", {1, 2, 3, 4}}}) || Die();
 
   // Serialize a MessageB value.
-  status =
-      serializer.Write(Messages{MessageB{1, {1, 2, 3, 4}, {"foo", "bar"}}});
-  CHECK_STATUS(status);
+  serializer.Write(Messages{MessageB{1, {1, 2, 3, 4}, {"foo", "bar"}}}) ||
+      Die();
 
   // Get the serialized data and print it to the debug stream.
   std::string data = serializer.writer().stream().str();
@@ -115,16 +118,14 @@ int main(int /*argc*/, char** /*argv*/) {
   message.Visit([](const auto& value) { std::cout << value << std::endl; });
 
   // Deserialize the first message into the variant variable.
-  status = deserializer.Read(&message);
-  CHECK_STATUS(status);
+  deserializer.Read(&message) || Die();
 
   // Visit the variant and print out the value to show what type the variant
   // contains.
   message.Visit([](const auto& value) { std::cout << value << std::endl; });
 
   // Deserialize the second message into the variant variable.
-  status = deserializer.Read(&message);
-  CHECK_STATUS(status);
+  deserializer.Read(&message) || Die();
 
   // Visit the variant and print out the value to show what type the variant
   // contains now.

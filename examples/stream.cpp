@@ -19,6 +19,7 @@
 #include <vector>
 
 #include <nop/serializer.h>
+#include <nop/utility/die.h>
 #include <nop/utility/stream_reader.h>
 #include <nop/utility/stream_writer.h>
 
@@ -153,6 +154,10 @@ std::ostream& operator<<(std::ostream& stream, const UserDefinedA& message) {
   return stream;
 }
 
+// Prints an error message to std::cerr when the Status<T> || Die() expression
+// evaluates to false.
+auto Die() { return nop::Die(std::cerr); }
+
 }  // anonymous namespace
 
 int main(int /*argc*/, char** /*argv*/) {
@@ -173,8 +178,7 @@ int main(int /*argc*/, char** /*argv*/) {
                            Optional<std::string>{"bif"}};
   std::cout << "Writing: " << message_out << std::endl << std::endl;
 
-  auto status = serializer.Write(message_out);
-  CHECK_STATUS(status);
+  serializer.Write(message_out) || Die();
 
   // Dump the serialized data as a hex string.
   std::string data = serializer.writer().stream().str();
@@ -186,8 +190,7 @@ int main(int /*argc*/, char** /*argv*/) {
 
   // Read a UserDefinedB structure from the stream.
   UserDefinedB message_in;
-  status = deserializer.Read(&message_in);
-  CHECK_STATUS(status);
+  deserializer.Read(&message_in) || Die();
 
   // Print the UserDefinedB structure.
   std::cout << "Read   : " << message_in << std::endl;

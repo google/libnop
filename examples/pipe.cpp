@@ -24,6 +24,7 @@
 #include <nop/status.h>
 #include <nop/types/file_handle.h>
 #include <nop/types/result.h>
+#include <nop/utility/die.h>
 #include <nop/utility/stream_reader.h>
 #include <nop/utility/stream_writer.h>
 
@@ -41,6 +42,10 @@ using nop::StringToHex;
 using nop::UniqueFileHandle;
 
 namespace {
+
+auto Die(const char* error_message = "Error") {
+  return nop::Die(std::cerr, error_message);
+}
 
 using Reader = StreamReader<FdInputStream>;
 using Writer = StreamWriter<FdOutputStream>;
@@ -133,12 +138,7 @@ int HandleChild(Channel channel) {
   std::cout << "Child waiting for message..." << std::endl;
 
   Request request;
-  auto status = channel.Read(&request);
-  if (!status) {
-    std::cerr << "Child failed to read request: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  auto status = channel.Read(&request) || Die("Child failed to read request");
 
   std::cout << "Child received a request for " << request.request_bytes
             << " bytes." << std::endl;
@@ -175,21 +175,10 @@ int HandleParent(Channel channel) {
   std::cout << "Parent sending message..." << std::endl;
 
   const std::uint32_t kRequestBytes = 32;
-  auto status = channel.Write(Request{kRequestBytes});
-  if (!status) {
-    std::cerr << "Parent failed to write request: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  channel.Write(Request{kRequestBytes}) || Die("Parent failed to write request");
 
   Response response;
-  status = channel.Read(&response);
-  if (!status) {
-    std::cerr << "Parent failed to read response: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
-
+  channel.Read(&response) || Die("Parent failed to read response");
   if (response) {
     std::cout << "Parent received " << response.get().size()
               << " bytes: " << StringToHex(response.get()) << std::endl;
@@ -203,12 +192,7 @@ int HandleParent(Channel channel) {
 }  // anonymous namespace
 
 int main(int /*argc*/, char** /*argv*/) {
-  auto pipe_status = MakeChannels();
-  if (!pipe_status) {
-    std::cerr << "Failed to create pipe: " << pipe_status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  auto pipe_status = MakeChannels() || Die("Failed to create pipe");
 
   Channel parent_channel, child_channel;
   std::tie(parent_channel, child_channel) = pipe_status.take();

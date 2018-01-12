@@ -20,6 +20,7 @@
 #include <nop/protocol.h>
 #include <nop/serializer.h>
 #include <nop/status.h>
+#include <nop/utility/die.h>
 #include <nop/utility/stream_reader.h>
 #include <nop/utility/stream_writer.h>
 
@@ -155,6 +156,10 @@ Status<std::vector<int>> ReadMessage(Deserializer* deserializer) {
   return {std::move(body)};
 }
 
+// Prints an error message to std::cerr when the Status<T> || Die() expression
+// evaluates to false.
+auto Die() { return nop::Die(std::cerr); }
+
 }  // anonymous namespace
 
 int main(int /*argc*/, char** /*argv*/) {
@@ -162,20 +167,16 @@ int main(int /*argc*/, char** /*argv*/) {
   Serializer<StreamWriter<std::stringstream>> serializer;
 
   // Write a message to the stream using the first overload of WriteMessage.
-  auto status = WriteMessage(&serializer, 1, 2, 3, 4);
-  CHECK_STATUS(status);
+  WriteMessage(&serializer, 1, 2, 3, 4) || Die();
 
   // Write a message to the stream using the second overload of WriteMessage.
-  status = WriteMessage(&serializer, std::array<int, 6>{{5, 6, 7, 8, 9, 10}});
-  CHECK_STATUS(status);
+  WriteMessage(&serializer, std::array<int, 6>{{5, 6, 7, 8, 9, 10}}) || Die();
 
   // Write a message to the stream using the third overload of WriteMessage.
-  status = WriteMessage(&serializer, {11, 22, 33, 44, 55, 66, 77, 88, 99});
-  CHECK_STATUS(status);
+  WriteMessage(&serializer, {11, 22, 33, 44, 55, 66, 77, 88, 99}) || Die();
 
   // Write a message to the stream using the fourth overload of WriteMessage.
-  status = WriteMessage(&serializer, std::vector<int>(42, 20));
-  CHECK_STATUS(status);
+  WriteMessage(&serializer, std::vector<int>(42, 20)) || Die();
 
   // Print the serialized buffer in hexadecimal to demonstrate the wire format.
   std::cout << "Serialized data: "
@@ -184,14 +185,12 @@ int main(int /*argc*/, char** /*argv*/) {
   // Construct a deserializer to read from a std::stringstream and pass it the
   // serialized data from the serializer.
   Deserializer<StreamReader<std::stringstream>> deserializer{
-      serializer.writer().stream().str()};
+      std::move(serializer.writer().stream())};
 
   // Read the messages written by each overload of WriteMessage and print the
   // resulting values.
   for (int i = 0; i < 4; i++) {
-    auto return_status = ReadMessage(&deserializer);
-    CHECK_STATUS(return_status);
-
+    auto return_status = ReadMessage(&deserializer) || Die();
     std::cout << "Read: " << return_status.get() << std::endl;
   }
 

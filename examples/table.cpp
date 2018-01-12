@@ -23,6 +23,7 @@
 #include <nop/base/table.h>
 #include <nop/serializer.h>
 #include <nop/status.h>
+#include <nop/utility/die.h>
 #include <nop/utility/stream_reader.h>
 #include <nop/utility/stream_writer.h>
 
@@ -140,6 +141,12 @@ std::ostream& operator<<(std::ostream& stream, const version3::TableA& table) {
   return stream;
 }
 
+// Prints an error message to std::cerr when the Status<T> || Die() expression
+// evaluates to false.
+auto Die(const char* error_message = "Error") {
+  return nop::Die(std::cerr, error_message);
+}
+
 }  // namespace
 
 int main(int /*argc*/, char** /*argv*/) {
@@ -148,12 +155,7 @@ int main(int /*argc*/, char** /*argv*/) {
   // Initialize the first version of TableA and serialize it. The serialized
   // form is stored as a std::string in t1_data for reading back later.
   version1::TableA t1{"Version 1"};
-  auto status = serializer.Write(t1);
-  if (!status) {
-    std::cerr << "Failed to write t1: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  serializer.Write(t1) || Die("Failed to write t1");
   const std::string t1_data = serializer.writer().stream().str();
   serializer.writer().stream().str("");
 
@@ -164,12 +166,7 @@ int main(int /*argc*/, char** /*argv*/) {
   // Initialize the second version of TableA and serialize it. The serialized
   // form is stored as a std::string in t2_data for reading back later.
   version2::TableA t2{"Version 2", {1, 2, 3, 4}};
-  status = serializer.Write(t2);
-  if (!status) {
-    std::cerr << "Failed to write t2: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  serializer.Write(t2) || Die("Failed to write t2");
   const std::string t2_data = serializer.writer().stream().str();
   serializer.writer().stream().str("");
 
@@ -180,12 +177,7 @@ int main(int /*argc*/, char** /*argv*/) {
   // Initialize the third version of TableA and serialize it. The serialized
   // form is stored as a std::string in t3_data for reading back later.
   version3::TableA t3{"Version 3", {}};
-  status = serializer.Write(t3);
-  if (!status) {
-    std::cerr << "Failed to write t3: " << status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
+  serializer.Write(t3) || Die("Failed to write t3");
   const std::string t3_data = serializer.writer().stream().str();
   serializer.writer().stream().str("");
 
@@ -201,12 +193,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t1_data);
 
     version1::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t1_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t1_data");
     std::cout << "Read t1_data: " << table << std::endl;
   }
 
@@ -214,12 +201,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t2_data);
 
     version1::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t2_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t2_data");
     std::cout << "Read t2_data: " << table << std::endl;
   }
 
@@ -227,12 +209,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t3_data);
 
     version1::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t3_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t3_data");
     std::cout << "Read t3_data: " << table << std::endl;
   }
 
@@ -242,12 +219,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t1_data);
 
     version2::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t1_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t1_data");
     std::cout << "Read t1_data: " << table << std::endl;
   }
 
@@ -255,12 +227,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t2_data);
 
     version2::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t2_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t2_data");
     std::cout << "Read t2_data: " << table << std::endl;
   }
 
@@ -268,12 +235,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t3_data);
 
     version2::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t3_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t3_data");
     std::cout << "Read t3_data: " << table << std::endl;
   }
 
@@ -283,12 +245,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t1_data);
 
     version3::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t1_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t1_data");
     std::cout << "Read t1_data: " << table << std::endl;
   }
 
@@ -296,12 +253,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t2_data);
 
     version3::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t2_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t2_data");
     std::cout << "Read t2_data: " << table << std::endl;
   }
 
@@ -309,12 +261,7 @@ int main(int /*argc*/, char** /*argv*/) {
     deserializer.reader().stream().str(t3_data);
 
     version3::TableA table;
-    status = deserializer.Read(&table);
-    if (!status) {
-      std::cerr << "Failed to read t3_data: " << status.GetErrorMessage()
-                << std::endl;
-      return -1;
-    }
+    deserializer.Read(&table) || Die("Failed to read t3_data");
     std::cout << "Read t3_data: " << table << std::endl;
   }
 
