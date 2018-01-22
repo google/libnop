@@ -22,6 +22,7 @@
 
 #include <nop/base/utility.h>
 #include <nop/serializer.h>
+#include <nop/structure.h>
 
 #include "mock_writer.h"
 #include "test_reader.h"

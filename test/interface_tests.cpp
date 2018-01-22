@@ -23,6 +23,7 @@
 #include <nop/rpc/simple_method_receiver.h>
 #include <nop/rpc/simple_method_sender.h>
 #include <nop/serializer.h>
+#include <nop/structure.h>
 
 #include "test_reader.h"
 #include "test_utilities.h"

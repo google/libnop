@@ -29,6 +29,7 @@
 #include <nop/rpc/simple_method_receiver.h>
 #include <nop/rpc/simple_method_sender.h>
 #include <nop/serializer.h>
+#include <nop/structure.h>
 #include <nop/types/result.h>
 #include <nop/types/variant.h>
 #include <nop/utility/stream_reader.h>

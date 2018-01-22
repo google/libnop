@@ -16,6 +16,7 @@
 #include <sstream>
 
 #include <nop/serializer.h>
+#include <nop/structure.h>
 #include <nop/status.h>
 #include <nop/types/variant.h>
 #include <nop/utility/die.h>

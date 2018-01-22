@@ -16,6 +16,7 @@
 
 #include <array>
 
+#include <nop/structure.h>
 #include <nop/base/logical_buffer.h>
 #include <nop/traits/is_fungible.h>
 #include <nop/types/optional.h>

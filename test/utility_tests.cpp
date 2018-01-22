@@ -18,8 +18,8 @@
 #include <iostream>
 #include <string>
 
-#include <nop/base/members.h>
 #include <nop/base/utility.h>
+#include <nop/structure.h>
 
 using nop::EnableIfHasMemberList;
 using nop::EnableIfNotHasMemberList;

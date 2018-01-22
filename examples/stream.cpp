@@ -19,6 +19,7 @@
 #include <vector>
 
 #include <nop/serializer.h>
+#include <nop/structure.h>
 #include <nop/utility/die.h>
 #include <nop/utility/stream_reader.h>
 #include <nop/utility/stream_writer.h>

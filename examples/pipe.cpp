@@ -21,6 +21,7 @@
 #include <utility>
 
 #include <nop/serializer.h>
+#include <nop/structure.h>
 #include <nop/status.h>
 #include <nop/types/file_handle.h>
 #include <nop/types/result.h>

@@ -19,6 +19,7 @@
 
 #include <nop/protocol.h>
 #include <nop/serializer.h>
+#include <nop/structure.h>
 #include <nop/status.h>
 #include <nop/utility/die.h>
 #include <nop/utility/stream_reader.h>
