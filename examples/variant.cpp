@@ -50,7 +50,7 @@ struct MessageA {
   std::uint32_t a;
   std::string b;
   std::vector<short> c;
-  NOP_MEMBERS(MessageA, a, b, c);
+  NOP_STRUCTURE(MessageA, a, b, c);
 };
 
 // Second user-defined type.
@@ -58,7 +58,7 @@ struct MessageB {
   std::uint64_t x;
   std::vector<int> y;
   std::pair<std::string, std::string> z;
-  NOP_MEMBERS(MessageB, x, y, z);
+  NOP_STRUCTURE(MessageB, x, y, z);
 };
 
 // Utility to print MessageA to the debug stream.

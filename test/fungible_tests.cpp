@@ -567,54 +567,54 @@ namespace {
 struct UserDefinedA {
   std::array<int, 10> a;
   std::array<float, 20> b;
-  NOP_MEMBERS(UserDefinedA, a, b);
+  NOP_STRUCTURE(UserDefinedA, a, b);
 };
 
 struct UserDefinedB1 {
   std::array<int, 10> a;
   float b[20];
-  NOP_MEMBERS(UserDefinedB1, a, b);
+  NOP_STRUCTURE(UserDefinedB1, a, b);
 };
 
 struct UserDefinedB2 {
   int a[10];
   float b[20];
-  NOP_MEMBERS(UserDefinedB2, a, b);
+  NOP_STRUCTURE(UserDefinedB2, a, b);
 };
 
 struct UserDefinedC {
   int a[10];
   std::string b;
-  NOP_MEMBERS(UserDefinedC, a, b);
+  NOP_STRUCTURE(UserDefinedC, a, b);
 };
 
 struct UserDefinedD {
   int a[10];
-  NOP_MEMBERS(UserDefinedD, a);
+  NOP_STRUCTURE(UserDefinedD, a);
 };
 
 struct UserDefinedE {
   int a[10];
   float b[20];
   int c;
-  NOP_MEMBERS(UserDefinedE, a, b, c);
+  NOP_STRUCTURE(UserDefinedE, a, b, c);
 };
 
 struct UserDefinedF1 {
   std::vector<int> a;
-  NOP_MEMBERS(UserDefinedF1, a);
+  NOP_STRUCTURE(UserDefinedF1, a);
 };
 
 struct UserDefinedF2 {
   int a[10];
   int b;
-  NOP_MEMBERS(UserDefinedF2, (a, b));
+  NOP_STRUCTURE(UserDefinedF2, (a, b));
 };
 
 struct UserDefinedF3 {
   std::array<int, 10> a;
   int b;
-  NOP_MEMBERS(UserDefinedF3, (a, b));
+  NOP_STRUCTURE(UserDefinedF3, (a, b));
 };
 
 }  // anonymous namespace

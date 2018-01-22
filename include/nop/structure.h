@@ -22,6 +22,53 @@
 
 namespace nop {
 
+//
+// User-defined structures are structs or classes that have been annotated so
+// that the serialization engine understands how to read and write them.
+
+// Defines the set of members belonging to a type that should be
+// serialized/deserialized. This macro must be inkoked once within the
+// struct/class definition, preferrably in the private section for classes with
+// private data.
+#define NOP_STRUCTURE(type, ... /*members*/)  \
+  template <typename, typename>               \
+  friend struct ::nop::Encoding;              \
+  template <typename, typename>               \
+  friend struct ::nop::HasInternalMemberList; \
+  template <typename, typename>               \
+  friend struct ::nop::MemberListTraits;      \
+  using NOP__MEMBERS = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>
+
+// Defines the set of members belonging to a type that should be
+// serialized/deserialized without changing the type itself. This is useful for
+// making external library types with public data serializable.
+#define NOP_EXTERNAL_STRUCTURE(type, ... /*members*/)                         \
+  template <typename>                                                         \
+  struct NOP__MEMBER_TRAITS;                                                  \
+  template <>                                                                 \
+  struct NOP__MEMBER_TRAITS<type> {                                           \
+    using MemberList = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>; \
+  };                                                                          \
+  NOP__MEMBER_TRAITS<type> __attribute__((used))                              \
+      NOP__GetExternalMemberTraits(type*)
+
+// Similar to NOP_EXTERNAL_STRUCTURE but for template types.
+#define NOP_EXTERNAL_TEMPLATE(type, ... /*members*/)                  \
+  template <typename>                                                 \
+  struct NOP__MEMBER_TRAITS;                                          \
+  template <typename... Ts>                                           \
+  struct NOP__MEMBER_TRAITS<type<Ts...>> {                            \
+    using MemberList =                                                \
+        ::nop::MemberList<NOP_MEMBER_LIST(type<Ts...>, __VA_ARGS__)>; \
+  };                                                                  \
+  template <typename... Ts>                                           \
+  NOP__MEMBER_TRAITS<type<Ts...>> __attribute__((used))               \
+      NOP__GetExternalMemberTraits(type<Ts...>*)
+
+//
+// Utility macros used by the macros above.
+//
+
 // Generates a pair of template arguments (member pointer type and value) to be
 // passed to MemberPointer<MemberPointerType, MemberPointerValue, ...> from the
 // given type name and member name.
@@ -50,45 +97,6 @@ namespace nop {
 // Defines a list of MemberPointer types given a type and list of member names.
 #define NOP_MEMBER_LIST(type, ...) \
   NOP_MAP_ARGS(_NOP_MEMBER_POINTER_FIRST, (type), __VA_ARGS__)
-
-// Defines the set of members belonging to a type that should be
-// serialized/deserialized. This macro should be called once within the
-// struct/class definition, preferrably in the private section for classes with
-// private data.
-#define NOP_MEMBERS(type, ... /*members*/)    \
-  template <typename, typename>               \
-  friend struct ::nop::Encoding;              \
-  template <typename, typename>               \
-  friend struct ::nop::HasInternalMemberList; \
-  template <typename, typename>               \
-  friend struct ::nop::MemberListTraits;      \
-  using NOP__MEMBERS = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>
-
-// Defines the set of members belonging to a type that should be
-// serialized/deserialized without changing the type itself. This is useful for
-// making external library types with public data serializable.
-#define NOP_STRUCTURE(type, ... /*members*/)                                  \
-  template <typename>                                                         \
-  struct NOP__MEMBER_TRAITS;                                                  \
-  template <>                                                                 \
-  struct NOP__MEMBER_TRAITS<type> {                                           \
-    using MemberList = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>; \
-  };                                                                          \
-  NOP__MEMBER_TRAITS<type> __attribute__((used))                              \
-      NOP__GetExternalMemberTraits(type*)
-
-// Similar to NOP_STRUCTURE but for template types.
-#define NOP_TEMPLATE(type, ... /*members*/)                           \
-  template <typename>                                                 \
-  struct NOP__MEMBER_TRAITS;                                          \
-  template <typename... Ts>                                           \
-  struct NOP__MEMBER_TRAITS<type<Ts...>> {                            \
-    using MemberList =                                                \
-        ::nop::MemberList<NOP_MEMBER_LIST(type<Ts...>, __VA_ARGS__)>; \
-  };                                                                  \
-  template <typename... Ts>                                           \
-  NOP__MEMBER_TRAITS<type<Ts...>> __attribute__((used))               \
-      NOP__GetExternalMemberTraits(type<Ts...>*)
 
 }  // namespace nop
 

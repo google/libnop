@@ -80,7 +80,7 @@ struct Header {
 
   // Make this header type serializable by describing it to the serialization
   // engine..
-  NOP_MEMBERS(Header, magic, version_major, version_minor);
+  NOP_STRUCTURE(Header, magic, version_major, version_minor);
 };
 
 // Protocol type for the header of the message.

@@ -63,7 +63,7 @@ struct TestA {
   }
 
  private:
-  NOP_MEMBERS(TestA, a, b);
+  NOP_STRUCTURE(TestA, a, b);
 };
 
 enum class EnumA : std::uint8_t {
@@ -82,11 +82,11 @@ struct TestB {
   }
 
  private:
-  NOP_MEMBERS(TestB, a, b);
+  NOP_STRUCTURE(TestB, a, b);
 };
 
 struct TestC {
-  NOP_MEMBERS(TestC);
+  NOP_STRUCTURE(TestC);
 };
 
 struct TestD {
@@ -98,7 +98,7 @@ struct TestD {
     return a == other.a && b == other.b && c == other.c;
   }
 };
-NOP_STRUCTURE(TestD, a, b, c);
+NOP_EXTERNAL_STRUCTURE(TestD, a, b, c);
 
 template <typename T>
 struct TestE {
@@ -109,7 +109,7 @@ struct TestE {
     return a == other.a && b == other.b;
   }
 };
-NOP_TEMPLATE(TestE, a, b);
+NOP_EXTERNAL_TEMPLATE(TestE, a, b);
 
 template <typename T, typename U>
 struct TestF {
@@ -120,7 +120,7 @@ struct TestF {
     return a == other.a && b == other.b;
   }
 };
-NOP_TEMPLATE(TestF, a, b);
+NOP_EXTERNAL_TEMPLATE(TestF, a, b);
 
 struct TestG {
   int a;
@@ -131,20 +131,20 @@ struct TestG {
   }
 
  private:
-  NOP_MEMBERS(TestG, a, b);
+  NOP_STRUCTURE(TestG, a, b);
 };
 
 struct TestH {
   char data[128];
   unsigned char size;
 };
-NOP_STRUCTURE(TestH, (data, size));
+NOP_EXTERNAL_STRUCTURE(TestH, (data, size));
 
 struct TestH2 {
   std::array<char, 128> data;
   unsigned char size;
 };
-NOP_STRUCTURE(TestH2, (data, size));
+NOP_EXTERNAL_STRUCTURE(TestH2, (data, size));
 
 struct TestI {
   std::string names[5];
@@ -160,7 +160,7 @@ struct TestI {
     return true;
   }
 
-  NOP_MEMBERS(TestI, (names, size));
+  NOP_STRUCTURE(TestI, (names, size));
 };
 
 }  // anonymous namespace

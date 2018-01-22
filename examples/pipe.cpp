@@ -21,8 +21,8 @@
 #include <utility>
 
 #include <nop/serializer.h>
-#include <nop/structure.h>
 #include <nop/status.h>
+#include <nop/structure.h>
 #include <nop/types/file_handle.h>
 #include <nop/types/result.h>
 #include <nop/utility/die.h>
@@ -71,7 +71,7 @@ struct Channel {
 // Defines the format of request messages sent from parent to child.
 struct Request {
   std::uint32_t request_bytes{0};
-  NOP_MEMBERS(Request, request_bytes);
+  NOP_STRUCTURE(Request, request_bytes);
 };
 
 // Defines the errors that may be returned from child to parent.
@@ -176,7 +176,8 @@ int HandleParent(Channel channel) {
   std::cout << "Parent sending message..." << std::endl;
 
   const std::uint32_t kRequestBytes = 32;
-  channel.Write(Request{kRequestBytes}) || Die("Parent failed to write request");
+  channel.Write(Request{kRequestBytes}) ||
+      Die("Parent failed to write request");
 
   Response response;
   channel.Read(&response) || Die("Parent failed to read response");

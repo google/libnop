@@ -55,14 +55,14 @@ struct MessageA {
   int a;
   std::string b;
 
-  NOP_MEMBERS(MessageA, a, b);
+  NOP_STRUCTURE(MessageA, a, b);
 };
 
 struct MessageB {
   float a;
   std::vector<int> b;
 
-  NOP_MEMBERS(MessageB, a, b);
+  NOP_STRUCTURE(MessageB, a, b);
 };
 
 struct TestInterface : Interface<TestInterface> {

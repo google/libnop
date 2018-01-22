@@ -115,7 +115,7 @@ class PhoneNumber {
   std::string number_;
   Type type_{Type::Other};
 
-  NOP_MEMBERS(PhoneNumber, number_, type_);
+  NOP_STRUCTURE(PhoneNumber, number_, type_);
 };
 
 // A simple customer record with basic identity and contact information,
@@ -166,8 +166,8 @@ class Customer {
   std::string address_;
   std::vector<PhoneNumber> phone_numbers_;
 
-  NOP_MEMBERS(Customer, last_name_, first_name_, middle_name_, address_,
-              phone_numbers_);
+  NOP_STRUCTURE(Customer, last_name_, first_name_, middle_name_, address_,
+                phone_numbers_);
 };
 
 // Type for unique customer ids.

@@ -41,16 +41,16 @@ using nop::StringToHex;
 //
 
 // Here we describe struct tm from the standard library, which is code we don't
-// own and can't change to include an annotation. The NOP_STRUCTURE() macro
-// annotates types we don't own so that the serializer can understand how to
-// work with them. The annotation must be in the same namespace as the structure
-// is originally defined in.
-// NOTE: struct tm is orignally defined in the global namespace, even though the
-// header <ctime> also aliases it into the std namespace. The annotation must be
-// defined in the ORIGINAL namespace of the annotated type because the compiler
-// only considers the original namespace during name lookup.
-NOP_STRUCTURE(tm, tm_sec, tm_min, tm_hour, tm_mday, tm_mon, tm_year, tm_wday,
-              tm_yday, tm_isdst);
+// own and can't change to include an annotation. The NOP_EXTERNAL_STRUCTURE()
+// macro annotates types we don't own so that the serializer can understand how
+// to work with them. The annotation must be in the same namespace as the
+// structure is originally defined in. NOTE: struct tm is orignally defined in
+// the global namespace, even though the header <ctime> also aliases it into the
+// std namespace. The annotation must be defined in the ORIGINAL namespace of
+// the annotated type because the compiler only considers the original namespace
+// during name lookup.
+NOP_EXTERNAL_STRUCTURE(tm, tm_sec, tm_min, tm_hour, tm_mday, tm_mon, tm_year,
+                       tm_wday, tm_yday, tm_isdst);
 
 namespace {
 
@@ -76,7 +76,7 @@ class UserDefinedA {
   std::string a_;
   std::vector<int> b_;
 
-  NOP_MEMBERS(UserDefinedA, a_, b_);
+  NOP_STRUCTURE(UserDefinedA, a_, b_);
 };
 
 // All enum and enum class types are serializable.
@@ -97,7 +97,7 @@ struct UserDefinedB {
   EnumA f;
   Optional<std::string> g;
 
-  NOP_MEMBERS(UserDefinedB, a, b, c, d, e, f, g);
+  NOP_STRUCTURE(UserDefinedB, a, b, c, d, e, f, g);
 };
 
 // Prints a struct tm to the given stream.

@@ -36,7 +36,7 @@ struct TestMemberList {
   std::string b;
 
  private:
-  NOP_MEMBERS(TestMemberList, a, b);
+  NOP_STRUCTURE(TestMemberList, a, b);
 };
 
 struct TestNoMemberList {
@@ -48,13 +48,13 @@ struct TestExternalMemberList {
   int a;
   std::string b;
 };
-NOP_STRUCTURE(TestExternalMemberList, a, b);
+NOP_EXTERNAL_STRUCTURE(TestExternalMemberList, a, b);
 
 struct TestExternalMemberList2 {
   float a;
   uint64_t b;
 };
-NOP_STRUCTURE(TestExternalMemberList2, a, b);
+NOP_EXTERNAL_STRUCTURE(TestExternalMemberList2, a, b);
 
 template <typename T>
 EnableIfHasMemberList<T, bool> CheckHasMemberList(const T& value) {
