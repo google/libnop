@@ -140,6 +140,41 @@ struct IsFungible<std::tuple<A, B>, std::pair<C, D>>
     : And<IsFungible<std::decay_t<A>, std::decay_t<C>>,
           IsFungible<std::decay_t<B>, std::decay_t<D>>> {};
 
+// Compares std::vector with an n-element std::tuple to see if every element of
+// the tuple is fugible with the non-integral vector element type.
+template <typename T, typename Allocator, typename... Ts>
+struct IsFungible<std::vector<T, Allocator>, std::tuple<Ts...>,
+                  EnableIfNotIntegral<T>> : And<IsFungible<T, Ts>...> {};
+template <typename T, typename Allocator, typename... Ts>
+struct IsFungible<std::tuple<Ts...>, std::vector<T, Allocator>,
+                  EnableIfNotIntegral<T>> : And<IsFungible<T, Ts>...> {};
+
+// Compares std::array with an n-element std::tuple to see if every element of
+// the tuple is fugible with the non-integral array element type.
+template <typename T, std::size_t Size, typename... Ts>
+struct IsFungible<
+    std::array<T, Size>, std::tuple<Ts...>,
+    std::enable_if_t<Size == sizeof...(Ts) && !std::is_integral<T>::value>>
+    : And<IsFungible<T, Ts>...> {};
+template <typename T, std::size_t Size, typename... Ts>
+struct IsFungible<
+    std::tuple<Ts...>, std::array<T, Size>,
+    std::enable_if_t<Size == sizeof...(Ts) && !std::is_integral<T>::value>>
+    : And<IsFungible<T, Ts>...> {};
+
+// Compares C array with an n-element std::tuple to see if every element of
+// the tuple is fugible with the non-integral C array element type.
+template <typename T, std::size_t Size, typename... Ts>
+struct IsFungible<
+    T[Size], std::tuple<Ts...>,
+    std::enable_if_t<Size == sizeof...(Ts) && !std::is_integral<T>::value>>
+    : And<IsFungible<T, Ts>...> {};
+template <typename T, std::size_t Size, typename... Ts>
+struct IsFungible<
+    std::tuple<Ts...>, T[Size],
+    std::enable_if_t<Size == sizeof...(Ts) && !std::is_integral<T>::value>>
+    : And<IsFungible<T, Ts>...> {};
+
 // Compares std::vector and std::array to see if the element types are
 // fungible.
 template <typename A, typename B, typename Allocator, std::size_t Size>
