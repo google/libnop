@@ -50,7 +50,7 @@ using nop::StringToHex;
 // situations where requirements are expected to evolve over time.
 //
 // A table is a class or structure with members of type nop::Entry<T, Id>. These
-// members are called the table's entries. The macro NOP_TABLE() is used to
+// members are called the table's entries. The macro NOP_TABLE*() is used to
 // describe the table and its entries to the serialization engine. Each entry
 // has a type, which may be any serializable type, and a numeric id that is
 // unique among the entries of the same table. Entry ids should not change or be
@@ -77,7 +77,7 @@ namespace version1 {
 struct TableA {
   Entry<std::string, 0> a;
 
-  NOP_TABLE("TableA", TableA, a);
+  NOP_TABLE_NS("TableA", TableA, a);
 };
 
 }  // namespace version1
@@ -89,7 +89,7 @@ struct TableA {
   Entry<std::string, 0> a;
   Entry<std::vector<int>, 1> b;
 
-  NOP_TABLE("TableA", TableA, a, b);
+  NOP_TABLE_NS("TableA", TableA, a, b);
 };
 
 }  // namespace version2
@@ -101,7 +101,7 @@ struct TableA {
   Entry<std::string, 0> a;
   Entry<std::vector<int>, 1, DeletedEntry> b;
 
-  NOP_TABLE("TableA", TableA, a, b);
+  NOP_TABLE_NS("TableA", TableA, a, b);
 };
 
 }  // namespace version3

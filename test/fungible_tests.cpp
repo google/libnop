@@ -735,26 +735,26 @@ namespace {
 struct TableA0 {
   Entry<int, 0> a;
   Entry<std::vector<int>, 1> b;
-  NOP_TABLE("TableA", TableA0, a, b);
+  NOP_TABLE_NS("TableA", TableA0, a, b);
 };
 
 struct TableA1 {
   Entry<int, 0> a;
   Entry<std::array<int, 10>, 1> b;
-  NOP_TABLE("TableA", TableA1, a, b);
+  NOP_TABLE_NS("TableA", TableA1, a, b);
 };
 
 struct TableA2 {
   Entry<int, 0> a;
   Entry<std::vector<int>, 1> b;
-  NOP_TABLE("DifferentLabel", TableA2, a, b);
+  NOP_TABLE_NS("DifferentLabel", TableA2, a, b);
 };
 
 struct TableA3 {
   Entry<int, 0> a;
   Entry<std::array<int, 10>, 1> b;
   Entry<float, 2> c;
-  NOP_TABLE("TableA", TableA3, a, b, c);
+  NOP_TABLE_NS("TableA", TableA3, a, b, c);
 };
 
 }  // anonymous namespace

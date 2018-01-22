@@ -19,8 +19,8 @@
 
 #include <type_traits>
 
-#include <nop/structure.h>
 #include <nop/base/macros.h>
+#include <nop/structure.h>
 #include <nop/types/optional.h>
 #include <nop/utility/sip_hash.h>
 
@@ -46,7 +46,7 @@ namespace nop {
 // struct MyTable {
 //   Entry<Address, 0> address;
 //   Entry<PhoneNumber, 1> phone_number;
-//   NOP_TABLE("MyTable", MyTable, address, phone_number);
+//   NOP_TABLE(MyTable, address, phone_number);
 // };
 //
 // Example of handling empty values:
@@ -62,8 +62,8 @@ namespace nop {
 //   HandlePhoneNumber(my_table.phone_number.get());
 //
 // Table entries may be public, private, or protected, depending on how the
-// table type will be used. If the entries are non-public, call NOP_TABLE() in a
-// private section to avoid exposing member pointers to arbitrary code.
+// table type will be used. If the entries are non-public, call NOP_TABLE*() in
+// a private section to avoid exposing member pointers to arbitrary code.
 //
 // Use the following rules to maximize compatability between different versions
 // of a table type:
@@ -74,10 +74,11 @@ namespace nop {
 //      old entry id.
 //   3. Never change the Id for an entry. Doing so will break compatibility with
 //      older versions of serialized data.
-//   4. Never change the string name passed as the first argument to the macro
-//      NOP_TABLE. This is used to compute a hash used for sanity checking
-//      during deserialization. Changing this string will break compatibility
-//      with older versions of serialized data.
+//   4. Never change the namespace hash or namespace string passed as the first
+//      argument to the macros NOP_TABLE_HASH / NOP_TABLE_NS. These values are
+//      used for sanity checking during deserialization. Changing these
+//      arguments will break compatibility with older versions of serialized
+//      data.
 //
 
 // Type tags to define used and deprecated entries.
@@ -173,23 +174,34 @@ enum : std::uint64_t {
   kNopTableKey1 = 0x0123456789abcdef,
 };
 
-// Defines a table type, its hash, and its members. This macro should be call
-// once within a table struct or class to inform the serialization engine about
-// the table members and hash value. This is accomplished by befriending several
-// key classes and defining an internal type named NOP__ENTRIES that describes
-// the table type's Entry<T, Id> members.
-#define NOP_TABLE(string_name, type, ... /*entries*/)                \
-  template <typename, typename>                                      \
-  friend struct ::nop::Encoding;                                     \
-  template <typename, typename>                                      \
-  friend struct ::nop::HasEntryList;                                 \
-  template <typename>                                                \
-  friend struct ::nop::EntryListTraits;                              \
-  using NOP__ENTRIES = ::nop::EntryList<                             \
-      ::nop::HashValue<::nop::SipHash::Compute(                      \
-          string_name, ::nop::kNopTableKey0, ::nop::kNopTableKey1)>, \
-      NOP_MEMBER_LIST(type, __VA_ARGS__)>
+// Defines a table type, its namespace hash, and its members. This macro must be
+// invoked once within a table struct or class to inform the serialization
+// engine about the table members and hash value. This is accomplished by
+// befriending several key classes and defining an internal type named
+// NOP__ENTRIES that describes the table type's Entry<T, Id> members.
+#define NOP_TABLE_HASH(hash, type, ... /*entries*/)             \
+  template <typename, typename>                                 \
+  friend struct ::nop::Encoding;                                \
+  template <typename, typename>                                 \
+  friend struct ::nop::HasEntryList;                            \
+  template <typename>                                           \
+  friend struct ::nop::EntryListTraits;                         \
+  using NOP__ENTRIES = ::nop::EntryList<::nop::HashValue<hash>, \
+                                        NOP_MEMBER_LIST(type, __VA_ARGS__)>
+
+// Similar to NOP_TABLE_HASH except that the namespace hash is computed from a
+// compile-time hash of the given string literal that defines the namespace of
+// the table.
+#define NOP_TABLE_NS(string_name, type, ... /*entries*/)                    \
+  NOP_TABLE_HASH(::nop::SipHash::Compute(string_name, ::nop::kNopTableKey0, \
+                                         ::nop::kNopTableKey1),             \
+                 type, __VA_ARGS__)
+
+// Similar to NOP_TABLE_HASH except that the namespace hash is set to zero,
+// which has a compact encoding compared to average 64bit hash values. This
+// saves space in the encoding when namespace checks are not desired.
+#define NOP_TABLE(type, ... /*entries*/) NOP_TABLE_HASH(0, type, __VA_ARGS__)
 
 }  // namespace nop
 
-#endif // LIBNOP_INCLUDE_NOP_TABLE_H_
+#endif  // LIBNOP_INCLUDE_NOP_TABLE_H_
