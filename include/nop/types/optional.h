@@ -60,8 +60,8 @@ class Optional {
   constexpr Optional() noexcept : state_{} {}
 
   // Constructs a non-empty Optional from lvalue and rvalue type T.
-  explicit constexpr Optional(const T& value) : state_{value} {}
-  explicit constexpr Optional(T&& value) : state_{std::move(value)} {}
+  constexpr Optional(const T& value) : state_{value} {}
+  constexpr Optional(T&& value) : state_{std::move(value)} {}
 
   // Copy and move constructors.
   constexpr Optional(const Optional& other) : state_{other.state_} {}
