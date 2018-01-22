@@ -72,6 +72,7 @@ int main(int argc, char** argv) {
 #include <vector>
 
 #include <nop/serializer.h>
+#include <nop/structure.h>
 #include <nop/utility/stream_writer.h>
 
 namespace example {
@@ -81,7 +82,7 @@ struct Person {
   std::uint32_t age_years;
   std::uint8_t height_inches;
   std::uint16_t weight_pounds;
-  NOP_MEMBERS(Person, name, age_years, height_inches, weight_pounds);
+  NOP_STRUCTURE(Person, name, age_years, height_inches, weight_pounds);
 };
 
 }  // namespace example
@@ -109,6 +110,7 @@ int main(int argc, char** argv) {
 #include <string>
 
 #include <nop/serializer.h>
+#include <nop/structure.h>
 #include <nop/utility/stream_writer.h>
 
 namespace example {
@@ -128,7 +130,7 @@ struct UserDefined {
   std::string label_;
   std::vector<T> vector_;
 
-  NOP_MEMBERS(UserDefined, label_, vector_);
+  NOP_STRUCTURE(UserDefined, label_, vector_);
 };
 
 }  // namespace example
