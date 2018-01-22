@@ -80,7 +80,7 @@ class BufferReader {
 
   bool empty() const { return index_ == size_; }
 
-  std::size_t size() const { return index_; }
+  std::size_t remaining() const { return size_ - index_; }
   std::size_t capacity() const { return size_; }
 
  private:
