@@ -44,11 +44,12 @@
 //   size_t count;
 // };
 //
-// To handle the externally-defined structure use the macro NOP_STRUCTURE in the
-// C++ code that handles serializing the data. Parenthesis are used to group the
-// pair of members to treat as a logical buffer.
+// To handle the externally-defined structure use the macro
+// NOP_EXTERNAL_STRUCTURE in the C++ code that handles serializing the data.
+// Parenthesis are used to group the pair of members to treat as a logical
+// buffer.
 //
-// NOP_STRUCTURE(SomeCType, (data, count));
+// NOP_EXTERNAL_STRUCTURE(SomeCType, (data, count));
 //
 // Example of defining a C++ type with a logical buffer pair:
 
@@ -56,7 +57,7 @@
 // struct SomeTemplateType {
 //  std::array<T, 20> elements;
 //  std::size_t count;
-//  NOP_MEMBERS(SomeTemplateType, (elements, count));
+//  NOP_STRUCTURE(SomeTemplateType, (elements, count));
 // };
 //
 // Logical buffers are fungible with other array-like types:
@@ -64,14 +65,14 @@
 // struct A {
 //  int value;
 //  std::vector<int> data;
-//  NOP_MEMBERS(A, value, data);
+//  NOP_STRUCTURE(A, value, data);
 // };
 //
 // struct B {
 //  int value;
 //  int data[256];
 //  size_t count;
-//  NOP_MEMBERS(B, value, (data, count));
+//  NOP_STRUCTURE(B, value, (data, count));
 // };
 //
 // static_assert(nop::IsFungible<A, B>::value, "!!");

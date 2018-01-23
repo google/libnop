@@ -106,9 +106,9 @@ struct MemberList {
 };
 
 // Utility to retrieve a traits type that defines a MemberList for type T using
-// ADL. The macros NOP_STRUCTURE and NOP_TEMPLATE define the appropriate traits
-// type and a defintion of NOP__GetExternalMemberTraits that this utility finds
-// using ADL.
+// ADL. The macros NOP_STRUCTURE, NOP_EXTERNAL_STRUCTURE, and
+// NOP_EXTERNAL_TEMPLATE define the appropriate traits type and a defintion of
+// NOP__GetExternalMemberTraits that this utility finds using ADL.
 template <typename T>
 using ExternalMemberTraits =
     decltype(NOP__GetExternalMemberTraits(std::declval<T*>()));
