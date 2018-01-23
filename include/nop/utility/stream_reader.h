@@ -42,20 +42,19 @@ class StreamReader {
   Status<void> Ensure(std::size_t /*size*/) { return {}; }
 
   Status<void> Read(EncodingByte* prefix) {
-    stream_.read(reinterpret_cast<typename IStream::char_type*>(prefix),
-                 sizeof(EncodingByte));
+    using CharType = typename IStream::char_type;
+    stream_.read(reinterpret_cast<CharType*>(prefix), sizeof(EncodingByte));
 
     return ReturnStatus();
   }
 
-  template <typename IterBegin, typename IterEnd>
-  Status<void> ReadRaw(IterBegin begin, IterEnd end) {
-    const std::size_t length_bytes =
-        std::distance(begin, end) *
-        sizeof(typename std::iterator_traits<IterBegin>::value_type);
+  Status<void> ReadRaw(void* begin, void* end) {
+    using CharType = typename IStream::char_type;
+    CharType* begin_char = static_cast<CharType*>(begin);
+    CharType* end_char = static_cast<CharType*>(end);
 
-    stream_.read(reinterpret_cast<typename IStream::char_type*>(&*begin),
-                 length_bytes);
+    const std::size_t length_bytes = std::distance(begin_char, end_char);
+    stream_.read(begin_char, length_bytes);
 
     return ReturnStatus();
   }

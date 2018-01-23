@@ -53,17 +53,16 @@ class BufferWriter {
     }
   }
 
-  template <typename IterBegin, typename IterEnd>
-  Status<void> WriteRaw(IterBegin begin, IterEnd end) {
-    const std::size_t length_bytes =
-        std::distance(begin, end) *
-        sizeof(typename std::iterator_traits<IterBegin>::value_type);
+  Status<void> WriteRaw(const void* begin, const void* end) {
+    using Byte = std::uint8_t;
+    const Byte* begin_byte = static_cast<const Byte*>(begin);
+    const Byte* end_byte = static_cast<const Byte*>(end);
 
+    const std::size_t length_bytes = std::distance(begin_byte, end_byte);
     if (length_bytes > (size_ - index_))
       return ErrorStatus::WriteLimitReached;
 
-    std::copy(reinterpret_cast<const std::uint8_t*>(&*begin),
-              reinterpret_cast<const std::uint8_t*>(&*end), &buffer_[index_]);
+    std::copy(begin_byte, end_byte, &buffer_[index_]);
 
     index_ += length_bytes;
     return {};

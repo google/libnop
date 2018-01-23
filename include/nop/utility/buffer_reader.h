@@ -20,7 +20,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <type_traits>
 
 #include <nop/base/encoding.h>
 #include <nop/base/handle.h>
@@ -54,17 +53,16 @@ class BufferReader {
     }
   }
 
-  template <typename IterBegin, typename IterEnd>
-  Status<void> ReadRaw(IterBegin begin, IterEnd end) {
-    const std::size_t length_bytes =
-        std::distance(begin, end) *
-        sizeof(typename std::iterator_traits<IterBegin>::value_type);
+  Status<void> ReadRaw(void* begin, void* end) {
+    using Byte = std::uint8_t;
+    Byte* begin_byte = static_cast<Byte*>(begin);
+    Byte* end_byte = static_cast<Byte*>(end);
 
+    const std::size_t length_bytes = std::distance(begin_byte, end_byte);
     if (length_bytes > (size_ - index_))
       return ErrorStatus::ReadLimitReached;
 
-    std::copy(&buffer_[index_], &buffer_[index_ + length_bytes],
-              reinterpret_cast<std::uint8_t*>(&*begin));
+    std::copy(&buffer_[index_], &buffer_[index_ + length_bytes], begin_byte);
 
     index_ += length_bytes;
     return {};

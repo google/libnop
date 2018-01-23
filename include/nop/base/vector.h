@@ -135,12 +135,13 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte prefix, const Type& value,
                                    Writer* writer) {
-    auto status =
-        Encoding<std::uint64_t>::Write(value.size() * sizeof(T), writer);
+    const std::size_t length = value.size();
+    const std::size_t length_bytes = length * sizeof(T);
+    auto status = Encoding<std::uint64_t>::Write(length_bytes, writer);
     if (!status)
       return status;
 
-    return writer->WriteRaw(value.begin(), value.end());
+    return writer->WriteRaw(&value[0], &value[length]);
   }
 
   template <typename Reader>

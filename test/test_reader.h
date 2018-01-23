@@ -20,7 +20,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <type_traits>
 #include <vector>
 
 #include <nop/base/encoding.h>
@@ -49,24 +48,23 @@ class TestReader {
     }
   }
 
-  template <typename IterBegin, typename IterEnd>
-  Status<void> ReadRaw(IterBegin begin, IterEnd end) {
-    const std::size_t length_bytes =
-        std::distance(begin, end) *
-        sizeof(typename std::iterator_traits<IterBegin>::value_type);
+  Status<void> ReadRaw(void* begin, void* end) {
+    using Byte = std::uint8_t;
+    Byte* begin_byte = static_cast<Byte*>(begin);
+    Byte* end_byte = static_cast<Byte*>(end);
 
+    const std::size_t length_bytes = std::distance(begin_byte, end_byte);
     if (length_bytes > (data_.size() - index_))
       return ErrorStatus::ReadLimitReached;
 
-    std::copy(&data_[index_], &data_[index_ + length_bytes],
-              reinterpret_cast<std::uint8_t*>(&*begin));
+    std::copy(&data_[index_], &data_[index_ + length_bytes], begin_byte);
     index_ += length_bytes;
     return {};
   }
 
   Status<void> Skip(std::size_t padding_bytes) {
     std::vector<std::uint8_t> padding(padding_bytes);
-    return ReadRaw(padding.begin(), padding.end());
+    return ReadRaw(&*padding.begin(), &*padding.end());
   }
 
   template <typename HandleType>

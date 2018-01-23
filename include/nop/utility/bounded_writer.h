@@ -20,7 +20,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <type_traits>
 
 #include <nop/base/encoding.h>
 #include <nop/base/handle.h>
@@ -63,12 +62,12 @@ class BoundedWriter {
     }
   }
 
-  template <typename IterBegin, typename IterEnd>
-  Status<void> WriteRaw(IterBegin begin, IterEnd end) {
-    const std::size_t length_bytes =
-        std::distance(begin, end) *
-        sizeof(typename std::iterator_traits<IterBegin>::value_type);
+  Status<void> WriteRaw(const void* begin, const void* end) {
+    using Byte = std::uint8_t;
+    const Byte* begin_byte = static_cast<const Byte*>(begin);
+    const Byte* end_byte = static_cast<const Byte*>(end);
 
+    const std::size_t length_bytes = std::distance(begin_byte, end_byte);
     if (length_bytes > (size_ - index_))
       return ErrorStatus::WriteLimitReached;
 

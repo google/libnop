@@ -52,12 +52,13 @@ struct Encoding<std::string> : EncodingIO<std::string> {
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
-    const std::size_t length_bytes = value.length() * sizeof(Type::value_type);
+    const std::size_t length = value.length();
+    const std::size_t length_bytes = length * sizeof(Type::value_type);
     auto status = Encoding<std::uint64_t>::Write(length_bytes, writer);
     if (!status)
       return status;
 
-    return writer->WriteRaw(value.begin(), value.end());
+    return writer->WriteRaw(&value[0], &value[length]);
   }
 
   template <typename Reader>

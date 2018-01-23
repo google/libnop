@@ -19,7 +19,6 @@
 
 #include <cstdint>
 #include <iterator>
-#include <type_traits>
 #include <vector>
 
 #include <nop/base/encoding.h>
@@ -42,26 +41,25 @@ class TestWriter {
     return {};
   }
 
-  template <typename IterBegin, typename IterEnd>
-  Status<void> WriteRaw(IterBegin begin, IterEnd end) {
-    const std::size_t length_bytes =
-        std::distance(begin, end) *
-        sizeof(typename std::iterator_traits<IterBegin>::value_type);
+  Status<void> WriteRaw(const void* begin, const void* end) {
+    using Byte = std::uint8_t;
+    const Byte* begin_byte = static_cast<const Byte*>(begin);
+    const Byte* end_byte = static_cast<const Byte*>(end);
+
+    const std::size_t length_bytes = std::distance(begin_byte, end_byte);
 
     // Extend the buffer to accomodate the data.
     const std::size_t start_offset = data_.size();
     data_.resize(start_offset + length_bytes);
 
-    std::copy(reinterpret_cast<const std::uint8_t*>(&*begin),
-              reinterpret_cast<const std::uint8_t*>(&*end),
-              &data_[start_offset]);
+    std::copy(begin_byte, end_byte, &data_[start_offset]);
     return {};
   }
 
   Status<void> Skip(std::size_t padding_bytes,
                     std::uint8_t padding_value = 0x00) {
     std::vector<std::uint8_t> padding(padding_bytes, padding_value);
-    return WriteRaw(padding.begin(), padding.end());
+    return WriteRaw(&*padding.begin(), &*padding.end());
   }
 
   template <typename HandleType>

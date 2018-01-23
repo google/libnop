@@ -47,14 +47,13 @@ class StreamWriter {
     return ReturnStatus();
   }
 
-  template <typename IterBegin, typename IterEnd>
-  Status<void> WriteRaw(IterBegin begin, IterEnd end) {
-    const std::size_t length_bytes =
-        std::distance(begin, end) *
-        sizeof(typename std::iterator_traits<IterBegin>::value_type);
+  Status<void> WriteRaw(const void* begin, const void* end) {
+    using CharType = typename OStream::char_type;
+    const CharType* begin_char = static_cast<const CharType*>(begin);
+    const CharType* end_char = static_cast<const CharType*>(end);
 
-    stream_.write(reinterpret_cast<const typename OStream::char_type*>(&*begin),
-                  length_bytes);
+    const std::size_t length_bytes = std::distance(begin_char, end_char);
+    stream_.write(begin_char, length_bytes);
 
     return ReturnStatus();
   }
