@@ -109,6 +109,34 @@ struct Entry<T, Id_, DeletedEntry> {
   void clear() {}
 };
 
+// Defines a table type, its namespace hash, and its members. This macro must be
+// invoked once within a table struct or class to inform the serialization
+// engine about the table members and hash value. The macro befriends several
+// key classes and defines an internal type named NOP__ENTRIES that describes
+// the table type's Entry<T, Id> members to the engine.
+#define NOP_TABLE_HASH(hash, type, ... /*entries*/)             \
+  template <typename, typename>                                 \
+  friend struct ::nop::Encoding;                                \
+  template <typename, typename>                                 \
+  friend struct ::nop::HasEntryList;                            \
+  template <typename>                                           \
+  friend struct ::nop::EntryListTraits;                         \
+  using NOP__ENTRIES = ::nop::EntryList<::nop::HashValue<hash>, \
+                                        NOP_MEMBER_LIST(type, __VA_ARGS__)>
+
+// Similar to NOP_TABLE_HASH except that the namespace hash is computed from a
+// compile-time hash of the given string literal that defines the namespace of
+// the table.
+#define NOP_TABLE_NS(string_name, type, ... /*entries*/)                    \
+  NOP_TABLE_HASH(::nop::SipHash::Compute(string_name, ::nop::kNopTableKey0, \
+                                         ::nop::kNopTableKey1),             \
+                 type, __VA_ARGS__)
+
+// Similar to NOP_TABLE_HASH except that the namespace hash is set to zero,
+// which has a compact encoding compared to average 64bit hash values. This
+// saves space in the encoding when namespace checks are not desired.
+#define NOP_TABLE(type, ... /*entries*/) NOP_TABLE_HASH(0, type, __VA_ARGS__)
+
 // Determines whether two entries have the same id.
 template <typename A, typename B>
 struct SameEntryId : std::integral_constant<bool, A::Id == B::Id> {};
@@ -173,34 +201,6 @@ enum : std::uint64_t {
   kNopTableKey0 = 0xbaadf00ddeadbeef,
   kNopTableKey1 = 0x0123456789abcdef,
 };
-
-// Defines a table type, its namespace hash, and its members. This macro must be
-// invoked once within a table struct or class to inform the serialization
-// engine about the table members and hash value. The macro befriends several
-// key classes and defines an internal type named NOP__ENTRIES that describes
-// the table type's Entry<T, Id> members to the engine.
-#define NOP_TABLE_HASH(hash, type, ... /*entries*/)             \
-  template <typename, typename>                                 \
-  friend struct ::nop::Encoding;                                \
-  template <typename, typename>                                 \
-  friend struct ::nop::HasEntryList;                            \
-  template <typename>                                           \
-  friend struct ::nop::EntryListTraits;                         \
-  using NOP__ENTRIES = ::nop::EntryList<::nop::HashValue<hash>, \
-                                        NOP_MEMBER_LIST(type, __VA_ARGS__)>
-
-// Similar to NOP_TABLE_HASH except that the namespace hash is computed from a
-// compile-time hash of the given string literal that defines the namespace of
-// the table.
-#define NOP_TABLE_NS(string_name, type, ... /*entries*/)                    \
-  NOP_TABLE_HASH(::nop::SipHash::Compute(string_name, ::nop::kNopTableKey0, \
-                                         ::nop::kNopTableKey1),             \
-                 type, __VA_ARGS__)
-
-// Similar to NOP_TABLE_HASH except that the namespace hash is set to zero,
-// which has a compact encoding compared to average 64bit hash values. This
-// saves space in the encoding when namespace checks are not desired.
-#define NOP_TABLE(type, ... /*entries*/) NOP_TABLE_HASH(0, type, __VA_ARGS__)
 
 }  // namespace nop
 
