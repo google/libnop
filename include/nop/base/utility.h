@@ -20,6 +20,8 @@
 #include <cstddef>
 #include <type_traits>
 
+#include <nop/traits/void.h>
+
 namespace nop {
 
 // Counting template for recursive template definitions.
@@ -73,10 +75,6 @@ using EnableIfNotArithmetic =
 template <typename T, typename U>
 using EnableIfConvertible =
     typename std::enable_if<std::is_convertible<T, U>::value>::type;
-
-// Utility type for SFINAE expression evaluation.
-template <typename... Ts>
-using Void = void;
 
 // Utility type to retrieve the first type in a parameter pack.
 template <typename...>
