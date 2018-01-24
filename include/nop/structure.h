@@ -25,9 +25,30 @@ namespace nop {
 //
 // User-defined structures are structs or classes that have been annotated so
 // that the serialization engine understands how to read and write them.
+// Annotation is performed by invoking one of the following three macros:
+//  * NOP_STRUCTURE in the body of the struct, class, or template.
+//  * NOP_EXTERNAL_STRUCTURE at namespace scope matching the type.
+//  * NOP_EXTERNAL_TEMPLATE at namespace scope matching the template.
+//
+// Example:
+//
+//  struct User {
+//    std::string name;
+//    std::uint8_t age;
+//
+//    enum class Gender {
+//      Other,
+//      Female,
+//      Male,
+//    };
+//    nop::Optional<Gender> gender;
+//
+//    NOP_STRUCTURE(User, name, age, gender);
+//  };
+//
 
 // Defines the set of members belonging to a type that should be
-// serialized/deserialized. This macro must be inkoked once within the
+// serialized/deserialized. This macro must be invoked once within the
 // struct/class definition, preferrably in the private section for classes with
 // private data.
 #define NOP_STRUCTURE(type, ... /*members*/)  \

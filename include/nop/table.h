@@ -176,9 +176,9 @@ enum : std::uint64_t {
 
 // Defines a table type, its namespace hash, and its members. This macro must be
 // invoked once within a table struct or class to inform the serialization
-// engine about the table members and hash value. This is accomplished by
-// befriending several key classes and defining an internal type named
-// NOP__ENTRIES that describes the table type's Entry<T, Id> members.
+// engine about the table members and hash value. The macro befriends several
+// key classes and defines an internal type named NOP__ENTRIES that describes
+// the table type's Entry<T, Id> members to the engine.
 #define NOP_TABLE_HASH(hash, type, ... /*entries*/)             \
   template <typename, typename>                                 \
   friend struct ::nop::Encoding;                                \
