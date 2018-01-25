@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <type_traits>
 
+#include <nop/traits/is_template_base_of.h>
 #include <nop/traits/void.h>
 
 namespace nop {
@@ -109,16 +110,6 @@ struct ArrayTraits<const std::array<T, Length_>> {
   using ElementType = T;
   using Type = const std::array<T, Length>;
 };
-
-// Utility to deduce the template type from a derived type.
-template <template <typename...> class TT, typename... Ts>
-std::true_type DeduceTemplateType(const TT<Ts...>*);
-template <template <typename...> class TT>
-std::false_type DeduceTemplateType(...);
-
-// Utility determining whether template type TT<...> is a base of type T.
-template <template <typename...> class TT, typename T>
-using IsTemplateBaseOf = decltype(DeduceTemplateType<TT>(std::declval<T*>()));
 
 // Logical AND over template parameter pack.
 template <typename... T>
