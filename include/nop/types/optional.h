@@ -21,6 +21,9 @@
 #include <type_traits>
 #include <utility>
 
+#include <nop/traits/is_comparable.h>
+#include <nop/traits/is_template_base_of.h>
+
 namespace nop {
 
 // Type tag to disambiguate in-place constructors.
@@ -126,8 +129,8 @@ class Optional {
 
   // Copy assignment from a different Optional type.
   template <typename U>
-  std::enable_if_t<std::is_constructible<T, const U&>::value, Optional&> operator=(
-      const Optional<U>& other) {
+  std::enable_if_t<std::is_constructible<T, const U&>::value, Optional&>
+  operator=(const Optional<U>& other) {
     if (!other.empty()) {
       Assign(other.value());
     } else {
@@ -159,6 +162,8 @@ class Optional {
 
   // Returns true if the Optional is empty.
   constexpr bool empty() const noexcept { return state_.empty; }
+
+  // Returns true if the Optional is non-empty.
   explicit constexpr operator bool() const noexcept { return !empty(); }
 
   // Returns the underlying value. These accessors may only be called when
@@ -368,6 +373,150 @@ class Optional {
   // Tracks the value and empty/non-empty state.
   State<T> state_;
 };
+
+// Relational operators.
+
+template <typename T, typename U,
+          typename Enabled = EnableIfComparableEqual<T, U>>
+constexpr bool operator==(const Optional<T>& a, const Optional<U>& b) {
+  if (a.empty() != b.empty())
+    return false;
+  else if (a.empty())
+    return true;
+  else
+    return a.get() == b.get();
+}
+
+template <typename T, typename U,
+          typename Enabled = EnableIfComparableEqual<T, U>>
+constexpr bool operator!=(const Optional<T>& a, const Optional<U>& b) {
+  return !(a == b);
+}
+
+template <typename T, typename U,
+          typename Enabled = EnableIfComparableLess<T, U>>
+constexpr bool operator<(const Optional<T>& a, const Optional<U>& b) {
+  if (b.empty())
+    return false;
+  else if (a.empty())
+    return true;
+  else
+    return a.get() < b.get();
+}
+
+template <typename T, typename U,
+          typename Enabled = EnableIfComparableLess<T, U>>
+constexpr bool operator>(const Optional<T>& a, const Optional<U>& b) {
+  return b < a;
+}
+
+template <typename T, typename U,
+          typename Enabled = EnableIfComparableLess<T, U>>
+constexpr bool operator<=(const Optional<T>& a, const Optional<U>& b) {
+  return !(b < a);
+}
+
+template <typename T, typename U,
+          typename Enabled = EnableIfComparableLess<T, U>>
+constexpr bool operator>=(const Optional<T>& a, const Optional<U>& b) {
+  return !(a < b);
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableEqual<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, U>::value>>
+constexpr bool operator==(const Optional<T>& a, const U& b) {
+  return !a.empty() ? a.get() == b : false;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableEqual<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, T>::value>>
+constexpr bool operator==(const T& a, const Optional<U>& b) {
+  return !b.empty() ? a == b.get() : false;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableEqual<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, U>::value>>
+constexpr bool operator!=(const Optional<T>& a, const U& b) {
+  return !(a == b);
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableEqual<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, T>::value>>
+constexpr bool operator!=(const T& a, const Optional<U>& b) {
+  return !(a == b);
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, U>::value>>
+constexpr bool operator<(const Optional<T>& a, const U& b) {
+  return !a.empty() ? a.get() < b : true;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, T>::value>>
+constexpr bool operator<(const T& a, const Optional<U>& b) {
+  return !b.empty() ? a < b.get() : false;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, U>::value>>
+constexpr bool operator>(const Optional<T>& a, const U& b) {
+  return !a.empty() ? b < a.get() : false;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, T>::value>>
+constexpr bool operator>(const T& a, const Optional<U>& b) {
+  return !b.empty() ? b.get() < a : true;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, U>::value>>
+constexpr bool operator<=(const Optional<T>& a, const U& b) {
+  return !a.empty() ? !(b < a.get()) : true;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, T>::value>>
+constexpr bool operator<=(const T& a, const Optional<U>& b) {
+  return !b.empty() ? !(b.get() < a) : false;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, U>::value>>
+constexpr bool operator>=(const Optional<T>& a, const U& b) {
+  return !a.empty() ? !(a.get() < b) : false;
+}
+
+template <
+    typename T, typename U,
+    typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
+                                        !IsTemplateBaseOf<Optional, T>::value>>
+constexpr bool operator>=(const T& a, const Optional<U>& b) {
+  return !b.empty() ? !(a < b.get()) : true;
+}
 
 }  // namespace nop
 

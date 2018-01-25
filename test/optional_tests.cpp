@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include <nop/types/optional.h>
 
@@ -114,6 +114,14 @@ template <typename T>
 std::size_t InstrumentType<T>::move_assignment_count_ = 0;
 template <typename T>
 std::size_t InstrumentType<T>::copy_assignment_count_ = 0;
+
+// Type to test relational operator enables on subclasses of Optional.
+template <typename T>
+struct OptionalSubclass : Optional<T> {
+  using Optional<T>::Optional;
+
+  constexpr bool has_value() const { return !this->empty(); }
+};
 
 }  // anonymous namespace
 
@@ -453,6 +461,211 @@ TEST(Optional, MoveConstructor) {
     ASSERT_FALSE(b.empty());
     EXPECT_TRUE(a.get() == nullptr);
     EXPECT_TRUE(b.get() != nullptr);
+  }
+}
+
+TEST(Optional, RelationalOperators) {
+  {
+    const Optional<int> a{};
+    const Optional<int> b{};
+    EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
+    EXPECT_FALSE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_TRUE(a >= b);
+    EXPECT_TRUE(a <= b);
+  }
+
+  {
+    const Optional<int> a{10};
+    const Optional<int> b{10};
+    EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
+    EXPECT_FALSE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_TRUE(a >= b);
+    EXPECT_TRUE(a <= b);
+  }
+
+  {
+    const Optional<int> a{10};
+    const Optional<int> b{20};
+
+    EXPECT_FALSE(a == b);
+    EXPECT_TRUE(a != b);
+    EXPECT_TRUE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_FALSE(a >= b);
+    EXPECT_TRUE(a <= b);
+
+    EXPECT_FALSE(b == a);
+    EXPECT_TRUE(b != a);
+    EXPECT_FALSE(b < a);
+    EXPECT_TRUE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_FALSE(b <= a);
+  }
+
+  {
+    const Optional<int> a{10};
+    const int b{10};
+
+    EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
+    EXPECT_FALSE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_TRUE(a >= b);
+    EXPECT_TRUE(a <= b);
+
+    EXPECT_TRUE(b == a);
+    EXPECT_FALSE(b != a);
+    EXPECT_FALSE(b < a);
+    EXPECT_FALSE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_TRUE(b <= a);
+  }
+
+  {
+    const Optional<int> a{10};
+    const int b{20};
+
+    EXPECT_FALSE(a == b);
+    EXPECT_TRUE(a != b);
+    EXPECT_TRUE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_FALSE(a >= b);
+    EXPECT_TRUE(a <= b);
+
+    EXPECT_FALSE(b == a);
+    EXPECT_TRUE(b != a);
+    EXPECT_FALSE(b < a);
+    EXPECT_TRUE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_FALSE(b <= a);
+  }
+
+  {
+    const Optional<int> a{};
+    const int b{10};
+
+    EXPECT_FALSE(a == b);
+    EXPECT_TRUE(a != b);
+    EXPECT_TRUE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_FALSE(a >= b);
+    EXPECT_TRUE(a <= b);
+
+    EXPECT_FALSE(b == a);
+    EXPECT_TRUE(b != a);
+    EXPECT_FALSE(b < a);
+    EXPECT_TRUE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_FALSE(b <= a);
+  }
+
+  {
+    const Optional<std::string> a{};
+    const Optional<std::string> b{};
+    EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
+    EXPECT_FALSE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_TRUE(a >= b);
+    EXPECT_TRUE(a <= b);
+  }
+
+  {
+    const Optional<std::string> a{"bar"};
+    const Optional<std::string> b{"bar"};
+    EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
+    EXPECT_FALSE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_TRUE(a >= b);
+    EXPECT_TRUE(a <= b);
+  }
+
+  {
+    const Optional<std::string> a{"bar"};
+    const Optional<std::string> b{"foo"};
+
+    EXPECT_FALSE(a == b);
+    EXPECT_TRUE(a != b);
+    EXPECT_TRUE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_FALSE(a >= b);
+    EXPECT_TRUE(a <= b);
+
+    EXPECT_FALSE(b == a);
+    EXPECT_TRUE(b != a);
+    EXPECT_FALSE(b < a);
+    EXPECT_TRUE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_FALSE(b <= a);
+  }
+
+  {
+    const Optional<std::string> a{"bar"};
+    const std::string b{"bar"};
+
+    EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
+    EXPECT_FALSE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_TRUE(a >= b);
+    EXPECT_TRUE(a <= b);
+
+    EXPECT_TRUE(b == a);
+    EXPECT_FALSE(b != a);
+    EXPECT_FALSE(b < a);
+    EXPECT_FALSE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_TRUE(b <= a);
+  }
+
+  {
+    const Optional<std::string> a{"bar"};
+    const std::string b{"foo"};
+
+    EXPECT_FALSE(a == b);
+    EXPECT_TRUE(a != b);
+    EXPECT_TRUE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_FALSE(a >= b);
+    EXPECT_TRUE(a <= b);
+
+    EXPECT_FALSE(b == a);
+    EXPECT_TRUE(b != a);
+    EXPECT_FALSE(b < a);
+    EXPECT_TRUE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_FALSE(b <= a);
+  }
+
+  {
+    const Optional<std::string> a{};
+    const std::string b{"bar"};
+
+    EXPECT_FALSE(a == b);
+    EXPECT_TRUE(a != b);
+    EXPECT_TRUE(a < b);
+    EXPECT_FALSE(a > b);
+    EXPECT_FALSE(a >= b);
+    EXPECT_TRUE(a <= b);
+
+    EXPECT_FALSE(b == a);
+    EXPECT_TRUE(b != a);
+    EXPECT_FALSE(b < a);
+    EXPECT_TRUE(b > a);
+    EXPECT_TRUE(b >= a);
+    EXPECT_FALSE(b <= a);
+  }
+
+  {
+    OptionalSubclass<std::string> a{};
+    OptionalSubclass<std::string> b{};
+
+    EXPECT_TRUE(a == b);
   }
 }
 
