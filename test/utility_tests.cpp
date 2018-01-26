@@ -57,12 +57,12 @@ struct TestExternalMemberList2 {
 NOP_EXTERNAL_STRUCTURE(TestExternalMemberList2, a, b);
 
 template <typename T>
-EnableIfHasMemberList<T, bool> CheckHasMemberList(const T& value) {
+EnableIfHasMemberList<T, bool> CheckHasMemberList(const T& /*value*/) {
   return true;
 }
 
 template <typename T>
-EnableIfNotHasMemberList<T, bool> CheckHasMemberList(const T& value) {
+EnableIfNotHasMemberList<T, bool> CheckHasMemberList(const T& /*value*/) {
   return false;
 }
 

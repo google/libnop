@@ -38,7 +38,7 @@ template <typename... Types>
 struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   using Type = std::tuple<Types...>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Array;
   }
 
@@ -63,7 +63,7 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
     std::uint64_t size;
     auto status = Encoding<std::uint64_t>::Read(&size, reader);
@@ -81,7 +81,9 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
       std::remove_reference_t<std::tuple_element_t<Index, Type>>>;
 
   // Terminates template recursion.
-  static constexpr std::size_t Size(const Type& value, Index<0>) { return 0; }
+  static constexpr std::size_t Size(const Type& /*value*/, Index<0>) {
+    return 0;
+  }
 
   // Recursively determines the size of all tuple elements.
   template <std::size_t index>
@@ -92,7 +94,8 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
 
   // Terminates template recursion.
   template <typename Writer>
-  static Status<void> WriteElements(const Type& value, Writer*, Index<0>) {
+  static Status<void> WriteElements(const Type& /*value*/, Writer* /*writer*/,
+                                    Index<0>) {
     return {};
   }
 
@@ -109,7 +112,8 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadElements(Type* value, Reader* reader, Index<0>) {
+  static Status<void> ReadElements(Type* /*value*/, Reader* /*reader*/,
+                                   Index<0>) {
     return {};
   }
 

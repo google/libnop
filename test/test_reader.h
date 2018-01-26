@@ -71,7 +71,7 @@ class TestReader {
   Status<HandleType> GetHandle(HandleReference handle_reference) {
     if (handle_reference < 0)
       return {HandleType{}};
-    else if (handle_reference < handles_.size())
+    else if (handle_reference < static_cast<HandleReference>(handles_.size()))
       return {HandleType{handles_[handle_reference]}};
     else
       return ErrorStatus::InvalidHandleReference;

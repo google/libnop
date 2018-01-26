@@ -17,10 +17,10 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_TABLE_H_
 #define LIBNOP_INCLUDE_NOP_BASE_TABLE_H_
 
-#include <nop/table.h>
 #include <nop/base/encoding.h>
 #include <nop/base/members.h>
 #include <nop/base/utility.h>
+#include <nop/table.h>
 #include <nop/utility/bounded_reader.h>
 #include <nop/utility/bounded_writer.h>
 
@@ -61,7 +61,7 @@ namespace nop {
 
 template <typename Table>
 struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
-  static constexpr EncodingByte Prefix(const Table& value) {
+  static constexpr EncodingByte Prefix(const Table& /*value*/) {
     return EncodingByte::Table;
   }
 
@@ -79,7 +79,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Table& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Table& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(
         EntryListTraits<Table>::EntryList::Hash, writer);
@@ -95,7 +95,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Table* value,
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Table* value,
                                   Reader* reader) {
     // Clear entries so that we can detect whether there are duplicate entries
     // for the same id during deserialization.
@@ -123,7 +123,8 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   using PointerAt =
       typename EntryListTraits<Table>::EntryList::template At<Index>;
 
-  static constexpr std::size_t ActiveEntryCount(const Table& value, Index<0>) {
+  static constexpr std::size_t ActiveEntryCount(const Table& /*value*/,
+                                                Index<0>) {
     return 0;
   }
 
@@ -149,7 +150,9 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     return 0;
   }
 
-  static constexpr std::size_t Size(const Table& value, Index<0>) { return 0; }
+  static constexpr std::size_t Size(const Table& /*value*/, Index<0>) {
+    return 0;
+  }
 
   template <std::size_t index>
   static constexpr std::size_t Size(const Table& value, Index<index>) {
@@ -157,7 +160,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     return Size(value, Index<index - 1>{}) + Size(Pointer::Resolve(value));
   }
 
-  static void ClearEntries(Table* value, Index<0>) {}
+  static void ClearEntries(Table* /*value*/, Index<0>) {}
 
   template <std::size_t index>
   static void ClearEntries(Table* value, Index<index>) {

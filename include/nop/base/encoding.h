@@ -184,7 +184,7 @@ struct Encoding<bool> : EncodingIO<bool> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, bool /*value*/,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, bool /*value*/,
                                    Writer* /*writer*/) {
     return {};
   }

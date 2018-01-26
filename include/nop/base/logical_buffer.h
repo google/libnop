@@ -93,7 +93,7 @@ struct Encoding<
       std::remove_const_t<typename ArrayTraits<BufferType>::ElementType>;
   enum : std::size_t { Length = ArrayTraits<BufferType>::Length };
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Array;
   }
 
@@ -112,7 +112,7 @@ struct Encoding<
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     const std::uint64_t size = static_cast<std::uint64_t>(value.size());
     if (size > Length)
@@ -132,7 +132,7 @@ struct Encoding<
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
     std::uint64_t size;
     auto status = Encoding<std::uint64_t>::Read(&size, reader);
@@ -164,7 +164,7 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
       std::remove_const_t<typename ArrayTraits<BufferType>::ElementType>;
   enum : std::size_t { Length = ArrayTraits<BufferType>::Length };
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Binary;
   }
 
@@ -179,7 +179,7 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     const std::uint64_t size = value.size();
     if (size > Length)
@@ -194,7 +194,7 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
     std::uint64_t size_bytes;
     auto status = Encoding<std::uint64_t>::Read(&size_bytes, reader);

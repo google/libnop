@@ -440,7 +440,7 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
   // Terminates recursion when searching for the given method selector. Reaching
   // this function means the selector was not found in this dispatch table.
   template <typename MethodSelector>
-  bool MatchTable(MethodSelector method_selector, Index<0>) {
+  bool MatchTable(MethodSelector /*method_selector*/, Index<0>) {
     return false;
   }
 
@@ -457,8 +457,9 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
   // Terminates recursion when searching for the given method selector to
   // dispatch.
   template <typename Receiver, typename MethodSelector>
-  Status<void> DispatchTable(Receiver* receiver, MethodSelector method_selector,
-                             Index<0>, Args&&... args) {
+  Status<void> DispatchTable(Receiver* /*receiver*/,
+                             MethodSelector /*method_selector*/, Index<0>,
+                             Args&&... /*args*/) {
     return ErrorStatus::InvalidInterfaceMethod;
   }
 
@@ -543,8 +544,7 @@ inline constexpr MethodSelector ComputeMethodSelector(
 // Defines an interface with a 32bit method selector type. This is an
 // optimiztion intended to small 32bit platforms such as microcontrollers.
 // Larger 32bit platforms should use the 64bit variant.
-#define NOP_INTERFACE32(string_name) \
-  _NOP_INTERFACE(std::uint32_t, string_name)
+#define NOP_INTERFACE32(string_name) _NOP_INTERFACE(std::uint32_t, string_name)
 
 // Defines a remote method name and signature. This macro must be called within
 // a class or structure definition, and may appear in public, protected, or

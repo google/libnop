@@ -51,7 +51,7 @@ struct Encoding<std::array<T, Length>, EnableIfNotIntegral<T>>
     : EncodingIO<std::array<T, Length>> {
   using Type = std::array<T, Length>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Array;
   }
 
@@ -69,7 +69,7 @@ struct Encoding<std::array<T, Length>, EnableIfNotIntegral<T>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(Length, writer);
     if (!status)
@@ -108,7 +108,7 @@ template <typename T, std::size_t Length>
 struct Encoding<T[Length], EnableIfNotIntegral<T>> : EncodingIO<T[Length]> {
   using Type = T[Length];
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Array;
   }
 
@@ -126,7 +126,7 @@ struct Encoding<T[Length], EnableIfNotIntegral<T>> : EncodingIO<T[Length]> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(Length, writer);
     if (!status)
@@ -166,7 +166,7 @@ struct Encoding<std::array<T, Length>, EnableIfIntegral<T>>
     : EncodingIO<std::array<T, Length>> {
   using Type = std::array<T, Length>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Binary;
   }
 
@@ -181,7 +181,7 @@ struct Encoding<std::array<T, Length>, EnableIfIntegral<T>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(Length * sizeof(T), writer);
     if (!status)
@@ -208,7 +208,7 @@ template <typename T, std::size_t Length>
 struct Encoding<T[Length], EnableIfIntegral<T>> : EncodingIO<T[Length]> {
   using Type = T[Length];
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Binary;
   }
 
@@ -223,7 +223,7 @@ struct Encoding<T[Length], EnableIfIntegral<T>> : EncodingIO<T[Length]> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(Length * sizeof(T), writer);
     if (!status)

@@ -36,7 +36,7 @@ namespace nop {
 
 template <typename T>
 struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
-  static constexpr EncodingByte Prefix(const T& value) {
+  static constexpr EncodingByte Prefix(const T& /*value*/) {
     return EncodingByte::Structure;
   }
 
@@ -50,7 +50,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const T& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const T& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(Count, writer);
     if (!status)
@@ -60,7 +60,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, T* value,
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, T* value,
                                   Reader* reader) {
     std::uint64_t size = 0;
     auto status = Encoding<std::uint64_t>::Read(&size, reader);
@@ -79,7 +79,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   using PointerAt =
       typename MemberListTraits<T>::MemberList::template At<Index>;
 
-  static constexpr std::size_t Size(const T& value, Index<0>) { return 0; }
+  static constexpr std::size_t Size(const T& /*value*/, Index<0>) { return 0; }
 
   template <std::size_t index>
   static constexpr std::size_t Size(const T& value, Index<index>) {

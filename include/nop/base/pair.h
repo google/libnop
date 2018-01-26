@@ -38,7 +38,7 @@ template <typename T, typename U>
 struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
   using Type = std::pair<T, U>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Array;
   }
 
@@ -53,7 +53,7 @@ struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(2u, writer);
     if (!status)

@@ -39,7 +39,7 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
     : EncodingIO<std::map<Key, T, Compare, Allocator>> {
   using Type = std::map<Key, T, Compare, Allocator>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Map;
   }
 
@@ -59,7 +59,7 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(value.size(), writer);
     if (!status)
@@ -79,7 +79,7 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
     std::uint64_t size;
     auto status = Encoding<std::uint64_t>::Read(&size, reader);
@@ -110,7 +110,7 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
     : EncodingIO<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>> {
   using Type = std::unordered_map<Key, T, Hash, KeyEqual, Allocator>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Map;
   }
 
@@ -130,7 +130,7 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<std::uint64_t>::Write(value.size(), writer);
     if (!status)
@@ -150,7 +150,7 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
     std::uint64_t size;
     auto status = Encoding<std::uint64_t>::Read(&size, reader);

@@ -38,7 +38,7 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
   using Type = Handle<Policy>;
   using HandleType = decltype(Policy::HandleType());
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::Handle;
   }
 
@@ -56,7 +56,7 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<HandleType>::Write(Policy::HandleType(), writer);
     if (!status)
@@ -70,7 +70,7 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
+  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
     HandleType handle_type;
     auto status = Encoding<HandleType>::Read(&handle_type, reader);

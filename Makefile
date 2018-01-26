@@ -10,7 +10,7 @@ GTEST_INSTALL ?= /opt/local
 GTEST_LIB ?= $(GTEST_INSTALL)/lib
 GTEST_INCLUDE ?= $(GTEST_INSTALL)/include
 
-HOST_CFLAGS := -g -O2 -Wall -Iinclude
+HOST_CFLAGS := -g -O2 -Wall -Werror -Wextra -Iinclude
 HOST_CXXFLAGS := -std=c++14
 HOST_LDFLAGS :=
 
