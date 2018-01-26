@@ -870,8 +870,12 @@ struct Encoding<double> : EncodingIO<double> {
 // platform. Simply forward to either std::uint32_t or std::uint64_t.
 //
 
-template <>
-struct Encoding<std::size_t> : EncodingIO<std::size_t> {
+template <typename T>
+struct Encoding<T,
+                std::enable_if_t<std::is_same<T, std::size_t>::value &&
+                                 IsUnique<std::is_same, std::size_t,
+                                          std::uint32_t, std::uint64_t>::value>>
+    : EncodingIO<std::size_t> {
   // Check that std::size_t is either 32 or 64-bit.
   static_assert(sizeof(std::size_t) == sizeof(std::uint32_t) ||
                     sizeof(std::size_t) == sizeof(std::uint64_t),
