@@ -440,7 +440,7 @@ RES = | VALUE  | OR |  0xb6  |  ENUM  |
 ### Table Container
 
 The table type is special collection of key/value pairs designed to support
-bi-directional binary compatibility, similar in spirit to how ProtoBufs work.
+bidirectional binary compatibility, similar in spirit to how ProtoBufs work.
 The high-level protocol defines a table type as a collection of typed entries.
 Each entry has a unique id (key) within the specific table and may either be
 empty or contain a value of the type specified for the entry. In other words
@@ -467,8 +467,8 @@ entry may only appear once per encoded instance of the table. Duplicate ids in
 an encoded table are treated as errors by the library.
 
 In order to make parsing an entry with an unknown id easier the encoded bytes of
-the entry's value are wrapped in a binary container. This makes it possible to
-skip the value without parsing it at all. The binary container is permitted to
+the entry's value are wrapped in a sized byte string. This makes it possible to
+skip the value without parsing it at all. The sized byte string is permitted to
 be larger than required for the encoded value to make it easier to handle types
 that over estimate their size during encode. `nop::Handle` is an example of a
 type that over estimates its size; this is necessary because the value of the
@@ -486,27 +486,19 @@ N    = number of entries
 TAB = |  0xb5  | UINT64 | UINT64 | N ENTRIES |
       +--------+========+========+~~~~~~~~~~~+
 
-Entry encoding (simplified):
+Entry encoding:
 
 ID   = unique entry id
-VAL  = encoded value wrapped in a binary container
+N    = number of bytes in byte string, including padding bytes
 
-       /  ID  \ / VAL  \
-      +========+========+
-ENT = | UINT64 |  BIN   |
-      +========+========+
-
-Entry encoding (expanded):
-
-ID   = unique entry id
-N    = number of bytes in binary container, including padding bytes
-
-       /  ID  \ / BIN  \ /  N   \ /          N TOTAL BYTES          \
-      +========+--------+========+--------+--------+--------+--------+
-ENT = | UINT64 |  0xbc  | UINT64 |   VALUE BYTES   |  PADDING BYTES  |
-      +========+--------+========+--------+--------+--------+--------+
+       /  ID  \ /  N   \ /          N TOTAL BYTES          \
+      +========+========+--------//-------+--------//-------+
+ENT = | UINT64 | UINT64 |   VALUE BYTES   |  PADDING BYTES  |
+      +========+========+--------//-------+--------//-------+
 ```
 
 ## Implementation
 
 This section describes how libnop maps C++ types to the underlying binary format.
+
+**TODO**

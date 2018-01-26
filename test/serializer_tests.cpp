@@ -23,6 +23,7 @@
 #include <nop/base/utility.h>
 #include <nop/serializer.h>
 #include <nop/structure.h>
+#include <nop/table.h>
 
 #include "mock_writer.h"
 #include "test_reader.h"
@@ -32,10 +33,12 @@
 using nop::Append;
 using nop::Compose;
 using nop::DefaultHandlePolicy;
+using nop::DeletedEntry;
 using nop::Deserializer;
 using nop::EnableIfIntegral;
 using nop::Encoding;
 using nop::EncodingByte;
+using nop::Entry;
 using nop::ErrorStatus;
 using nop::Handle;
 using nop::Integer;
@@ -161,6 +164,41 @@ struct TestI {
   }
 
   NOP_STRUCTURE(TestI, (names, size));
+};
+
+struct TableA1 {
+  TableA1() = default;
+  TableA1(std::string name) : name{std::move(name)} {}
+  TableA1(std::vector<std::string> attributes)
+      : attributes{std::move(attributes)} {}
+  TableA1(std::string name, std::vector<std::string> attributes)
+      : name{std::move(name)}, attributes{std::move(attributes)} {}
+
+  bool operator==(const TableA1& other) const {
+    return name == other.name && attributes == other.attributes;
+  }
+
+  Entry<std::string, 0> name;
+  Entry<std::vector<std::string>, 1> attributes;
+
+  NOP_TABLE(TableA1, name, attributes);
+};
+
+struct TableA2 {
+  TableA2() = default;
+  TableA2(std::string name) : name{std::move(name)} {}
+  TableA2(std::string name, std::string address)
+      : name{std::move(name)}, address{std::move(address)} {}
+
+  bool operator==(const TableA2& other) const {
+    return name == other.name && address == other.address;
+  }
+
+  Entry<std::string, 0> name;
+  Entry<std::vector<std::string>, 1, DeletedEntry> attributes;
+  Entry<std::string, 2> address;
+
+  NOP_TABLE(TableA2, name, attributes, address);
 };
 
 }  // anonymous namespace
@@ -2324,7 +2362,7 @@ TEST(Deserializer, Enum) {
   }
 }
 
-TEST(Serializer, Members) {
+TEST(Serializer, Structure) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
   Serializer<TestWriter*> serializer{&writer};
@@ -2452,7 +2490,7 @@ TEST(Serializer, Members) {
   }
 }
 
-TEST(Deserializer, Members) {
+TEST(Deserializer, Structure) {
   TestReader reader;
   Deserializer<TestReader*> deserializer{&reader};
   Status<void> status;
@@ -2573,6 +2611,111 @@ TEST(Deserializer, Members) {
     ASSERT_TRUE(deserializer.Read(&value));
 
     TestI expected{{"abc", "xyzw"}, 2};
+    EXPECT_EQ(expected, value);
+  }
+}
+
+TEST(Serializer, Table) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+
+  {
+    TableA1 value{"Ron Swanson", {{"snarky", "male", "attitude"}}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status);
+
+    expected = Compose(EncodingByte::Table, 0, 2, 0, 13, EncodingByte::String,
+                       11, "Ron Swanson", 1, 26, EncodingByte::Array, 3,
+                       EncodingByte::String, 6, "snarky", EncodingByte::String,
+                       4, "male", EncodingByte::String, 8, "attitude");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    TableA1 value{{{"snarky", "male", "attitude"}}};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status);
+
+    expected = Compose(EncodingByte::Table, 0, 1, 1, 26, EncodingByte::Array, 3,
+                       EncodingByte::String, 6, "snarky", EncodingByte::String,
+                       4, "male", EncodingByte::String, 8, "attitude");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    TableA1 value{"Ron Swanson"};
+
+    status = serializer.Write(value);
+    ASSERT_TRUE(status);
+
+    expected = Compose(EncodingByte::Table, 0, 1, 0, 13, EncodingByte::String,
+                       11, "Ron Swanson");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, Table) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+  Status<void> status;
+
+  {
+    TableA1 value;
+
+    reader.Set(Compose(EncodingByte::Table, 0, 2, 0, 13, EncodingByte::String,
+                       11, "Ron Swanson", 1, 26, EncodingByte::Array, 3,
+                       EncodingByte::String, 6, "snarky", EncodingByte::String,
+                       4, "male", EncodingByte::String, 8, "attitude"));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status);
+
+    TableA1 expected{"Ron Swanson", {{"snarky", "male", "attitude"}}};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    TableA1 value;
+
+    reader.Set(Compose(EncodingByte::Table, 0, 1, 1, 26, EncodingByte::Array, 3,
+                       EncodingByte::String, 6, "snarky", EncodingByte::String,
+                       4, "male", EncodingByte::String, 8, "attitude"));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status);
+
+    TableA1 expected{{{"snarky", "male", "attitude"}}};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    TableA1 value;
+
+    reader.Set(Compose(EncodingByte::Table, 0, 1, 0, 13, EncodingByte::String,
+                       11, "Ron Swanson"));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status);
+
+    TableA1 expected{"Ron Swanson"};
+    EXPECT_EQ(expected, value);
+  }
+
+  {
+    TableA2 value;
+
+    reader.Set(Compose(EncodingByte::Table, 0, 2, 0, 13, EncodingByte::String,
+                       11, "Ron Swanson", 1, 26, EncodingByte::Array, 3,
+                       EncodingByte::String, 6, "snarky", EncodingByte::String,
+                       4, "male", EncodingByte::String, 8, "attitude"));
+    status = deserializer.Read(&value);
+    ASSERT_TRUE(status);
+
+    TableA2 expected{"Ron Swanson"};
     EXPECT_EQ(expected, value);
   }
 }

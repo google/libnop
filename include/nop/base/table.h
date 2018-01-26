@@ -29,9 +29,9 @@ namespace nop {
 //
 // Entry<T, Id, ActiveEntry> encoding format:
 //
-// +----------+-----+------------+-------+---------+
-// | INT64:ID | BIN | INT64:SIZE | VALUE | PADDING |
-// +----------+-----+------------+-------+---------+
+// +----------+------------+-------+---------+
+// | INT64:ID | INT64:SIZE | VALUE | PADDING |
+// +----------+------------+-------+---------+
 //
 // VALUE must be a valid encoding of type T. If the entry is empty it is not
 // encoded. The encoding of type T is wrapped in a sized binary encoding to
@@ -41,9 +41,9 @@ namespace nop {
 //
 // Entry<T, Id, DeletedEntry> encoding format:
 //
-// +----------+-----+------------+--------------+
-// | INT64:ID | BIN | INT64:SIZE | OPAQUE BYTES |
-// +----------+-----+------------+--------------+
+// +----------+------------+--------------+
+// | INT64:ID | INT64:SIZE | OPAQUE BYTES |
+// +----------+------------+--------------+
 //
 // A deleted entry is never written, but may be encountered by code using newer
 // table definitions to read older data streams.
@@ -173,10 +173,6 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
       if (!status)
         return status;
 
-      status = writer->Write(EncodingByte::Binary);
-      if (!status)
-        return status;
-
       const std::uint64_t size = Encoding<T>::Size(entry.get());
       status = Encoding<std::uint64_t>::Write(size, writer);
       if (!status)
@@ -232,15 +228,8 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     // cleared. If an entry is not cleared here then more than one entry for
     // the same id was written in violation of the table protocol.
     if (entry->empty()) {
-      EncodingByte prefix;
-      auto status = reader->Read(&prefix);
-      if (!status)
-        return status;
-      else if (prefix != EncodingByte::Binary)
-        return ErrorStatus::UnexpectedEncodingType;
-
       std::uint64_t size;
-      status = Encoding<std::uint64_t>::Read(&size, reader);
+      auto status = Encoding<std::uint64_t>::Read(&size, reader);
       if (!status)
         return status;
 
@@ -264,15 +253,8 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   // Skips over the binary container for an entry.
   template <typename Reader>
   static Status<void> SkipEntry(Reader* reader) {
-    EncodingByte prefix;
-    auto status = reader->Read(&prefix);
-    if (!status)
-      return status;
-    else if (prefix != EncodingByte::Binary)
-      return ErrorStatus::UnexpectedEncodingType;
-
     std::uint64_t size;
-    status = Encoding<std::uint64_t>::Read(&size, reader);
+    auto status = Encoding<std::uint64_t>::Read(&size, reader);
     if (!status)
       return status;
 
