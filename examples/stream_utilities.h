@@ -28,17 +28,6 @@
 
 namespace {
 
-// Checks whether the given nop::Status<T> contains an error. If it does the
-// error message is printed to standard error and the program is terminated.
-#define CHECK_STATUS(status)                                             \
-  do {                                                                   \
-    if (!(status)) {                                                     \
-      std::cerr << "CHECK_STATUS: Failure: " << status.GetErrorMessage() \
-                << std::endl;                                            \
-      std::exit(EXIT_FAILURE);                                           \
-    }                                                                    \
-  } while (false)
-
 // Prints a std::vector<T> to the given stream. This template will work for any
 // type T that has an operator<< overload.
 template <typename T, typename Allocator>
