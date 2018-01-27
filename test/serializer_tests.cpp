@@ -375,7 +375,7 @@ TEST(Serializer, IntegerStdArrayFailOnPrepare) {
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::array<std::uint8_t, 4> value = {{1, 2, 3, 4}};
@@ -393,7 +393,7 @@ TEST(Serializer, IntegerCArrayFailOnPrepare) {
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::uint8_t value[4] = {1, 2, 3, 4};
@@ -411,7 +411,7 @@ TEST(Serializer, NonIntegerStdArrayFailOnPrepare) {
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::array<std::string, 4> value = {{"1", "2", "3", "4"}};
@@ -430,7 +430,7 @@ TEST(Serializer, NonIntegerCArrayFailOnPrepare) {
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::string value[4] = {"1", "2", "3", "4"};
@@ -448,10 +448,10 @@ TEST(Serializer, IntegerStdArrayFailOnWritePrefix) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(EncodingByte::Binary))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::array<std::uint8_t, 4> value = {{1, 2, 3, 4}};
@@ -469,10 +469,10 @@ TEST(Serializer, IntegerCArrayFailOnWritePrefix) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(EncodingByte::Binary))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::uint8_t value[4] = {1, 2, 3, 4};
@@ -490,10 +490,10 @@ TEST(Serializer, NonIntegerStdArrayFailOnWritePrefix) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(EncodingByte::Array))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::array<std::string, 4> value = {{"1", "2", "3", "4"}};
@@ -511,10 +511,10 @@ TEST(Serializer, NonIntegerCArrayFailOnWritePrefix) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(EncodingByte::Array))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::string value[4] = {"1", "2", "3", "4"};
@@ -532,13 +532,13 @@ TEST(Serializer, IntegerStdArrayFailOnWriteLengthPrefix) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(EncodingByte::Binary))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(static_cast<EncodingByte>(4)))
+  EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::array<std::uint8_t, 4> value = {{1, 2, 3, 4}};
@@ -556,13 +556,13 @@ TEST(Serializer, IntegerCArrayFailOnWriteLengthPrefix) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(EncodingByte::Binary))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(static_cast<EncodingByte>(4)))
+  EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::uint8_t value[4] = {1, 2, 3, 4};
@@ -580,13 +580,13 @@ TEST(Serializer, NonIntegerStdArrayFailOnWriteLengthPrefix) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(EncodingByte::Array))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(static_cast<EncodingByte>(4)))
+  EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::array<std::string, 4> value = {{"1", "2", "3", "4"}};
@@ -604,13 +604,13 @@ TEST(Serializer, NonIntegerCArrayFailOnWriteLengthPrefix) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(EncodingByte::Array))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(static_cast<EncodingByte>(4)))
+  EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, DoWriteRaw(_, _)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::string value[4] = {"1", "2", "3", "4"};
@@ -630,13 +630,13 @@ TEST(Serializer, IntegerStdArrayFailOnWriteLength) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(static_cast<EncodingByte>(4)))
+  EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(EncodingByte::Binary))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, DoWriteRaw(_, _))
+  EXPECT_CALL(writer, Write(_, _))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
@@ -658,13 +658,13 @@ TEST(Serializer, IntegerCArrayFailOnWriteLength) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(static_cast<EncodingByte>(4)))
+  EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(EncodingByte::Binary))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, DoWriteRaw(_, _))
+  EXPECT_CALL(writer, Write(_, _))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
@@ -686,13 +686,13 @@ TEST(Serializer, NonIntegerStdArrayFailOnWriteLength) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(static_cast<EncodingByte>(4)))
+  EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(EncodingByte::Array))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(EncodingByte::String))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
@@ -714,13 +714,13 @@ TEST(Serializer, NonIntegerCArrayFailOnWriteLength) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
-  EXPECT_CALL(writer, Write(static_cast<EncodingByte>(4)))
+  EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(EncodingByte::Array))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(EncodingByte::String))
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
       .Times(1)
       .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Skip(_, _)).Times(0);

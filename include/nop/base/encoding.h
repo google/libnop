@@ -98,7 +98,7 @@ struct EncodingIO {
   template <typename Writer>
   static Status<void> Write(const T& value, Writer* writer) {
     EncodingByte prefix = Encoding<T>::Prefix(value);
-    auto status = writer->Write(prefix);
+    auto status = writer->Write(static_cast<std::uint8_t>(prefix));
     if (!status)
       return status;
     else
@@ -107,11 +107,12 @@ struct EncodingIO {
 
   template <typename Reader>
   static Status<void> Read(T* value, Reader* reader) {
-    EncodingByte prefix;
-    auto status = reader->Read(&prefix);
+    std::uint8_t prefix_byte;
+    auto status = reader->Read(&prefix_byte);
     if (!status)
       return status;
 
+    const EncodingByte prefix = static_cast<EncodingByte>(prefix_byte);
     if (Encoding<T>::Match(prefix))
       return Encoding<T>::ReadPayload(prefix, value, reader);
     else
@@ -123,14 +124,14 @@ struct EncodingIO {
             typename Enabled = EnableIfArithmetic<As, From>>
   static Status<void> Write(From value, Writer* writer) {
     As temp = static_cast<As>(value);
-    return writer->WriteRaw(&temp, &temp + 1);
+    return writer->Write(&temp, &temp + 1);
   }
 
   template <typename As, typename From, typename Reader,
             typename Enabled = EnableIfArithmetic<As, From>>
   static Status<void> Read(From* value, Reader* reader) {
     As temp;
-    auto status = reader->ReadRaw(&temp, &temp + 1);
+    auto status = reader->Read(&temp, &temp + 1);
     if (!status)
       return status;
 

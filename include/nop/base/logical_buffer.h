@@ -190,7 +190,7 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
     if (!status)
       return status;
 
-    return writer->WriteRaw(value.begin(), value.end());
+    return writer->Write(value.begin(), value.end());
   }
 
   template <typename Reader>
@@ -207,7 +207,7 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
 
     const std::uint64_t size = size_bytes / sizeof(ValueType);
     value->size() = size;
-    return reader->ReadRaw(value->begin(), value->end());
+    return reader->Read(value->begin(), value->end());
   }
 };
 

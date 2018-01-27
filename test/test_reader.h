@@ -39,16 +39,16 @@ class TestReader {
       return {};
   }
 
-  Status<void> Read(EncodingByte* prefix) {
+  Status<void> Read(std::uint8_t* byte) {
     if (index_ < data_.size()) {
-      *prefix = static_cast<EncodingByte>(data_[index_++]);
+      *byte = data_[index_++];
       return {};
     } else {
       return ErrorStatus::ReadLimitReached;
     }
   }
 
-  Status<void> ReadRaw(void* begin, void* end) {
+  Status<void> Read(void* begin, void* end) {
     using Byte = std::uint8_t;
     Byte* begin_byte = static_cast<Byte*>(begin);
     Byte* end_byte = static_cast<Byte*>(end);
@@ -64,7 +64,7 @@ class TestReader {
 
   Status<void> Skip(std::size_t padding_bytes) {
     std::vector<std::uint8_t> padding(padding_bytes);
-    return ReadRaw(&*padding.begin(), &*padding.end());
+    return Read(&*padding.begin(), &*padding.end());
   }
 
   template <typename HandleType>

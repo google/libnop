@@ -58,7 +58,7 @@ struct Encoding<std::string> : EncodingIO<std::string> {
     if (!status)
       return status;
 
-    return writer->WriteRaw(&value[0], &value[length]);
+    return writer->Write(&value[0], &value[length]);
   }
 
   template <typename Reader>
@@ -80,7 +80,7 @@ struct Encoding<std::string> : EncodingIO<std::string> {
       return status;
 
     value->resize(size);
-    return reader->ReadRaw(&(*value)[0], &(*value)[size]);
+    return reader->Read(&(*value)[0], &(*value)[size]);
   }
 };
 

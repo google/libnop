@@ -36,12 +36,12 @@ class TestWriter {
     return {};
   }
 
-  Status<void> Write(EncodingByte prefix) {
-    data_.push_back(static_cast<std::uint8_t>(prefix));
+  Status<void> Write(std::uint8_t byte) {
+    data_.push_back(byte);
     return {};
   }
 
-  Status<void> WriteRaw(const void* begin, const void* end) {
+  Status<void> Write(const void* begin, const void* end) {
     using Byte = std::uint8_t;
     const Byte* begin_byte = static_cast<const Byte*>(begin);
     const Byte* end_byte = static_cast<const Byte*>(end);
@@ -59,7 +59,7 @@ class TestWriter {
   Status<void> Skip(std::size_t padding_bytes,
                     std::uint8_t padding_value = 0x00) {
     std::vector<std::uint8_t> padding(padding_bytes, padding_value);
-    return WriteRaw(&*padding.begin(), &*padding.end());
+    return Write(&*padding.begin(), &*padding.end());
   }
 
   template <typename HandleType>

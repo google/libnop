@@ -50,9 +50,9 @@ class BoundedReader {
       return reader_->Ensure(size);
   }
 
-  Status<void> Read(EncodingByte* prefix) {
+  Status<void> Read(std::uint8_t* byte) {
     if (index_ < size_) {
-      auto status = reader_->Read(prefix);
+      auto status = reader_->Read(byte);
       if (!status)
         return status;
 
@@ -63,8 +63,8 @@ class BoundedReader {
     }
   }
 
-  Status<void> ReadRaw(void* begin, void* end) {
-  	using Byte = std::uint8_t;
+  Status<void> Read(void* begin, void* end) {
+    using Byte = std::uint8_t;
     Byte* begin_byte = static_cast<Byte*>(begin);
     Byte* end_byte = static_cast<Byte*>(end);
 
@@ -72,7 +72,7 @@ class BoundedReader {
     if (length_bytes > (size_ - index_))
       return ErrorStatus::ReadLimitReached;
 
-    auto status = reader_->ReadRaw(begin, end);
+    auto status = reader_->Read(begin, end);
     if (!status)
       return status;
 

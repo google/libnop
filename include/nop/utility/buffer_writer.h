@@ -44,16 +44,16 @@ class BufferWriter {
       return {};
   }
 
-  Status<void> Write(EncodingByte prefix) {
+  Status<void> Write(std::uint8_t byte) {
     if (index_ < size_) {
-      buffer_[index_++] = static_cast<std::uint8_t>(prefix);
+      buffer_[index_++] = byte;
       return {};
     } else {
       return ErrorStatus::WriteLimitReached;
     }
   }
 
-  Status<void> WriteRaw(const void* begin, const void* end) {
+  Status<void> Write(const void* begin, const void* end) {
     using Byte = std::uint8_t;
     const Byte* begin_byte = static_cast<const Byte*>(begin);
     const Byte* end_byte = static_cast<const Byte*>(end);

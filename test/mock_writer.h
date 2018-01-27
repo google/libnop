@@ -24,15 +24,10 @@ namespace testing {
 
 struct MockWriter {
   MOCK_METHOD1(Prepare, Status<void>(std::size_t size));
-  MOCK_METHOD1(Write, Status<void>(EncodingByte prefix));
-  MOCK_METHOD2(DoWriteRaw, Status<void>(const void* begin, const void* end));
+  MOCK_METHOD1(Write, Status<void>(std::uint8_t byte));
+  MOCK_METHOD2(Write, Status<void>(const void* begin, const void* end));
   MOCK_METHOD2(Skip, Status<void>(std::size_t padding_bytes,
                                   std::uint8_t padding_value));
-
-  template <typename IterBegin, typename IterEnd>
-  Status<void> WriteRaw(IterBegin begin, IterEnd end) {
-    return DoWriteRaw(&*begin, &*end);
-  }
 };
 
 }  // namespace testing

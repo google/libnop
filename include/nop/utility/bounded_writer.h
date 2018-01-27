@@ -49,9 +49,9 @@ class BoundedWriter {
       return writer_->Prepare(size);
   }
 
-  Status<void> Write(EncodingByte prefix) {
+  Status<void> Write(std::uint8_t byte) {
     if (index_ < size_) {
-      auto status = writer_->Write(prefix);
+      auto status = writer_->Write(byte);
       if (!status)
         return status;
 
@@ -62,7 +62,7 @@ class BoundedWriter {
     }
   }
 
-  Status<void> WriteRaw(const void* begin, const void* end) {
+  Status<void> Write(const void* begin, const void* end) {
     using Byte = std::uint8_t;
     const Byte* begin_byte = static_cast<const Byte*>(begin);
     const Byte* end_byte = static_cast<const Byte*>(end);
@@ -71,7 +71,7 @@ class BoundedWriter {
     if (length_bytes > (size_ - index_))
       return ErrorStatus::WriteLimitReached;
 
-    auto status = writer_->WriteRaw(begin, end);
+    auto status = writer_->Write(begin, end);
     if (!status)
       return status;
 

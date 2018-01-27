@@ -43,9 +43,9 @@ class BufferReader {
       return {};
   }
 
-  Status<void> Read(EncodingByte* prefix) {
+  Status<void> Read(std::uint8_t* byte) {
     if (index_ < size_) {
-      *prefix = static_cast<EncodingByte>(buffer_[index_]);
+      *byte = buffer_[index_];
       index_ += 1;
       return {};
     } else {
@@ -53,7 +53,7 @@ class BufferReader {
     }
   }
 
-  Status<void> ReadRaw(void* begin, void* end) {
+  Status<void> Read(void* begin, void* end) {
     using Byte = std::uint8_t;
     Byte* begin_byte = static_cast<Byte*>(begin);
     Byte* end_byte = static_cast<Byte*>(end);

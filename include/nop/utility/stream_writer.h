@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <ostream>
 
-#include <nop/base/encoding.h>
 #include <nop/status.h>
 
 namespace nop {
@@ -41,13 +40,12 @@ class StreamWriter {
 
   Status<void> Prepare(std::size_t /*size*/) { return {}; }
 
-  Status<void> Write(EncodingByte prefix) {
-    stream_.put(static_cast<typename OStream::char_type>(prefix));
-
+  Status<void> Write(std::uint8_t byte) {
+    stream_.put(static_cast<typename OStream::char_type>(byte));
     return ReturnStatus();
   }
 
-  Status<void> WriteRaw(const void* begin, const void* end) {
+  Status<void> Write(const void* begin, const void* end) {
     using CharType = typename OStream::char_type;
     const CharType* begin_char = static_cast<const CharType*>(begin);
     const CharType* end_char = static_cast<const CharType*>(end);

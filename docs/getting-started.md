@@ -891,6 +891,7 @@ a single template method that can receive all required handle types.
 
 ```C++
 #include <cstddef>
+#include <cstdint>
 
 #include <nop/status.h>
 
@@ -911,13 +912,15 @@ class Reader {
   // May return other errors particular to the reader implementation.
   nop::Status<void> Ensure(std::size_t size);
 
-  // Reads a byte from the input and returns it as an EncodingByte enum value.
+  // Reads a single byte from the input and returns it. This is a common
+  // operation because of the prefix-oriented format. Breaking this out into a
+  // separate overload improves code density on some platforms.
   //
   // Returns ErrorStatus::None on success.
   // Returns ErrorStatus::ReadLimitReached if there are no more bytes left in
   // the input.
   // May return other errors particular to the reader implementation.
-  nop::Status<void> Read(EncodingByte* prefix);
+  nop::Status<void> Read(std::uint8_t* byte);
 
   // Reads bytes into the buffer starting at |begin| until reaching |end|.
   //
@@ -925,7 +928,7 @@ class Reader {
   // Returns ErrorStatus::ReadLimitReached if there are no more bytes left in
   // the input.
   // May return other errors particular to the reader implementation.
-  nop::Status<void> ReadRaw(void* begin, void* end);
+  nop::Status<void> Read(void* begin, void* end);
 
   // Skips |padding_bytes| number of bytes in the input.
   //
@@ -972,13 +975,15 @@ class Writer {
   // May return other errors particular to the reader implementation.
   nop::Status<void> Prepare(std::size_t size);
 
-  // Writes the EncodingByte enum value as a byte to the output.
+  // Writes a byte to the output. This is a common operation because of the
+  // prefix-oriented format. Breaking this out into a separate overload
+  // increases code density on some platforms.
   //
   // Returns ErrorStatus::None on success.
   // Returns ErrorStatus::WriteLimitReached if no more bytes can be accepted to
   // the output.
   // May return other errors particular to the reader implementation.
-  nop::Status<void> Write(EncodingByte prefix);
+  nop::Status<void> Write(std::uint8_t byte);
 
   // Writes bytes from the buffer starting at |begin| until reaching |end|.
   //
@@ -986,7 +991,7 @@ class Writer {
   // Returns ErrorStatus::WriteLimitReached if no more bytes can be accepted to
   // the output.
   // May return other errors particular to the reader implementation.
-  nop::Status<void> WriteRaw(const void* begin, const void* end);
+  nop::Status<void> Write(const void* begin, const void* end);
 
   // Skips |padding_bytes| bytes in the output using |padding_value| as a
   // filler value.

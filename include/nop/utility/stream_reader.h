@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <istream>
 
-#include <nop/base/encoding.h>
 #include <nop/status.h>
 
 namespace nop {
@@ -41,14 +40,14 @@ class StreamReader {
 
   Status<void> Ensure(std::size_t /*size*/) { return {}; }
 
-  Status<void> Read(EncodingByte* prefix) {
+  Status<void> Read(std::uint8_t* byte) {
     using CharType = typename IStream::char_type;
-    stream_.read(reinterpret_cast<CharType*>(prefix), sizeof(EncodingByte));
+    stream_.read(static_cast<CharType*>(byte), sizeof(std::uint8_t));
 
     return ReturnStatus();
   }
 
-  Status<void> ReadRaw(void* begin, void* end) {
+  Status<void> Read(void* begin, void* end) {
     using CharType = typename IStream::char_type;
     CharType* begin_char = static_cast<CharType*>(begin);
     CharType* end_char = static_cast<CharType*>(end);
