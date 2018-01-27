@@ -70,21 +70,20 @@ namespace nop {
   struct NOP__MEMBER_TRAITS<type> {                                           \
     using MemberList = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>; \
   };                                                                          \
-  NOP__MEMBER_TRAITS<type> __attribute__((used))                              \
-      NOP__GetExternalMemberTraits(type*)
+  NOP__MEMBER_TRAITS<type> NOP__GetExternalMemberTraits[[gnu::used]](type*)
 
 // Similar to NOP_EXTERNAL_STRUCTURE but for template types.
-#define NOP_EXTERNAL_TEMPLATE(type, ... /*members*/)                  \
-  template <typename>                                                 \
-  struct NOP__MEMBER_TRAITS;                                          \
-  template <typename... Ts>                                           \
-  struct NOP__MEMBER_TRAITS<type<Ts...>> {                            \
-    using MemberList =                                                \
-        ::nop::MemberList<NOP_MEMBER_LIST(type<Ts...>, __VA_ARGS__)>; \
-  };                                                                  \
-  template <typename... Ts>                                           \
-  NOP__MEMBER_TRAITS<type<Ts...>> __attribute__((used))               \
-      NOP__GetExternalMemberTraits(type<Ts...>*)
+#define NOP_EXTERNAL_TEMPLATE(type, ... /*members*/)                         \
+  template <typename>                                                        \
+  struct NOP__MEMBER_TRAITS;                                                 \
+  template <typename... Ts>                                                  \
+  struct NOP__MEMBER_TRAITS<type<Ts...>> {                                   \
+    using MemberList =                                                       \
+        ::nop::MemberList<NOP_MEMBER_LIST(type<Ts...>, __VA_ARGS__)>;        \
+  };                                                                         \
+  template <typename... Ts>                                                  \
+  NOP__MEMBER_TRAITS<type<Ts...>> NOP__GetExternalMemberTraits[[gnu::used]]( \
+      type<Ts...>*)
 
 //
 // Utility macros used by the macros above.
