@@ -255,6 +255,188 @@ TEST(Deserializer, bool) {
   EXPECT_EQ(false, value);
 }
 
+TEST(Serializer, IntegerVectorFailOnPrepare) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::vector<std::uint8_t> value = {1, 2, 3, 4};
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, NonIntegerVectorFailOnPrepare) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::vector<std::string> value = {"a", "b", "c", "d"};
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, IntegerVectorFailOnWritePrefix) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::vector<std::uint8_t> value = {1, 2, 3, 4};
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, NonIntegerVectorFailOnWritePrefix) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::vector<std::string> value = {"a", "b", "c", "d"};
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, IntegerVectorFailOnWriteLengthPrefix) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(4))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::vector<std::uint8_t> value = {1, 2, 3, 4};
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, NonIntegerVectorFailOnWriteLengthPrefix) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(4))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::vector<std::string> value = {"a", "b", "c", "d"};
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, IntegerVectorFailOnWritePayload) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  // Writer::Prepare() indicates write possible and write prefix succeeds but
+  // encoding length fails.
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(4))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::vector<std::uint8_t> value = {1, 2, 3, 4};
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, NonIntegerVectorFailOnWritePayload) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  // Writer::Prepare() indicates write possible and write prefix succeeds but
+  // encoding length fails.
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(4))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::vector<std::string> value = {"a", "b", "c", "d"};
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
 TEST(Serializer, Vector) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
@@ -619,7 +801,7 @@ TEST(Serializer, NonIntegerCArrayFailOnWriteLengthPrefix) {
   EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
 }
 
-TEST(Serializer, IntegerStdArrayFailOnWriteLength) {
+TEST(Serializer, IntegerStdArrayFailOnWritePayload) {
   MockWriter writer;
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
@@ -630,15 +812,15 @@ TEST(Serializer, IntegerStdArrayFailOnWriteLength) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
   EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(_, _))
-      .Times(1)
-      .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::array<std::uint8_t, 4> value = {{1, 2, 3, 4}};
@@ -647,7 +829,7 @@ TEST(Serializer, IntegerStdArrayFailOnWriteLength) {
   EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
 }
 
-TEST(Serializer, IntegerCArrayFailOnWriteLength) {
+TEST(Serializer, IntegerCArrayFailOnWritePayload) {
   MockWriter writer;
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
@@ -658,15 +840,15 @@ TEST(Serializer, IntegerCArrayFailOnWriteLength) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
   EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(_, _))
-      .Times(1)
-      .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::uint8_t value[4] = {1, 2, 3, 4};
@@ -675,7 +857,7 @@ TEST(Serializer, IntegerCArrayFailOnWriteLength) {
   EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
 }
 
-TEST(Serializer, NonIntegerStdArrayFailOnWriteLength) {
+TEST(Serializer, NonIntegerStdArrayFailOnWritePayload) {
   MockWriter writer;
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
@@ -686,15 +868,15 @@ TEST(Serializer, NonIntegerStdArrayFailOnWriteLength) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
   EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
-      .Times(1)
-      .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::array<std::string, 4> value = {{"1", "2", "3", "4"}};
@@ -703,7 +885,7 @@ TEST(Serializer, NonIntegerStdArrayFailOnWriteLength) {
   EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
 }
 
-TEST(Serializer, NonIntegerCArrayFailOnWriteLength) {
+TEST(Serializer, NonIntegerCArrayFailOnWritePayload) {
   MockWriter writer;
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
@@ -714,15 +896,15 @@ TEST(Serializer, NonIntegerCArrayFailOnWriteLength) {
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(4))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
   EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
       .Times(1)
       .WillOnce(Return(Status<void>{}));
-  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
-      .Times(1)
-      .WillOnce(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Skip(_, _)).Times(0);
 
   std::string value[4] = {"1", "2", "3", "4"};
@@ -1984,6 +2166,97 @@ TEST(Deserializer, int64_t) {
   EXPECT_EQ(9223372036854775807LL, value);
 
   // TODO(eieio): Test rejection of all other encoding prefix bytes.
+}
+
+TEST(Serializer, StringFailOnPrepare) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_)).Times(0);
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::string value = "abcd";
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, StringFailOnWritePrefix) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::string value = "abcd";
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, StringFailOnWriteLengthPrefix) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(4))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::string value = "abcd";
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer, StringFailOnWritePayload) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  // Writer::Prepare() indicates write possible and write prefix succeeds but
+  // encoding length fails.
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(4))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::String)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  std::string value = "abcd";
+  status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
 }
 
 TEST(Serializer, String) {
