@@ -24,23 +24,25 @@
 namespace nop {
 
 //
-// std::string encoding format:
+// std::basic_string<...> encoding format:
 //
 // +-----+---------+---//----+
 // | STR | INT64:N | N BYTES |
 // +-----+---------+---//----+
 //
 
-template <>
-struct Encoding<std::string> : EncodingIO<std::string> {
-  using Type = std::string;
+template <typename CharType, typename Traits, typename Allocator>
+struct Encoding<std::basic_string<CharType, Traits, Allocator>>
+    : EncodingIO<std::basic_string<CharType, Traits, Allocator>> {
+  using Type = std::basic_string<CharType, Traits, Allocator>;
+  enum : std::size_t { CharSize = sizeof(CharType) };
 
   static constexpr EncodingByte Prefix(const Type& /*value*/) {
     return EncodingByte::String;
   }
 
   static std::size_t Size(const Type& value) {
-    const std::size_t length_bytes = value.length() * sizeof(Type::value_type);
+    const std::size_t length_bytes = value.length() * CharSize;
     return BaseEncodingSize(Prefix(value)) +
            Encoding<std::uint64_t>::Size(length_bytes) + length_bytes;
   }
@@ -53,7 +55,7 @@ struct Encoding<std::string> : EncodingIO<std::string> {
   static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     const std::size_t length = value.length();
-    const std::size_t length_bytes = length * sizeof(Type::value_type);
+    const std::size_t length_bytes = length * CharSize;
     auto status = Encoding<std::uint64_t>::Write(length_bytes, writer);
     if (!status)
       return status;
@@ -68,10 +70,10 @@ struct Encoding<std::string> : EncodingIO<std::string> {
     auto status = Encoding<std::uint64_t>::Read(&length_bytes, reader);
     if (!status)
       return status;
-    else if (length_bytes % sizeof(Type::value_type) != 0)
+    else if (length_bytes % CharSize != 0)
       return ErrorStatus::InvalidStringLength;
 
-    const std::uint64_t size = length_bytes / sizeof(Type::value_type);
+    const std::uint64_t size = length_bytes / CharSize;
 
     // Make sure the reader has enough data to fulfill the requested size as a
     // defense against abusive or erroneous string sizes.

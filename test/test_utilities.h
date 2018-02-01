@@ -60,6 +60,24 @@ inline auto Item(const std::string& string) {
   return std::vector<std::uint8_t>(string.begin(), string.end());
 }
 
+inline auto Item(const std::wstring& string) {
+  return std::vector<std::uint8_t>(
+      reinterpret_cast<const std::uint8_t*>(&*string.begin()),
+      reinterpret_cast<const std::uint8_t*>(&*string.end()));
+}
+
+inline auto Item(const std::u16string& string) {
+  return std::vector<std::uint8_t>(
+      reinterpret_cast<const std::uint8_t*>(&*string.begin()),
+      reinterpret_cast<const std::uint8_t*>(&*string.end()));
+}
+
+inline auto Item(const std::u32string& string) {
+  return std::vector<std::uint8_t>(
+      reinterpret_cast<const std::uint8_t*>(&*string.begin()),
+      reinterpret_cast<const std::uint8_t*>(&*string.end()));
+}
+
 inline void Append(std::vector<std::uint8_t>* /*vector*/) {}
 
 template <typename First, typename... Rest>
