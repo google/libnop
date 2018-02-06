@@ -122,14 +122,14 @@ struct EncodingIO {
  protected:
   template <typename As, typename From, typename Writer,
             typename Enabled = EnableIfArithmetic<As, From>>
-  static Status<void> Write(From value, Writer* writer) {
+  static Status<void> WriteAs(From value, Writer* writer) {
     As temp = static_cast<As>(value);
     return writer->Write(&temp, &temp + 1);
   }
 
   template <typename As, typename From, typename Reader,
             typename Enabled = EnableIfArithmetic<As, From>>
-  static Status<void> Read(From* value, Reader* reader) {
+  static Status<void> ReadAs(From* value, Reader* reader) {
     As temp;
     auto status = reader->Read(&temp, &temp + 1);
     if (!status)
@@ -237,7 +237,7 @@ struct Encoding<char> : EncodingIO<char> {
   static Status<void> WritePayload(EncodingByte prefix, char value,
                                    Writer* writer) {
     if (prefix == EncodingByte::U8)
-      return Write<std::uint8_t>(value, writer);
+      return WriteAs<std::uint8_t>(value, writer);
     else
       return {};
   }
@@ -246,7 +246,7 @@ struct Encoding<char> : EncodingIO<char> {
   static Status<void> ReadPayload(EncodingByte prefix, char* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::U8) {
-      return Read<std::uint8_t>(value, reader);
+      return ReadAs<std::uint8_t>(value, reader);
     } else {
       *value = static_cast<char>(prefix);
       return {};
@@ -289,7 +289,7 @@ struct Encoding<std::uint8_t> : EncodingIO<std::uint8_t> {
   static Status<void> WritePayload(EncodingByte prefix, std::uint8_t value,
                                    Writer* writer) {
     if (prefix == EncodingByte::U8)
-      return Write<std::uint8_t>(value, writer);
+      return WriteAs<std::uint8_t>(value, writer);
     else
       return {};
   }
@@ -298,7 +298,7 @@ struct Encoding<std::uint8_t> : EncodingIO<std::uint8_t> {
   static Status<void> ReadPayload(EncodingByte prefix, std::uint8_t* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::U8) {
-      return Read<std::uint8_t>(value, reader);
+      return ReadAs<std::uint8_t>(value, reader);
     } else {
       *value = static_cast<std::uint8_t>(prefix);
       return {};
@@ -347,7 +347,7 @@ struct Encoding<std::int8_t> : EncodingIO<std::int8_t> {
   static Status<void> WritePayload(EncodingByte prefix, std::int8_t value,
                                    Writer* writer) {
     if (prefix == EncodingByte::I8)
-      return Write<std::int8_t>(value, writer);
+      return WriteAs<std::int8_t>(value, writer);
     else
       return {};
   }
@@ -356,7 +356,7 @@ struct Encoding<std::int8_t> : EncodingIO<std::int8_t> {
   static Status<void> ReadPayload(EncodingByte prefix, std::int8_t* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::I8) {
-      return Read<std::int8_t>(value, reader);
+      return ReadAs<std::int8_t>(value, reader);
     } else {
       *value = static_cast<std::int8_t>(prefix);
       return {};
@@ -403,9 +403,9 @@ struct Encoding<std::uint16_t> : EncodingIO<std::uint16_t> {
   static Status<void> WritePayload(EncodingByte prefix, std::uint16_t value,
                                    Writer* writer) {
     if (prefix == EncodingByte::U8)
-      return Write<std::uint8_t>(value, writer);
+      return WriteAs<std::uint8_t>(value, writer);
     else if (prefix == EncodingByte::U16)
-      return Write<std::uint16_t>(value, writer);
+      return WriteAs<std::uint16_t>(value, writer);
     else
       return {};
   }
@@ -414,9 +414,9 @@ struct Encoding<std::uint16_t> : EncodingIO<std::uint16_t> {
   static Status<void> ReadPayload(EncodingByte prefix, std::uint16_t* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::U8) {
-      return Read<std::uint8_t>(value, reader);
+      return ReadAs<std::uint8_t>(value, reader);
     } else if (prefix == EncodingByte::U16) {
-      return Read<std::uint16_t>(value, reader);
+      return ReadAs<std::uint16_t>(value, reader);
     } else {
       *value = static_cast<std::uint8_t>(prefix);
       return {};
@@ -467,9 +467,9 @@ struct Encoding<std::int16_t> : EncodingIO<std::int16_t> {
   static Status<void> WritePayload(EncodingByte prefix, std::int16_t value,
                                    Writer* writer) {
     if (prefix == EncodingByte::I8)
-      return Write<std::int8_t>(value, writer);
+      return WriteAs<std::int8_t>(value, writer);
     else if (prefix == EncodingByte::I16)
-      return Write<std::int16_t>(value, writer);
+      return WriteAs<std::int16_t>(value, writer);
     else
       return {};
   }
@@ -478,9 +478,9 @@ struct Encoding<std::int16_t> : EncodingIO<std::int16_t> {
   static Status<void> ReadPayload(EncodingByte prefix, std::int16_t* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::I8) {
-      return Read<std::int8_t>(value, reader);
+      return ReadAs<std::int8_t>(value, reader);
     } else if (prefix == EncodingByte::I16) {
-      return Read<std::int16_t>(value, reader);
+      return ReadAs<std::int16_t>(value, reader);
     } else {
       *value = static_cast<std::int8_t>(prefix);
       return {};
@@ -534,11 +534,11 @@ struct Encoding<std::uint32_t> : EncodingIO<std::uint32_t> {
   static Status<void> WritePayload(EncodingByte prefix, std::uint32_t value,
                                    Writer* writer) {
     if (prefix == EncodingByte::U8)
-      return Write<std::uint8_t>(value, writer);
+      return WriteAs<std::uint8_t>(value, writer);
     else if (prefix == EncodingByte::U16)
-      return Write<std::uint16_t>(value, writer);
+      return WriteAs<std::uint16_t>(value, writer);
     else if (prefix == EncodingByte::U32)
-      return Write<std::uint32_t>(value, writer);
+      return WriteAs<std::uint32_t>(value, writer);
     else
       return {};
   }
@@ -547,11 +547,11 @@ struct Encoding<std::uint32_t> : EncodingIO<std::uint32_t> {
   static Status<void> ReadPayload(EncodingByte prefix, std::uint32_t* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::U8) {
-      return Read<std::uint8_t>(value, reader);
+      return ReadAs<std::uint8_t>(value, reader);
     } else if (prefix == EncodingByte::U16) {
-      return Read<std::uint16_t>(value, reader);
+      return ReadAs<std::uint16_t>(value, reader);
     } else if (prefix == EncodingByte::U32) {
-      return Read<std::uint32_t>(value, reader);
+      return ReadAs<std::uint32_t>(value, reader);
     } else {
       *value = static_cast<std::uint8_t>(prefix);
       return {};
@@ -608,11 +608,11 @@ struct Encoding<std::int32_t> : EncodingIO<std::int32_t> {
   static Status<void> WritePayload(EncodingByte prefix, std::int32_t value,
                                    Writer* writer) {
     if (prefix == EncodingByte::I8)
-      return Write<std::int8_t>(value, writer);
+      return WriteAs<std::int8_t>(value, writer);
     else if (prefix == EncodingByte::I16)
-      return Write<std::int16_t>(value, writer);
+      return WriteAs<std::int16_t>(value, writer);
     else if (prefix == EncodingByte::I32)
-      return Write<std::int32_t>(value, writer);
+      return WriteAs<std::int32_t>(value, writer);
     else
       return {};
   }
@@ -621,11 +621,11 @@ struct Encoding<std::int32_t> : EncodingIO<std::int32_t> {
   static Status<void> ReadPayload(EncodingByte prefix, std::int32_t* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::I8) {
-      return Read<std::int8_t>(value, reader);
+      return ReadAs<std::int8_t>(value, reader);
     } else if (prefix == EncodingByte::I16) {
-      return Read<std::int16_t>(value, reader);
+      return ReadAs<std::int16_t>(value, reader);
     } else if (prefix == EncodingByte::I32) {
-      return Read<std::int32_t>(value, reader);
+      return ReadAs<std::int32_t>(value, reader);
     } else {
       *value = static_cast<std::int8_t>(prefix);
       return {};
@@ -685,13 +685,13 @@ struct Encoding<std::uint64_t> : EncodingIO<std::uint64_t> {
   static Status<void> WritePayload(EncodingByte prefix, std::uint64_t value,
                                    Writer* writer) {
     if (prefix == EncodingByte::U8)
-      return Write<std::uint8_t>(value, writer);
+      return WriteAs<std::uint8_t>(value, writer);
     else if (prefix == EncodingByte::U16)
-      return Write<std::uint16_t>(value, writer);
+      return WriteAs<std::uint16_t>(value, writer);
     else if (prefix == EncodingByte::U32)
-      return Write<std::uint32_t>(value, writer);
+      return WriteAs<std::uint32_t>(value, writer);
     else if (prefix == EncodingByte::U64)
-      return Write<std::uint64_t>(value, writer);
+      return WriteAs<std::uint64_t>(value, writer);
     else
       return {};
   }
@@ -700,13 +700,13 @@ struct Encoding<std::uint64_t> : EncodingIO<std::uint64_t> {
   static Status<void> ReadPayload(EncodingByte prefix, std::uint64_t* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::U8) {
-      return Read<std::uint8_t>(value, reader);
+      return ReadAs<std::uint8_t>(value, reader);
     } else if (prefix == EncodingByte::U16) {
-      return Read<std::uint16_t>(value, reader);
+      return ReadAs<std::uint16_t>(value, reader);
     } else if (prefix == EncodingByte::U32) {
-      return Read<std::uint32_t>(value, reader);
+      return ReadAs<std::uint32_t>(value, reader);
     } else if (prefix == EncodingByte::U64) {
-      return Read<std::uint64_t>(value, reader);
+      return ReadAs<std::uint64_t>(value, reader);
     } else {
       *value = static_cast<std::uint8_t>(prefix);
       return {};
@@ -769,13 +769,13 @@ struct Encoding<std::int64_t> : EncodingIO<std::int64_t> {
   static Status<void> WritePayload(EncodingByte prefix, std::int64_t value,
                                    Writer* writer) {
     if (prefix == EncodingByte::I8)
-      return Write<std::int8_t>(value, writer);
+      return WriteAs<std::int8_t>(value, writer);
     else if (prefix == EncodingByte::I16)
-      return Write<std::int16_t>(value, writer);
+      return WriteAs<std::int16_t>(value, writer);
     else if (prefix == EncodingByte::I32)
-      return Write<std::int32_t>(value, writer);
+      return WriteAs<std::int32_t>(value, writer);
     else if (prefix == EncodingByte::I64)
-      return Write<std::int64_t>(value, writer);
+      return WriteAs<std::int64_t>(value, writer);
     else
       return {};
   }
@@ -784,13 +784,13 @@ struct Encoding<std::int64_t> : EncodingIO<std::int64_t> {
   static Status<void> ReadPayload(EncodingByte prefix, std::int64_t* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::I8) {
-      return Read<std::int8_t>(value, reader);
+      return ReadAs<std::int8_t>(value, reader);
     } else if (prefix == EncodingByte::I16) {
-      return Read<std::int16_t>(value, reader);
+      return ReadAs<std::int16_t>(value, reader);
     } else if (prefix == EncodingByte::I32) {
-      return Read<std::int32_t>(value, reader);
+      return ReadAs<std::int32_t>(value, reader);
     } else if (prefix == EncodingByte::I64) {
-      return Read<std::int64_t>(value, reader);
+      return ReadAs<std::int64_t>(value, reader);
     } else {
       *value = static_cast<std::int8_t>(prefix);
       return {};
@@ -822,13 +822,13 @@ struct Encoding<float> : EncodingIO<float> {
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, float value,
                                    Writer* writer) {
-    return Write<float>(value, writer);
+    return WriteAs<float>(value, writer);
   }
 
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, float* value,
                                   Reader* reader) {
-    return Read<float>(value, reader);
+    return ReadAs<float>(value, reader);
   }
 };
 
@@ -856,13 +856,13 @@ struct Encoding<double> : EncodingIO<double> {
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, double value,
                                    Writer* writer) {
-    return Write<double>(value, writer);
+    return WriteAs<double>(value, writer);
   }
 
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, double* value,
                                   Reader* reader) {
-    return Read<double>(value, reader);
+    return ReadAs<double>(value, reader);
   }
 };
 
