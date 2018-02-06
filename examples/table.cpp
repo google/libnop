@@ -121,7 +121,7 @@ std::ostream& operator<<(std::ostream& stream,
 
 template <typename T, std::uint64_t Id>
 std::ostream& operator<<(std::ostream& stream,
-                         const Entry<T, Id, DeletedEntry>& entry) {
+                         const Entry<T, Id, DeletedEntry>& /*entry*/) {
   stream << "<deleted>";
   return stream;
 }
