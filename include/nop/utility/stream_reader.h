@@ -42,7 +42,7 @@ class StreamReader {
 
   Status<void> Read(std::uint8_t* byte) {
     using CharType = typename IStream::char_type;
-    stream_.read(static_cast<CharType*>(byte), sizeof(std::uint8_t));
+    stream_.read(reinterpret_cast<CharType*>(byte), sizeof(std::uint8_t));
 
     return ReturnStatus();
   }
