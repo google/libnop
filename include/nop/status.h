@@ -39,6 +39,7 @@ enum class ErrorStatus {
   InvalidStringLength,
   InvalidTableHash,
   InvalidHandleReference,
+  InvalidHandleValue,
   InvalidInterfaceMethod,
   DuplicateTableEntry,
   ReadLimitReached,
@@ -73,6 +74,8 @@ struct Status : Result<ErrorStatus, T> {
         return "Invalid Table Hash";
       case ErrorStatus::InvalidHandleReference:
         return "Invalid Handle Reference";
+      case ErrorStatus::InvalidHandleValue:
+        return "Invalid Handle Value";
       case ErrorStatus::InvalidInterfaceMethod:
         return "Invalid Interface Method";
       case ErrorStatus::DuplicateTableEntry:

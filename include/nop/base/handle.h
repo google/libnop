@@ -30,9 +30,6 @@ namespace nop {
 // +-----+------+-----------+
 //
 
-using HandleReference = std::int64_t;
-enum : HandleReference { kEmptyHandleReference = -1 };
-
 template <typename Policy>
 struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
   using Type = Handle<Policy>;

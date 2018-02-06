@@ -34,6 +34,10 @@ namespace nop {
 //   2. Sharing of resource objects between processes, when supported.
 //
 
+// Reference type used by the Reader/Writer to reference handles in serialized form.
+using HandleReference = std::int64_t;
+enum : HandleReference { kEmptyHandleReference = -1 };
+
 // Default handle policy. Primarily useful as an example of the required form of
 // a handle policy.
 template <typename T, T Empty = T{}>

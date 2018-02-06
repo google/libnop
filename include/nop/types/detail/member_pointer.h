@@ -78,7 +78,8 @@ struct MemberPointer<First Class::*, FirstPointer, Second Class::*,
   }
 
   static std::size_t Size(const Class& instance) {
-    return Resolve(instance).size();
+    ConstType pair = Resolve(instance);
+    return Encoding<ConstType>::Size(pair);
   }
 
   template <typename Writer>

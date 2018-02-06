@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 The Native Object Protocols Authors
+ * Copyright 2018 The Native Object Protocols Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBNOP_TEST_MOCK_WRITER_H_
-#define LIBNOP_TEST_MOCK_WRITER_H_
+#ifndef LIBNOP_TEST_MOCK_READER_H_
+#define LIBNOP_TEST_MOCK_READER_H_
 
 #include <cstdint>
 #include <gmock/gmock.h>
@@ -26,21 +26,24 @@
 namespace nop {
 namespace testing {
 
-struct MockWriter {
-  MOCK_METHOD1(Prepare, Status<void>(std::size_t size));
-  MOCK_METHOD1(Write, Status<void>(std::uint8_t byte));
-  MOCK_METHOD2(Write, Status<void>(const void* begin, const void* end));
-  MOCK_METHOD2(Skip, Status<void>(std::size_t padding_bytes,
-                                  std::uint8_t padding_value));
-  MOCK_METHOD1(PushIntHandle, Status<HandleReference>(int handle));
+struct MockReader {
+  MOCK_METHOD1(Ensure, Status<void>(std::size_t size));
+  MOCK_METHOD1(Read, Status<void>(std::uint8_t* byte));
+  MOCK_METHOD2(Read, Status<void>(void* begin, void* end));
+  MOCK_METHOD1(Skip, Status<void>(std::size_t padding_bytes));
+  MOCK_METHOD1(GetIntHandle, Status<int>(HandleReference handle_reference));
 
   template <typename HandleType>
-  Status<HandleReference> PushHandle(const HandleType& handle) {
-    return PushIntHandle(handle.get());
+  Status<HandleType> GetHandle(HandleReference handle_reference) {
+    auto status = GetIntHandle(handle_reference);
+    if (!status)
+      return status.error();
+    else
+      return HandleType{status.get()};
   }
 };
 
 }  // namespace testing
 }  // namespace nop
 
-#endif  // LIBNOP_TEST_MOCK_WRITER_H_
+#endif  // LIBNOP_TEST_MOCK_READER_H_
