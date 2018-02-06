@@ -31,7 +31,7 @@ namespace nop {
 //
 // Backtrace utility based on the UNIX backtrace API.
 //
-// Provides a simple mechanism to generate a backtrace with sumbol lookup.
+// Provides a simple mechanism to generate a backtrace with symbol lookup.
 //
 
 class Backtrace {

@@ -237,7 +237,7 @@ struct TemplateType {
 // public methods to enforce policy on how the data may be used.
 class Items {
  public:
-  Items = default;
+  Items() = default;
   Items(std::vector<std::string> items) : items_{std::move(items)} {}
   Items(const Items&) = default;
   Items(Items&&) = default;
