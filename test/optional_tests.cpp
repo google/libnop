@@ -14,11 +14,16 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <array>
+#include <initializer_list>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <nop/types/optional.h>
 
+using nop::InPlace;
 using nop::Optional;
 
 namespace {
@@ -160,7 +165,84 @@ TEST(Optional, Basic) {
     EXPECT_FALSE(value);
   }
 
-  // TODO(eieio): Thorough constructor/destructor tests.
+  {
+    using Pair = std::pair<int, int>;
+    const Pair pair{10, 20};
+    Optional<Pair> value{pair};
+    ASSERT_FALSE(value.empty());
+
+    const Pair expected{10, 20};
+    EXPECT_EQ(expected, value.get());
+  }
+
+  {
+    using Pair = std::pair<int, int>;
+    const Optional<Pair> pair{InPlace{}, 10, 20};
+    Optional<Pair> value{pair};
+    ASSERT_FALSE(value.empty());
+
+    const Pair expected{10, 20};
+    EXPECT_EQ(expected, value.get());
+  }
+
+  {
+    using Pair = std::pair<int, int>;
+    Optional<Pair> pair{InPlace{}, 10, 20};
+    Optional<Pair> value{std::move(pair)};
+    ASSERT_FALSE(value.empty());
+
+    const Pair expected{10, 20};
+    EXPECT_EQ(expected, value.get());
+    EXPECT_FALSE(pair.empty());
+  }
+
+  {
+    Optional<std::initializer_list<int>> value{
+        InPlace{}, std::initializer_list<int>{10, 20}};
+    ASSERT_FALSE(value.empty());
+
+    const auto expected = {10, 20};
+    EXPECT_TRUE(
+        std::equal(expected.begin(), expected.end(), value.get().begin()));
+  }
+
+  {
+    using Pair = std::pair<std::string, std::string>;
+    Optional<Pair> value{InPlace{}, "foo", "bar"};
+    ASSERT_FALSE(value.empty());
+
+    const Pair expected{"foo", "bar"};
+    EXPECT_EQ(expected, value.get());
+  }
+
+  {
+    Optional<std::vector<std::string>> value{
+        InPlace{}, std::initializer_list<std::string>{"foo", "bar"}};
+    ASSERT_FALSE(value.empty());
+
+    const std::vector<std::string> expected{"foo", "bar"};
+    EXPECT_EQ(expected, value.get());
+  }
+
+  {
+    Optional<std::vector<std::string>> value{
+        std::initializer_list<std::string>{"foo", "bar"}};
+    ASSERT_FALSE(value.empty());
+
+    const std::vector<std::string> expected{"foo", "bar"};
+    EXPECT_EQ(expected, value.get());
+  }
+
+  {
+    Optional<std::string> value{"foo"};
+    ASSERT_FALSE(value.empty());
+    ASSERT_FALSE(value.get().empty());
+
+    const std::string s = value.take();
+    ASSERT_FALSE(value.empty());
+    EXPECT_TRUE(value.get().empty());
+    EXPECT_EQ("foo", s);
+  }
 }
 
 TEST(Optional, Assignment) {
@@ -279,6 +361,29 @@ TEST(Optional, Assignment) {
 
   {
     Optional<std::string> v1{"test"};
+    Optional<std::tuple<std::string>> v2;
+    ASSERT_FALSE(v1.empty());
+    ASSERT_TRUE(v2.empty());
+
+    v2 = std::move(v1);
+    ASSERT_TRUE(v1.empty());
+    ASSERT_FALSE(v2.empty());
+    EXPECT_EQ(std::tuple<std::string>{"test"}, v2.get());
+  }
+
+  {
+    Optional<std::string> v1;
+    Optional<std::tuple<std::string>> v2{"test"};
+    ASSERT_TRUE(v1.empty());
+    ASSERT_FALSE(v2.empty());
+
+    v2 = std::move(v1);
+    ASSERT_TRUE(v1.empty());
+    ASSERT_TRUE(v2.empty());
+  }
+
+  {
+    Optional<std::string> v1{"test"};
     Optional<std::string> v2{"fizz"};
     ASSERT_FALSE(v1.empty());
     ASSERT_FALSE(v2.empty());
@@ -288,6 +393,17 @@ TEST(Optional, Assignment) {
     ASSERT_TRUE(v1.empty());
     ASSERT_FALSE(v2.empty());
     EXPECT_EQ("test", v2.get());
+  }
+
+  {
+    Optional<const char*> v1;
+    Optional<std::string> v2{"foo"};
+    ASSERT_TRUE(v1.empty());
+    ASSERT_FALSE(v2.empty());
+
+    v2 = v1;
+    EXPECT_TRUE(v1.empty());
+    EXPECT_TRUE(v2.empty());
   }
 }
 
@@ -320,6 +436,30 @@ TEST(Optional, CopyMoveConstructAssign) {
     v = InstrumentType<int>(10);
     EXPECT_EQ(2u, InstrumentType<int>::constructor_count());
     EXPECT_EQ(1u, InstrumentType<int>::destructor_count());
+    EXPECT_EQ(0u, InstrumentType<int>::move_assignment_count());
+    EXPECT_EQ(0u, InstrumentType<int>::copy_assignment_count());
+  }
+
+  {
+    InstrumentType<int>::clear();
+
+    // Copy construct.
+    Optional<InstrumentType<int>> v1{10};
+    Optional<InstrumentType<int>> v2{v1};
+    EXPECT_EQ(2u, InstrumentType<int>::constructor_count());
+    EXPECT_EQ(0u, InstrumentType<int>::destructor_count());
+    EXPECT_EQ(0u, InstrumentType<int>::move_assignment_count());
+    EXPECT_EQ(0u, InstrumentType<int>::copy_assignment_count());
+  }
+
+  {
+    InstrumentType<int>::clear();
+
+    // Copy construct.
+    const InstrumentType<int> i{10};
+    Optional<InstrumentType<int>> v{i};
+    EXPECT_EQ(2u, InstrumentType<int>::constructor_count());
+    EXPECT_EQ(0u, InstrumentType<int>::destructor_count());
     EXPECT_EQ(0u, InstrumentType<int>::move_assignment_count());
     EXPECT_EQ(0u, InstrumentType<int>::copy_assignment_count());
   }
@@ -485,6 +625,24 @@ TEST(Optional, RelationalOperators) {
     EXPECT_FALSE(a > b);
     EXPECT_TRUE(a >= b);
     EXPECT_TRUE(a <= b);
+  }
+
+  {
+    const Optional<int> a{10};
+    const Optional<int> b{};
+    EXPECT_FALSE(a == b);
+    EXPECT_TRUE(a != b);
+    EXPECT_FALSE(a < b);
+    EXPECT_TRUE(a > b);
+    EXPECT_TRUE(a >= b);
+    EXPECT_FALSE(a <= b);
+
+    EXPECT_FALSE(b == a);
+    EXPECT_TRUE(b != a);
+    EXPECT_TRUE(b < a);
+    EXPECT_FALSE(b > a);
+    EXPECT_FALSE(b >= a);
+    EXPECT_TRUE(b <= a);
   }
 
   {

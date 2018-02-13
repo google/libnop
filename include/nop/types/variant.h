@@ -78,7 +78,7 @@ class Variant {
   // Variants are default construcible, regardless of whether the elements are
   // default constructible. Default consruction yields an empty Variant.
   Variant() {}
-  explicit Variant(EmptyVariant) {}
+  explicit Variant(EmptyVariant value) { Construct(value); }
   ~Variant() { Destruct(); }
 
   Variant(const Variant& other)

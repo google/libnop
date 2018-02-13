@@ -118,7 +118,7 @@ class Optional {
           std::is_nothrow_move_constructible<T>::value) {
     if (this != &other) {
       if (!other.empty()) {
-        Assign(std::move(other.value()));
+        Assign(other.take());
         other.Destruct();
       } else {
         Destruct();
@@ -132,7 +132,7 @@ class Optional {
   std::enable_if_t<std::is_constructible<T, const U&>::value, Optional&>
   operator=(const Optional<U>& other) {
     if (!other.empty()) {
-      Assign(other.value());
+      Assign(other.get());
     } else {
       Destruct();
     }
@@ -144,7 +144,7 @@ class Optional {
   std::enable_if_t<std::is_constructible<T, U&&>::value, Optional&> operator=(
       Optional<U>&& other) {
     if (!other.empty()) {
-      Assign(std::move(other.value()));
+      Assign(other.take());
       other.Destruct();
     } else {
       Destruct();
@@ -168,9 +168,9 @@ class Optional {
 
   // Returns the underlying value. These accessors may only be called when
   // non-empty.
-  constexpr T const& get() const & { return value(); }
-  constexpr T& get() & { return value(); }
-  constexpr T&& take() && { return value(); }
+  constexpr const T& get() const { return state_.storage.value; }
+  constexpr T& get() { return state_.storage.value; }
+  constexpr T&& take() { return std::move(state_.storage.value); }
 
   // Clears the optional to the empty state, destroying the underlying value if
   // necessary.
@@ -195,11 +195,6 @@ class Optional {
       state_.empty = true;
     }
   }
-
-  // Internal utility accessors.
-  constexpr T const& value() const & { return state_.storage.value; }
-  constexpr T& value() & { return state_.storage.value; }
-  constexpr T&& value() && { return std::move(state_.storage.value); }
 
   // Type tag used by the nested State type to explicitly select the trivial
   // constructor in the nested Storage type.

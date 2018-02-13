@@ -31,12 +31,14 @@ using nop::Variant;
 namespace {
 
 struct BaseType {
-  BaseType(int value) : value(value) {}
+  BaseType(int value) : value{value} {}
+  BaseType(const BaseType& other) : value{other.value} {}
   int value;
 };
 
 struct DerivedType : BaseType {
   DerivedType(int value) : BaseType{value} {};
+  DerivedType(const BaseType& other) : BaseType{other} {}
 };
 
 template <typename T>
@@ -141,6 +143,12 @@ TEST(Variant, Assignment) {
     ASSERT_FALSE(v.is<int>());
     ASSERT_FALSE(v.is<bool>());
     ASSERT_FALSE(v.is<float>());
+    EXPECT_EQ(nullptr, &std::get<0>(v));
+    EXPECT_EQ(nullptr, &std::get<1>(v));
+    EXPECT_EQ(nullptr, &std::get<2>(v));
+    EXPECT_EQ(nullptr, &std::get<int>(v));
+    EXPECT_EQ(nullptr, &std::get<bool>(v));
+    EXPECT_EQ(nullptr, &std::get<float>(v));
   }
 
   {
@@ -151,6 +159,12 @@ TEST(Variant, Assignment) {
     ASSERT_FALSE(v.is<bool>());
     ASSERT_FALSE(v.is<float>());
     EXPECT_EQ(10, std::get<int>(v));
+    EXPECT_NE(nullptr, &std::get<0>(v));
+    EXPECT_EQ(nullptr, &std::get<1>(v));
+    EXPECT_EQ(nullptr, &std::get<2>(v));
+    EXPECT_NE(nullptr, &std::get<int>(v));
+    EXPECT_EQ(nullptr, &std::get<bool>(v));
+    EXPECT_EQ(nullptr, &std::get<float>(v));
   }
 
   {
@@ -161,6 +175,12 @@ TEST(Variant, Assignment) {
     ASSERT_TRUE(v.is<bool>());
     ASSERT_FALSE(v.is<float>());
     EXPECT_EQ(false, std::get<bool>(v));
+    EXPECT_EQ(nullptr, &std::get<0>(v));
+    EXPECT_NE(nullptr, &std::get<1>(v));
+    EXPECT_EQ(nullptr, &std::get<2>(v));
+    EXPECT_EQ(nullptr, &std::get<int>(v));
+    EXPECT_NE(nullptr, &std::get<bool>(v));
+    EXPECT_EQ(nullptr, &std::get<float>(v));
   }
 
   {
@@ -171,6 +191,71 @@ TEST(Variant, Assignment) {
     ASSERT_FALSE(v.is<bool>());
     ASSERT_TRUE(v.is<float>());
     EXPECT_FLOAT_EQ(1.0f, std::get<float>(v));
+    EXPECT_EQ(nullptr, &std::get<0>(v));
+    EXPECT_EQ(nullptr, &std::get<1>(v));
+    EXPECT_NE(nullptr, &std::get<2>(v));
+    EXPECT_EQ(nullptr, &std::get<int>(v));
+    EXPECT_EQ(nullptr, &std::get<bool>(v));
+    EXPECT_NE(nullptr, &std::get<float>(v));
+  }
+
+  {
+    const Variant<int, bool, float> v;
+    ASSERT_EQ(-1, v.index());
+    ASSERT_FALSE(v.is<int>());
+    ASSERT_FALSE(v.is<bool>());
+    ASSERT_FALSE(v.is<float>());
+    EXPECT_EQ(nullptr, &std::get<0>(v));
+    EXPECT_EQ(nullptr, &std::get<1>(v));
+    EXPECT_EQ(nullptr, &std::get<2>(v));
+    EXPECT_EQ(nullptr, &std::get<int>(v));
+    EXPECT_EQ(nullptr, &std::get<bool>(v));
+    EXPECT_EQ(nullptr, &std::get<float>(v));
+  }
+
+  {
+    const Variant<int, bool, float> v{10};
+    ASSERT_EQ(0, v.index());
+    ASSERT_TRUE(v.is<int>());
+    ASSERT_FALSE(v.is<bool>());
+    ASSERT_FALSE(v.is<float>());
+    EXPECT_EQ(10, std::get<int>(v));
+    EXPECT_NE(nullptr, &std::get<0>(v));
+    EXPECT_EQ(nullptr, &std::get<1>(v));
+    EXPECT_EQ(nullptr, &std::get<2>(v));
+    EXPECT_NE(nullptr, &std::get<int>(v));
+    EXPECT_EQ(nullptr, &std::get<bool>(v));
+    EXPECT_EQ(nullptr, &std::get<float>(v));
+  }
+
+  {
+    const Variant<int, bool, float> v{false};
+    ASSERT_EQ(1, v.index());
+    ASSERT_FALSE(v.is<int>());
+    ASSERT_TRUE(v.is<bool>());
+    ASSERT_FALSE(v.is<float>());
+    EXPECT_EQ(false, std::get<bool>(v));
+    EXPECT_EQ(nullptr, &std::get<0>(v));
+    EXPECT_NE(nullptr, &std::get<1>(v));
+    EXPECT_EQ(nullptr, &std::get<2>(v));
+    EXPECT_EQ(nullptr, &std::get<int>(v));
+    EXPECT_NE(nullptr, &std::get<bool>(v));
+    EXPECT_EQ(nullptr, &std::get<float>(v));
+  }
+
+  {
+    const Variant<int, bool, float> v{1.0f};
+    ASSERT_EQ(2, v.index());
+    ASSERT_FALSE(v.is<int>());
+    ASSERT_FALSE(v.is<bool>());
+    ASSERT_TRUE(v.is<float>());
+    EXPECT_FLOAT_EQ(1.0f, std::get<float>(v));
+    EXPECT_EQ(nullptr, &std::get<0>(v));
+    EXPECT_EQ(nullptr, &std::get<1>(v));
+    EXPECT_NE(nullptr, &std::get<2>(v));
+    EXPECT_EQ(nullptr, &std::get<int>(v));
+    EXPECT_EQ(nullptr, &std::get<bool>(v));
+    EXPECT_NE(nullptr, &std::get<float>(v));
   }
 
   {
@@ -289,11 +374,37 @@ TEST(Variant, Assignment) {
     a = 20;
     EXPECT_EQ(a, std::get<IntRef>(v));
   }
+
+  {
+    Variant<std::string, int> v{"foo"};
+    v = "test";
+
+    ASSERT_TRUE(v.is<std::string>());
+    EXPECT_EQ("test", std::get<std::string>(v));
+  }
+
+  {
+    Variant<std::string, int> v{10};
+    v = "test";
+
+    ASSERT_TRUE(v.is<std::string>());
+    EXPECT_EQ("test", std::get<std::string>(v));
+  }
 }
 
 TEST(Variant, MoveAssignment) {
   {
     Variant<std::string> v;
+    std::string s = "test";
+    v = std::move(s);
+
+    EXPECT_TRUE(s.empty());
+    ASSERT_TRUE(v.is<std::string>());
+    EXPECT_EQ("test", std::get<std::string>(v));
+  }
+
+  {
+    Variant<std::string, int> v{"foo"};
     std::string s = "test";
     v = std::move(s);
 
@@ -331,6 +442,16 @@ TEST(Variant, MoveAssignment) {
     ASSERT_TRUE(a.is<std::string>());
     ASSERT_TRUE(b.is<std::string>());
     EXPECT_TRUE(std::get<std::string>(a).empty());
+    EXPECT_EQ("test", std::get<std::string>(b));
+  }
+
+  {
+    Variant<const char*> a("test");
+    Variant<std::string> b("fizz");
+
+    b = std::move(a);
+    ASSERT_TRUE(a.is<const char*>());
+    ASSERT_TRUE(b.is<std::string>());
     EXPECT_EQ("test", std::get<std::string>(b));
   }
 
@@ -408,6 +529,13 @@ TEST(Variant, Constructor) {
 
   {
     Variant<const char*> c("test");
+    Variant<std::string> s(c);
+    ASSERT_TRUE(s.is<std::string>());
+    EXPECT_EQ("test", std::get<std::string>(s));
+  }
+
+  {
+    const Variant<std::string> c("test");
     Variant<std::string> s(c);
     ASSERT_TRUE(s.is<std::string>());
     EXPECT_EQ("test", std::get<std::string>(s));
@@ -669,6 +797,16 @@ TEST(Variant, MoveConstructor) {
     ASSERT_TRUE(b.is<std::unique_ptr<int>>());
     EXPECT_TRUE(std::get<std::unique_ptr<int>>(a) == nullptr);
     EXPECT_TRUE(std::get<std::unique_ptr<int>>(b) != nullptr);
+  }
+
+  {
+    Variant<BaseType> a(10);
+    Variant<DerivedType> b(std::move(a));
+
+    ASSERT_TRUE(a.is<BaseType>());
+    ASSERT_TRUE(b.is<DerivedType>());
+    EXPECT_EQ(10, std::get<BaseType>(a).value);
+    EXPECT_EQ(10, std::get<DerivedType>(b).value);
   }
 }
 
@@ -971,6 +1109,12 @@ TEST(Variant, Get) {
   {
     Variant<std::string> v("test");
     std::string s = std::get<std::string>(std::move(v));
+    EXPECT_EQ("test", s);
+  }
+
+  {
+    Variant<std::string> v("test");
+    std::string s = std::get<0>(std::move(v));
     EXPECT_EQ("test", s);
   }
 }
