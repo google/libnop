@@ -44,7 +44,7 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
 
   static constexpr std::size_t Size(const Type& value) {
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(sizeof...(Types)) +
+           Encoding<SizeType>::Size(sizeof...(Types)) +
            Size(value, Index<sizeof...(Types)>{});
   }
 
@@ -55,7 +55,7 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
-    auto status = Encoding<std::uint64_t>::Write(sizeof...(Types), writer);
+    auto status = Encoding<SizeType>::Write(sizeof...(Types), writer);
     if (!status)
       return status;
     else
@@ -65,8 +65,8 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
-    std::uint64_t size;
-    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+    SizeType size;
+    auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
     else if (size != sizeof...(Types))

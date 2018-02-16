@@ -19,8 +19,10 @@
 
 #include <errno.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <nop/base/encoding_byte.h>
@@ -28,6 +30,13 @@
 #include <nop/status.h>
 
 namespace nop {
+
+// Defines the size type for container and other formats that have a
+// count/length field. This is defined to be std::uint64_t on 64bit or greater
+// platforms, std::uint32_t on 32bit or smaller platforms.
+using SizeType =
+    std::conditional_t<sizeof(std::size_t) >= sizeof(std::uint64_t),
+                       std::uint64_t, std::uint32_t>;
 
 // Returns the size of the base encodings excluding extension payloads.
 inline constexpr std::size_t BaseEncodingSize(EncodingByte prefix) {

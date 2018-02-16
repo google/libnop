@@ -44,7 +44,7 @@ struct Encoding<std::basic_string<CharType, Traits, Allocator>>
   static std::size_t Size(const Type& value) {
     const std::size_t length_bytes = value.length() * CharSize;
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(length_bytes) + length_bytes;
+           Encoding<SizeType>::Size(length_bytes) + length_bytes;
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -56,7 +56,7 @@ struct Encoding<std::basic_string<CharType, Traits, Allocator>>
                                    Writer* writer) {
     const std::size_t length = value.length();
     const std::size_t length_bytes = length * CharSize;
-    auto status = Encoding<std::uint64_t>::Write(length_bytes, writer);
+    auto status = Encoding<SizeType>::Write(length_bytes, writer);
     if (!status)
       return status;
 
@@ -66,14 +66,14 @@ struct Encoding<std::basic_string<CharType, Traits, Allocator>>
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
-    std::uint64_t length_bytes;
-    auto status = Encoding<std::uint64_t>::Read(&length_bytes, reader);
+    SizeType length_bytes;
+    auto status = Encoding<SizeType>::Read(&length_bytes, reader);
     if (!status)
       return status;
     else if (length_bytes % CharSize != 0)
       return ErrorStatus::InvalidStringLength;
 
-    const std::uint64_t size = length_bytes / CharSize;
+    const SizeType size = length_bytes / CharSize;
 
     // Make sure the reader has enough data to fulfill the requested size as a
     // defense against abusive or erroneous string sizes.

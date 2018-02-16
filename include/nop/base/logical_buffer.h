@@ -99,7 +99,7 @@ struct Encoding<
 
   static constexpr std::size_t Size(const Type& value) {
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(value.size()) +
+           Encoding<SizeType>::Size(value.size()) +
            std::accumulate(
                std::begin(value), std::end(value), 0U,
                [](const std::size_t& sum, const ValueType& element) {
@@ -114,15 +114,15 @@ struct Encoding<
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
-    const std::uint64_t size = static_cast<std::uint64_t>(value.size());
+    const SizeType size = static_cast<SizeType>(value.size());
     if (size > Length)
       return ErrorStatus::InvalidContainerLength;
 
-    auto status = Encoding<std::uint64_t>::Write(size, writer);
+    auto status = Encoding<SizeType>::Write(size, writer);
     if (!status)
       return status;
 
-    for (std::uint64_t i = 0; i < size; i++) {
+    for (SizeType i = 0; i < size; i++) {
       status = Encoding<ValueType>::Write(value[i], writer);
       if (!status)
         return status;
@@ -134,14 +134,14 @@ struct Encoding<
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
-    std::uint64_t size;
-    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+    SizeType size;
+    auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
     else if (size > Length)
       return ErrorStatus::InvalidContainerLength;
 
-    for (std::uint64_t i = 0; i < size; i++) {
+    for (SizeType i = 0; i < size; i++) {
       status = Encoding<ValueType>::Read(&(*value)[i], reader);
       if (!status)
         return status;
@@ -171,7 +171,7 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   static constexpr std::size_t Size(const Type& value) {
     const std::size_t size = value.size() * sizeof(ValueType);
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(size) + size;
+           Encoding<SizeType>::Size(size) + size;
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -181,12 +181,12 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
-    const std::uint64_t size = value.size();
+    const SizeType size = value.size();
     if (size > Length)
       return ErrorStatus::InvalidContainerLength;
 
     auto status =
-        Encoding<std::uint64_t>::Write(size * sizeof(ValueType), writer);
+        Encoding<SizeType>::Write(size * sizeof(ValueType), writer);
     if (!status)
       return status;
 
@@ -196,8 +196,8 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
-    std::uint64_t size_bytes;
-    auto status = Encoding<std::uint64_t>::Read(&size_bytes, reader);
+    SizeType size_bytes;
+    auto status = Encoding<SizeType>::Read(&size_bytes, reader);
     if (!status) {
       return status;
     } else if (size_bytes > Length * sizeof(ValueType) ||
@@ -205,7 +205,7 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
       return ErrorStatus::InvalidContainerLength;
     }
 
-    const std::uint64_t size = size_bytes / sizeof(ValueType);
+    const SizeType size = size_bytes / sizeof(ValueType);
     value->size() = size;
     return reader->Read(value->begin(), value->end());
   }

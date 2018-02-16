@@ -69,7 +69,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     return BaseEncodingSize(Prefix(value)) +
            Encoding<std::uint64_t>::Size(
                EntryListTraits<Table>::EntryList::Hash) +
-           Encoding<std::uint64_t>::Size(
+           Encoding<SizeType>::Size(
                ActiveEntryCount(value, Index<Count>{})) +
            Size(value, Index<Count>{});
   }
@@ -86,7 +86,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     if (!status)
       return status;
 
-    status = Encoding<std::uint64_t>::Write(
+    status = Encoding<SizeType>::Write(
         ActiveEntryCount(value, Index<Count>{}), writer);
     if (!status)
       return status;
@@ -108,8 +108,8 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     else if (hash != EntryListTraits<Table>::EntryList::Hash)
       return ErrorStatus::InvalidTableHash;
 
-    std::uint64_t count;
-    status = Encoding<std::uint64_t>::Read(&count, reader);
+    SizeType count;
+    status = Encoding<SizeType>::Read(&count, reader);
     if (!status)
       return status;
 
@@ -176,8 +176,8 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
       if (!status)
         return status;
 
-      const std::uint64_t size = Encoding<T>::Size(entry.get());
-      status = Encoding<std::uint64_t>::Write(size, writer);
+      const SizeType size = Encoding<T>::Size(entry.get());
+      status = Encoding<SizeType>::Write(size, writer);
       if (!status)
         return status;
 
@@ -231,8 +231,8 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
     // cleared. If an entry is not cleared here then more than one entry for
     // the same id was written in violation of the table protocol.
     if (entry->empty()) {
-      std::uint64_t size;
-      auto status = Encoding<std::uint64_t>::Read(&size, reader);
+      SizeType size;
+      auto status = Encoding<SizeType>::Read(&size, reader);
       if (!status)
         return status;
 
@@ -256,8 +256,8 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   // Skips over the binary container for an entry.
   template <typename Reader>
   static Status<void> SkipEntry(Reader* reader) {
-    std::uint64_t size;
-    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+    SizeType size;
+    auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
 
@@ -288,9 +288,9 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   }
 
   template <typename Reader>
-  static Status<void> ReadEntries(Table* value, std::uint64_t count,
+  static Status<void> ReadEntries(Table* value, SizeType count,
                                   Reader* reader) {
-    for (std::uint64_t i = 0; i < count; i++) {
+    for (SizeType i = 0; i < count; i++) {
       std::uint64_t id;
       auto status = Encoding<std::uint64_t>::Read(&id, reader);
       if (!status)

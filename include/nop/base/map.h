@@ -45,7 +45,7 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
 
   static constexpr std::size_t Size(const Type& value) {
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(value.size()) +
+           Encoding<SizeType>::Size(value.size()) +
            std::accumulate(
                value.cbegin(), value.cend(), 0U,
                [](const std::size_t& sum, const std::pair<Key, T>& element) {
@@ -61,7 +61,7 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
-    auto status = Encoding<std::uint64_t>::Write(value.size(), writer);
+    auto status = Encoding<SizeType>::Write(value.size(), writer);
     if (!status)
       return status;
 
@@ -81,13 +81,13 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
-    std::uint64_t size;
-    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+    SizeType size;
+    auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
 
     value->clear();
-    for (std::uint64_t i = 0; i < size; i++) {
+    for (SizeType i = 0; i < size; i++) {
       std::pair<Key, T> element;
       status = Encoding<Key>::Read(&element.first, reader);
       if (!status)
@@ -116,7 +116,7 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
 
   static constexpr std::size_t Size(const Type& value) {
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(value.size()) +
+           Encoding<SizeType>::Size(value.size()) +
            std::accumulate(
                value.cbegin(), value.cend(), 0U,
                [](const std::size_t& sum, const std::pair<Key, T>& element) {
@@ -132,7 +132,7 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
-    auto status = Encoding<std::uint64_t>::Write(value.size(), writer);
+    auto status = Encoding<SizeType>::Write(value.size(), writer);
     if (!status)
       return status;
 
@@ -152,13 +152,13 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
-    std::uint64_t size;
-    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+    SizeType size;
+    auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
 
     value->clear();
-    for (std::uint64_t i = 0; i < size; i++) {
+    for (SizeType i = 0; i < size; i++) {
       std::pair<Key, T> element;
       status = Encoding<Key>::Read(&element.first, reader);
       if (!status)

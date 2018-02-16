@@ -42,7 +42,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
 
   static constexpr std::size_t Size(const T& value) {
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(Count) + Size(value, Index<Count>{});
+           Encoding<SizeType>::Size(Count) + Size(value, Index<Count>{});
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -52,7 +52,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte /*prefix*/, const T& value,
                                    Writer* writer) {
-    auto status = Encoding<std::uint64_t>::Write(Count, writer);
+    auto status = Encoding<SizeType>::Write(Count, writer);
     if (!status)
       return status;
     else
@@ -62,8 +62,8 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte /*prefix*/, T* value,
                                   Reader* reader) {
-    std::uint64_t size = 0;
-    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+    SizeType size = 0;
+    auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
     else if (size != Count)
