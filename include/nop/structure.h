@@ -58,18 +58,18 @@ namespace nop {
   friend struct ::nop::HasInternalMemberList; \
   template <typename, typename>               \
   friend struct ::nop::MemberListTraits;      \
-  using NOP__MEMBERS = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>
+  using NOP__MEMBERS = ::nop::MemberList<_NOP_MEMBER_LIST(type, __VA_ARGS__)>
 
 // Defines the set of members belonging to a type that should be
 // serialized/deserialized without changing the type itself. This is useful for
 // making external library types with public data serializable.
-#define NOP_EXTERNAL_STRUCTURE(type, ... /*members*/)                         \
-  template <typename>                                                         \
-  struct NOP__MEMBER_TRAITS;                                                  \
-  template <>                                                                 \
-  struct NOP__MEMBER_TRAITS<type> {                                           \
-    using MemberList = ::nop::MemberList<NOP_MEMBER_LIST(type, __VA_ARGS__)>; \
-  };                                                                          \
+#define NOP_EXTERNAL_STRUCTURE(type, ... /*members*/)                          \
+  template <typename>                                                          \
+  struct NOP__MEMBER_TRAITS;                                                   \
+  template <>                                                                  \
+  struct NOP__MEMBER_TRAITS<type> {                                            \
+    using MemberList = ::nop::MemberList<_NOP_MEMBER_LIST(type, __VA_ARGS__)>; \
+  };                                                                           \
   NOP__MEMBER_TRAITS<type> NOP__GetExternalMemberTraits[[gnu::used]](type*)
 
 // Similar to NOP_EXTERNAL_STRUCTURE but for template types.
@@ -79,7 +79,7 @@ namespace nop {
   template <typename... Ts>                                                  \
   struct NOP__MEMBER_TRAITS<type<Ts...>> {                                   \
     using MemberList =                                                       \
-        ::nop::MemberList<NOP_MEMBER_LIST(type<Ts...>, __VA_ARGS__)>;        \
+        ::nop::MemberList<_NOP_MEMBER_LIST(type<Ts...>, __VA_ARGS__)>;       \
   };                                                                         \
   template <typename... Ts>                                                  \
   NOP__MEMBER_TRAITS<type<Ts...>> NOP__GetExternalMemberTraits[[gnu::used]]( \
@@ -115,7 +115,7 @@ namespace nop {
 #define __NOP_MEMBER_POINTER_NEXT() _NOP_MEMBER_POINTER_NEXT
 
 // Defines a list of MemberPointer types given a type and list of member names.
-#define NOP_MEMBER_LIST(type, ...) \
+#define _NOP_MEMBER_LIST(type, ...) \
   NOP_MAP_ARGS(_NOP_MEMBER_POINTER_FIRST, (type), __VA_ARGS__)
 
 }  // namespace nop

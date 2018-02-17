@@ -259,6 +259,28 @@ struct IsFungible<
     : IsFungible<typename MemberListTraits<A>::MemberList,
                  typename MemberListTraits<B>::MemberList> {};
 
+// Compares user-defined value wrapper types A and B to see if the values are
+// fungible.
+template <typename A, typename B>
+struct IsFungible<
+    A, B,
+    std::enable_if_t<IsValueWrapper<A>::value && IsValueWrapper<B>::value>>
+    : IsFungible<typename ValueWrapperTraits<A>::MemberList,
+                 typename ValueWrapperTraits<B>::MemberList> {};
+
+// Compares user-defined value wrapper type A and non-wrapper type B and vice
+// versa to see if the wrapped and non-wrapped types are fungible.
+template <typename A, typename B>
+struct IsFungible<
+    A, B,
+    std::enable_if_t<IsValueWrapper<A>::value && !IsValueWrapper<B>::value>>
+    : IsFungible<typename ValueWrapperTraits<A>::Pointer::Type, B> {};
+template <typename A, typename B>
+struct IsFungible<
+    A, B,
+    std::enable_if_t<!IsValueWrapper<A>::value && IsValueWrapper<B>::value>>
+    : IsFungible<A, typename ValueWrapperTraits<B>::Pointer::Type> {};
+
 template <typename Hash, typename... A, typename... B>
 struct IsFungible<EntryList<Hash, A...>, EntryList<Hash, B...>,
                   std::enable_if_t<sizeof...(A) == sizeof...(B)>>

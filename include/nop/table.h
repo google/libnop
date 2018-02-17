@@ -122,7 +122,7 @@ struct Entry<T, Id_, DeletedEntry> {
   template <typename>                                           \
   friend struct ::nop::EntryListTraits;                         \
   using NOP__ENTRIES = ::nop::EntryList<::nop::HashValue<hash>, \
-                                        NOP_MEMBER_LIST(type, __VA_ARGS__)>
+                                        _NOP_MEMBER_LIST(type, __VA_ARGS__)>
 
 // Similar to NOP_TABLE_HASH except that the namespace hash is computed from a
 // compile-time hash of the given string literal that defines the namespace of

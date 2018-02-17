@@ -31,6 +31,7 @@
 #include <nop/base/string.h>
 #include <nop/base/table.h>
 #include <nop/base/tuple.h>
+#include <nop/base/value.h>
 #include <nop/base/variant.h>
 #include <nop/base/vector.h>
 

@@ -16,12 +16,13 @@
 
 #include <array>
 
-#include <nop/structure.h>
 #include <nop/base/logical_buffer.h>
+#include <nop/structure.h>
 #include <nop/traits/is_fungible.h>
 #include <nop/types/optional.h>
 #include <nop/types/result.h>
 #include <nop/types/variant.h>
+#include <nop/value.h>
 
 using nop::Entry;
 using nop::IsFungible;
@@ -777,4 +778,110 @@ TEST(FungibleTests, Table) {
   EXPECT_FALSE((IsFungible<TableA3, TableA0>::value));
   EXPECT_FALSE((IsFungible<TableA3, TableA1>::value));
   EXPECT_FALSE((IsFungible<TableA3, TableA2>::value));
+}
+
+namespace {
+
+template <typename T>
+struct ValueWrapper {
+  T value;
+  NOP_VALUE(ValueWrapper, value);
+};
+
+template <typename T, std::size_t Length>
+struct ArrayWrapper {
+  std::array<T, Length> data;
+  std::size_t size;
+  NOP_VALUE(ArrayWrapper, (data, size));
+};
+
+}  // anonymous namespace
+
+TEST(FungibleTests, Value) {
+  using IntWrapper = ValueWrapper<int>;
+  using FloatWrapper = ValueWrapper<float>;
+  using StringWrapper = ValueWrapper<std::string>;
+
+  using IntArray1 = ArrayWrapper<int, 1>;
+  using IntArray2 = ArrayWrapper<int, 2>;
+  using FloatArray1 = ArrayWrapper<float, 1>;
+  using FloatArray2 = ArrayWrapper<float, 2>;
+  using StringArray1 = ArrayWrapper<std::string, 1>;
+  using StringArray2 = ArrayWrapper<std::string, 2>;
+
+  EXPECT_TRUE((IsFungible<IntWrapper, IntWrapper>::value));
+  EXPECT_TRUE((IsFungible<FloatWrapper, FloatWrapper>::value));
+  EXPECT_TRUE((IsFungible<StringWrapper, StringWrapper>::value));
+
+  EXPECT_TRUE((IsFungible<IntArray1, IntArray1>::value));
+  EXPECT_TRUE((IsFungible<IntArray2, IntArray2>::value));
+  EXPECT_TRUE((IsFungible<FloatArray1, FloatArray1>::value));
+  EXPECT_TRUE((IsFungible<FloatArray2, FloatArray2>::value));
+  EXPECT_TRUE((IsFungible<StringArray1, StringArray1>::value));
+  EXPECT_TRUE((IsFungible<StringArray2, StringArray2>::value));
+
+  EXPECT_TRUE((IsFungible<IntWrapper, int>::value));
+  EXPECT_TRUE((IsFungible<int, IntWrapper>::value));
+  EXPECT_TRUE((IsFungible<FloatWrapper, float>::value));
+  EXPECT_TRUE((IsFungible<float, FloatWrapper>::value));
+  EXPECT_TRUE((IsFungible<StringWrapper, std::string>::value));
+  EXPECT_TRUE((IsFungible<std::string, StringWrapper>::value));
+
+  EXPECT_TRUE((IsFungible<IntArray1, std::vector<int>>::value));
+  EXPECT_TRUE((IsFungible<std::vector<int>, IntArray1>::value));
+  EXPECT_TRUE((IsFungible<IntArray2, std::vector<int>>::value));
+  EXPECT_TRUE((IsFungible<std::vector<int>, IntArray2>::value));
+  EXPECT_TRUE((IsFungible<FloatArray1, std::vector<float>>::value));
+  EXPECT_TRUE((IsFungible<std::vector<float>, FloatArray1>::value));
+  EXPECT_TRUE((IsFungible<FloatArray2, std::vector<float>>::value));
+  EXPECT_TRUE((IsFungible<std::vector<float>, FloatArray2>::value));
+  EXPECT_TRUE((IsFungible<StringArray1, std::vector<std::string>>::value));
+  EXPECT_TRUE((IsFungible<std::vector<std::string>, StringArray1>::value));
+  EXPECT_TRUE((IsFungible<StringArray2, std::vector<std::string>>::value));
+  EXPECT_TRUE((IsFungible<std::vector<std::string>, StringArray2>::value));
+
+  EXPECT_FALSE((IsFungible<IntWrapper, FloatWrapper>::value));
+  EXPECT_FALSE((IsFungible<IntWrapper, StringWrapper>::value));
+  EXPECT_FALSE((IsFungible<FloatWrapper, IntWrapper>::value));
+  EXPECT_FALSE((IsFungible<FloatWrapper, StringWrapper>::value));
+  EXPECT_FALSE((IsFungible<StringWrapper, IntWrapper>::value));
+  EXPECT_FALSE((IsFungible<StringWrapper, FloatWrapper>::value));
+
+  EXPECT_FALSE((IsFungible<IntWrapper, float>::value));
+  EXPECT_FALSE((IsFungible<IntWrapper, std::string>::value));
+  EXPECT_FALSE((IsFungible<float, IntWrapper>::value));
+  EXPECT_FALSE((IsFungible<std::string, IntWrapper>::value));
+  EXPECT_FALSE((IsFungible<FloatWrapper, int>::value));
+  EXPECT_FALSE((IsFungible<FloatWrapper, std::string>::value));
+  EXPECT_FALSE((IsFungible<int, FloatWrapper>::value));
+  EXPECT_FALSE((IsFungible<std::string, FloatWrapper>::value));
+  EXPECT_FALSE((IsFungible<StringWrapper, int>::value));
+  EXPECT_FALSE((IsFungible<StringWrapper, float>::value));
+  EXPECT_FALSE((IsFungible<int, StringWrapper>::value));
+  EXPECT_FALSE((IsFungible<float, StringWrapper>::value));
+
+  EXPECT_FALSE((IsFungible<IntArray1, std::vector<float>>::value));
+  EXPECT_FALSE((IsFungible<IntArray1, std::vector<std::string>>::value));
+  EXPECT_FALSE((IsFungible<std::vector<float>, IntArray1>::value));
+  EXPECT_FALSE((IsFungible<std::vector<std::string>, IntArray1>::value));
+  EXPECT_FALSE((IsFungible<IntArray2, std::vector<float>>::value));
+  EXPECT_FALSE((IsFungible<IntArray2, std::vector<std::string>>::value));
+  EXPECT_FALSE((IsFungible<std::vector<float>, IntArray2>::value));
+  EXPECT_FALSE((IsFungible<std::vector<std::string>, IntArray2>::value));
+  EXPECT_FALSE((IsFungible<FloatArray1, std::vector<int>>::value));
+  EXPECT_FALSE((IsFungible<FloatArray1, std::vector<std::string>>::value));
+  EXPECT_FALSE((IsFungible<std::vector<int>, FloatArray1>::value));
+  EXPECT_FALSE((IsFungible<std::vector<std::string>, FloatArray1>::value));
+  EXPECT_FALSE((IsFungible<FloatArray2, std::vector<int>>::value));
+  EXPECT_FALSE((IsFungible<FloatArray2, std::vector<std::string>>::value));
+  EXPECT_FALSE((IsFungible<std::vector<int>, FloatArray2>::value));
+  EXPECT_FALSE((IsFungible<std::vector<std::string>, FloatArray2>::value));
+  EXPECT_FALSE((IsFungible<StringArray1, std::vector<int>>::value));
+  EXPECT_FALSE((IsFungible<StringArray1, std::vector<float>>::value));
+  EXPECT_FALSE((IsFungible<std::vector<int>, StringArray1>::value));
+  EXPECT_FALSE((IsFungible<std::vector<float>, StringArray1>::value));
+  EXPECT_FALSE((IsFungible<StringArray2, std::vector<int>>::value));
+  EXPECT_FALSE((IsFungible<StringArray2, std::vector<float>>::value));
+  EXPECT_FALSE((IsFungible<std::vector<int>, StringArray2>::value));
+  EXPECT_FALSE((IsFungible<std::vector<float>, StringArray2>::value));
 }

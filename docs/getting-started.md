@@ -142,7 +142,8 @@ example above the order of calls to `Read()` and `Write()` and the types passed
 to them implicitly define a *protocol*. In contrast, user-defined types provide
 a means to explicitly specify the structure, or *protocol*, of the data stream.
 
-There are two main classes of user-defined types: *structures* and *tables*.
+There are three main classes of user-defined types: *structures*, *tables*, and
+*value wrappers*.
 
 Structures are space-efficient and appropriate for data that is relatively
 fixed-format and whose direct structure is not expected to evolve over time. For
@@ -154,6 +155,11 @@ Tables are somewhat less efficient in space, execution time, and convenience but
 offer bidirectional binary compatibility, allowing a user-defined table to add
 and remove fields over time and still handle data from different versions of the
 table.
+
+Value wrappers provide a means to add policy to other serializable types without
+adding additional overhead to the wire format. Value wrappers layer semantic
+rules over other types by specifying constructors, operators, and accessors that
+control value of the underling type.
 
 Note that it is perfectly valid for user-defined structures to contain
 user-defined table members and vice versa. A structure that contains tables
@@ -552,6 +558,67 @@ int main(int, char**) {
 
   return 0;
 }
+```
+
+### User-Defined Value Wrappers
+
+Values wrappers are user-defined types that add additional C++ policy to an
+exsiting serializable type without affecting the wire format for the underlying
+type. This policy can take the form of specific constructors, initializers,
+operators and accessors that control what values the underlying type can take
+and how the type interfaces with other code.
+
+A value wrapper is defined by internally annotating a normal C++ struct or class
+type using the `NOP_VALUE(type, member)` macro. This macro must be invoked once
+inside a struct or class and takes the type name followed by the member to wrap.
+
+The following are examples of value wrappers:
+```C++
+#include <nop/value.h>
+
+// Simple template type that stores floating point values as fixed point
+// integer with the specified number of fractional bits. This type has
+the same wire format as Integer.
+template <typename Integer, std::size_t FractionalBits_>
+class Fixed {
+ public:
+  enum : std::size_t {
+    Bits = sizeof(Integer) * 8,
+    FractionalBits = FractionalBits_,
+    IntegralBits = Bits - FractionalBits
+  };
+  enum : std::size_t { Power = 1 << FractionalBits };
+
+  static_assert(std::is_integral<Integer>::value, "");
+  static_assert(FractionalBits < Bits, "");
+
+  constexpr Fixed() = default;
+  constexpr Fixed(const Fixed&) = default;
+  constexpr Fixed(float f) { value_ = std::round(f * Power); }
+
+  Fixed& operator=(const Fixed&) = default;
+  Fixed& operator=(float f) { value_ = std::round(f * Power); }
+
+  constexpr float float_value() const {
+    return static_cast<float>(value_) / Power;
+  }
+
+  explicit constexpr operator float() const { return float_value(); }
+  constexpr Integer value() const { return value_; }
+
+ private:
+  Integer value_;
+  NOP_VALUE(Fixed, value_);
+};
+
+// A simple value wrapper around a logical buffer pair, providing a non-dynamic
+// alternative to std::vector<T>. This type is fungible with std::vector<T>.
+template <typename T, std::size_t Length>
+struct ArrayWrapper {
+  std::array<T, Length> data;
+  std::size_t count;
+  NOP_VALUE(ArrayWrapper, (data, count));
+};
 ```
 
 ## Protocols, Validation, and Fungibility

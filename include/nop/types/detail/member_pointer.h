@@ -54,9 +54,21 @@ struct MemberPointer<T Class::*, Pointer> {
     return Encoding<T>::Write(Resolve(instance), writer);
   }
 
+  template <typename Writer>
+  static Status<void> WritePayload(EncodingByte prefix, const Class& instance,
+                                   Writer* writer) {
+    return Encoding<T>::WritePayload(prefix, Resolve(instance), writer);
+  }
+
   template <typename Reader>
   static Status<void> Read(Class* instance, Reader* reader) {
     return Encoding<T>::Read(Resolve(instance), reader);
+  }
+
+  template <typename Reader>
+  static Status<void> ReadPayload(EncodingByte prefix, Class* instance,
+                                  Reader* reader) {
+    return Encoding<T>::ReadPayload(prefix, Resolve(instance), reader);
   }
 };
 
@@ -67,10 +79,10 @@ template <typename Class, typename First, typename Second,
 struct MemberPointer<First Class::*, FirstPointer, Second Class::*,
                      SecondPointer, EnableIfLogicalBufferPair<First, Second>> {
   using Type = LogicalBuffer<First, Second>;
-  using ConstType = LogicalBuffer<const First, const Second>;
 
-  static ConstType Resolve(const Class& instance) {
-    return {instance.*FirstPointer, instance.*SecondPointer};
+  static const Type Resolve(const Class& instance) {
+    return {const_cast<First&>(instance.*FirstPointer),
+            const_cast<Second&>(instance.*SecondPointer)};
   }
 
   static Type Resolve(Class* instance) {
@@ -78,20 +90,34 @@ struct MemberPointer<First Class::*, FirstPointer, Second Class::*,
   }
 
   static std::size_t Size(const Class& instance) {
-    ConstType pair = Resolve(instance);
-    return Encoding<ConstType>::Size(pair);
+    const Type pair = Resolve(instance);
+    return Encoding<Type>::Size(pair);
   }
 
   template <typename Writer>
   static Status<void> Write(const Class& instance, Writer* writer) {
-    ConstType pair = Resolve(instance);
-    return Encoding<ConstType>::Write(pair, writer);
+    const Type pair = Resolve(instance);
+    return Encoding<Type>::Write(pair, writer);
+  }
+
+  template <typename Writer>
+  static Status<void> WritePayload(EncodingByte prefix, const Class& instance,
+                                   Writer* writer) {
+    const Type pair = Resolve(instance);
+    return Encoding<Type>::WritePayload(prefix, pair, writer);
   }
 
   template <typename Reader>
   static Status<void> Read(Class* instance, Reader* reader) {
     Type pair = Resolve(instance);
     return Encoding<Type>::Read(&pair, reader);
+  }
+
+  template <typename Reader>
+  static Status<void> ReadPayload(EncodingByte prefix, Class* instance,
+                                  Reader* reader) {
+    Type pair = Resolve(instance);
+    return Encoding<Type>::ReadPayload(prefix, &pair, reader);
   }
 };
 
@@ -200,6 +226,42 @@ struct MemberListTraits<T, EnableIfHasInternalMemberList<T>> {
 template <typename T>
 struct MemberListTraits<T, EnableIfHasExternalMemberList<T>> {
   using MemberList = typename ExternalMemberTraits<T>::MemberList;
+};
+
+// Determines whether type T has a nested type named NOP__VALUE of
+// template type MemberList.
+template <typename T, typename = void>
+struct IsValueWrapper {
+ private:
+  template <typename U>
+  static constexpr bool Test(const typename U::NOP__VALUE*) {
+    return IsTemplateBaseOf<MemberList, typename U::NOP__VALUE>::value;
+  }
+  template <typename U>
+  static constexpr bool Test(...) {
+    return false;
+  }
+
+ public:
+  enum : bool { value = Test<T>(0) };
+};
+
+// Enable utilities for value wrapper predicates.
+template <typename T, typename ReturnType = void>
+using EnableIfIsValueWrapper =
+    typename std::enable_if<IsValueWrapper<T>::value, ReturnType>::type;
+template <typename T, typename ReturnType = void>
+using EnableIfIsNotValueWrapper =
+    typename std::enable_if<!IsValueWrapper<T>::value, ReturnType>::type;
+
+// Traits type that retrieves the internal MemberList and Pointer associated
+// with type T.
+template <typename T, typename = void>
+struct ValueWrapperTraits;
+template <typename T>
+struct ValueWrapperTraits<T, EnableIfIsValueWrapper<T>> {
+  using MemberList = typename T::NOP__VALUE;
+  using Pointer = typename MemberList::template At<0>;
 };
 
 }  // namespace nop

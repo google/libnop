@@ -25,6 +25,7 @@
 #include <nop/serializer.h>
 #include <nop/structure.h>
 #include <nop/table.h>
+#include <nop/value.h>
 
 #include "mock_reader.h"
 #include "mock_writer.h"
@@ -208,6 +209,19 @@ struct TableA2 {
   Entry<std::string, 2> address;
 
   NOP_TABLE_HASH(15, TableA2, name, attributes, address);
+};
+
+template <typename T>
+struct ValueWrapper {
+  T value;
+  NOP_VALUE(ValueWrapper, value);
+};
+
+template <typename T, std::size_t Length>
+struct ArrayWrapper {
+  std::array<T, Length> data{};
+  std::size_t size{0};
+  NOP_VALUE(ArrayWrapper, (data, size));
 };
 
 }  // anonymous namespace
@@ -6885,6 +6899,67 @@ TEST(Deserializer, Variant) {
     ASSERT_TRUE(value_b.is<std::string>());
     EXPECT_EQ("foo", std::get<std::string>(value_b));
     EXPECT_TRUE(value_c.empty());
+  }
+}
+
+TEST(Serializer, Value) {
+  std::vector<std::uint8_t> expected;
+  TestWriter writer;
+  Serializer<TestWriter*> serializer{&writer};
+  Status<void> status;
+
+  {
+    ValueWrapper<int> value_a{10};
+    ValueWrapper<std::string > value_b{"foo"};
+
+    ASSERT_TRUE(serializer.Write(value_a));
+    ASSERT_TRUE(serializer.Write(value_b));
+
+    expected = Compose(10, EncodingByte::String, 3, "foo");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    ArrayWrapper<std::string, 3> value{{{"foo", "bar", "baz"}}, 2};
+
+    ASSERT_TRUE(serializer.Write(value));
+
+    expected = Compose(EncodingByte::Array, 2, EncodingByte::String, 3, "foo",
+                       EncodingByte::String, 3, "bar");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+}
+
+TEST(Deserializer, Value) {
+  TestReader reader;
+  Deserializer<TestReader*> deserializer{&reader};
+
+  {
+    ValueWrapper<int> value_a;
+    ValueWrapper<std::string> value_b;
+
+    reader.Set(Compose(10, EncodingByte::String, 3, "foo"));
+
+    ASSERT_TRUE(deserializer.Read(&value_a));
+    ASSERT_TRUE(deserializer.Read(&value_b));
+
+    EXPECT_EQ(10, value_a.value);
+    EXPECT_EQ("foo", value_b.value);
+  }
+
+  {
+    ArrayWrapper<std::string, 3> value;
+
+    reader.Set(Compose(EncodingByte::Array, 2, EncodingByte::String, 3, "foo",
+                       EncodingByte::String, 3, "bar"));
+
+    ASSERT_TRUE(deserializer.Read(&value));
+
+    const std::array<std::string, 3> expected{{"foo", "bar"}};
+    EXPECT_EQ(expected, value.data);
+    EXPECT_EQ(2u, value.size);
   }
 }
 
