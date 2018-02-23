@@ -30,24 +30,25 @@
 namespace nop {
 
 enum class ErrorStatus {
-  None,
-  UnexpectedEncodingType,
-  UnexpectedHandleType,
-  UnexpectedVariantType,
-  InvalidContainerLength,
-  InvalidMemberCount,
-  InvalidStringLength,
-  InvalidTableHash,
-  InvalidHandleReference,
-  InvalidHandleValue,
-  InvalidInterfaceMethod,
-  DuplicateTableEntry,
-  ReadLimitReached,
-  WriteLimitReached,
-  StreamError,
-  ProtocolError,
-  IOError,
-  SystemError,
+  None,                    // 0
+  UnexpectedEncodingType,  // 1
+  UnexpectedHandleType,    // 2
+  UnexpectedVariantType,   // 3
+  InvalidContainerLength,  // 4
+  InvalidMemberCount,      // 5
+  InvalidStringLength,     // 6
+  InvalidTableHash,        // 7
+  InvalidHandleReference,  // 8
+  InvalidHandleValue,      // 9
+  InvalidInterfaceMethod,  // 10
+  DuplicateTableEntry,     // 11
+  ReadLimitReached,        // 12
+  WriteLimitReached,       // 13
+  StreamError,             // 14
+  ProtocolError,           // 15
+  IOError,                 // 16
+  SystemError,             // 17
+  DebugError,              // 18
 };
 
 template <typename T>
@@ -92,6 +93,8 @@ struct Status : Result<ErrorStatus, T> {
         return "IO Error";
       case ErrorStatus::SystemError:
         return "System Error";
+      case ErrorStatus::DebugError:
+        return "Debug Error";
       default:
         return "Unknown Error";
     }
