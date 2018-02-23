@@ -41,8 +41,8 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
   static constexpr std::size_t Size(const T& value) {
-    return BaseEncodingSize(Prefix(value)) +
-           Encoding<SizeType>::Size(Count) + Size(value, Index<Count>{});
+    return BaseEncodingSize(Prefix(value)) + Encoding<SizeType>::Size(Count) +
+           Size(value, Index<Count>{});
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -75,9 +75,10 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
  private:
   enum : std::size_t { Count = MemberListTraits<T>::MemberList::Count };
 
+  using MemberList = typename MemberListTraits<T>::MemberList;
+
   template <std::size_t Index>
-  using PointerAt =
-      typename MemberListTraits<T>::MemberList::template At<Index>;
+  using PointerAt = typename MemberList::template At<Index>;
 
   static constexpr std::size_t Size(const T& /*value*/, Index<0>) { return 0; }
 
@@ -99,7 +100,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
     if (!status)
       return status;
     else
-      return PointerAt<index - 1>::Write(value, writer);
+      return PointerAt<index - 1>::Write(value, writer, MemberList{});
   }
 
   template <typename Reader>
@@ -113,7 +114,7 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
     if (!status)
       return status;
     else
-      return PointerAt<index - 1>::Read(value, reader);
+      return PointerAt<index - 1>::Read(value, reader, MemberList{});
   }
 };
 

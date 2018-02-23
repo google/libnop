@@ -17,8 +17,11 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <limits>
+#include <memory>
 #include <vector>
 
 #include <nop/base/utility.h>
@@ -176,6 +179,33 @@ struct TestI {
   NOP_STRUCTURE(TestI, (names, size));
 };
 
+// A special rule allows data to be read/written past the end of the structure
+// when a logical buffer pair has an array part of size 1 at the end of the
+// structure. This permits serialization of the common dynamically sized buffer
+// pattern in C code.
+template <typename T>
+struct TestJ {
+  size_t size;
+  T data[1];
+};
+NOP_EXTERNAL_TEMPLATE(TestJ, (data, size));
+
+template <typename T>
+std::unique_ptr<TestJ<T>, decltype(&std::free)> MakeTestJ(
+    std::size_t capacity) {
+  return {static_cast<TestJ<T>*>(
+              std::calloc(1, offsetof(TestJ<T>, data) + capacity)),
+          &std::free};
+}
+
+template <typename T, std::size_t Size>
+auto MakeTestJ(const T (&data)[Size]) {
+  auto value = MakeTestJ<T>(Size);
+  std::copy(&data[0], &data[Size], &value->data[0]);
+  value->size = Size;
+  return value;
+}
+
 struct TableA1 {
   TableA1() = default;
   TableA1(std::string name) : name{std::move(name)} {}
@@ -223,6 +253,29 @@ struct ArrayWrapper {
   std::size_t size{0};
   NOP_VALUE(ArrayWrapper, (data, size));
 };
+
+template <typename T>
+struct CDynamicArray {
+  std::size_t size;
+  T data[1];
+  NOP_VALUE(CDynamicArray, (data, size));
+};
+
+template <typename T>
+std::unique_ptr<CDynamicArray<T>, decltype(&std::free)> MakeCDynamicArray(
+    std::size_t capacity) {
+  return {static_cast<CDynamicArray<T>*>(
+              std::calloc(1, offsetof(CDynamicArray<T>, data) + capacity)),
+          &std::free};
+}
+
+template <typename T, std::size_t Size>
+auto MakeCDynamicArray(const T (&data)[Size]) {
+  auto value = MakeCDynamicArray<T>(Size);
+  std::copy(&data[0], &data[Size], &value->data[0]);
+  value->size = Size;
+  return value;
+}
 
 }  // anonymous namespace
 
@@ -5097,6 +5150,58 @@ TEST(Serializer, StructureFailOnWriteNonIntegerLogicalBufferMemberPrefix) {
   EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
 }
 
+TEST(Serializer,
+     StructureFailOnWriteIntegerUnboundedLogicalBufferMemberPrefix) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Structure)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(1)).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  auto value = MakeTestJ<char>({'a', 'b', 'c'});
+  status = serializer.Write(*value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer,
+     StructureFailOnWriteNonIntegerUnboundedLogicalBufferMemberPrefix) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Structure)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(1)).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  auto value = MakeTestJ<std::pair<char, char>>({{'a', 'b'}, {'c', 'd'}});
+  status = serializer.Write(*value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
 TEST(Serializer, StructureFailOnWriteIntegerLogicalBufferMemberInvalidLength) {
   MockWriter writer;
   Serializer<MockWriter*> serializer{&writer};
@@ -5204,6 +5309,64 @@ TEST(Serializer, StructureFailOnWriteNonIntegerLogicalBufferMemberLength) {
   EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
 }
 
+TEST(Serializer,
+     StructureFailOnWriteIntegralUnboundedLogicalBufferMemberLength) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Structure)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(1)).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(3))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  auto value = MakeTestJ<char>({'a', 'b', 'c'});
+  status = serializer.Write(*value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer,
+     StructureFailOnWriteNonIntegralUnboundedLogicalBufferMemberLength) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Structure)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(1)).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(2))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  auto value = MakeTestJ<std::pair<char, char>>({{'a', 'b'}, {'c', 'd'}});
+  status = serializer.Write(*value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
 TEST(Serializer, StructureFailOnWriteIntegerLogicalBufferMemberPayload) {
   MockWriter writer;
   Serializer<MockWriter*> serializer{&writer};
@@ -5258,6 +5421,63 @@ TEST(Serializer,
 
   TestI value{{"a", "b", "c"}, 3};
   status = serializer.Write(value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer,
+     StructureFailOnWriteIntegralUnboundedLogicalBufferMemberPayload) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Structure)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(1)).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Binary)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(3)).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(NotNull(), NotNull()))
+      .Times(1)
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  auto value = MakeTestJ<char>({'a', 'b', 'c'});
+  status = serializer.Write(*value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
+}
+
+TEST(Serializer,
+     StructureFailOnWriteNonIntegralUnboundedLogicalBufferMemberPayload) {
+  MockWriter writer;
+  Serializer<MockWriter*> serializer{&writer};
+  Status<void> status;
+
+  EXPECT_CALL(writer, Prepare(Gt(0)))
+      .Times(AtLeast(1))
+      .WillOnce(Return(Status<void>{}))
+      .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Structure)))
+      .Times(1)
+      .WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(1)).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(static_cast<std::uint8_t>(EncodingByte::Array)))
+      .Times(2)
+      .WillOnce(Return(Status<void>{}))
+      .WillOnce(Return(ErrorStatus::WriteLimitReached));
+  EXPECT_CALL(writer, Write(2)).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(writer, Write(_, _)).Times(0);
+  EXPECT_CALL(writer, Skip(_, _)).Times(0);
+
+  auto value = MakeTestJ<std::pair<char, char>>({{'a', 'b'}, {'c', 'd'}});
+  status = serializer.Write(*value);
   EXPECT_FALSE(status);
   EXPECT_EQ(ErrorStatus::WriteLimitReached, status.error());
 }
@@ -5496,6 +5716,75 @@ TEST(Deserializer, StructureFailOnReadNonIntegerLogicalBufferPrefix) {
   EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
 }
 
+TEST(Deserializer, StructureFailOnReadIntegerUnboundedLogicalBufferPrefix) {
+  MockReader reader;
+  Deserializer<MockReader*> deserializer{&reader};
+  Status<void> status;
+
+  EXPECT_CALL(reader, Ensure(_)).Times(0);
+  EXPECT_CALL(reader, Read(_))
+      .Times(AtLeast(3))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Structure)),
+          Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
+      .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
+  EXPECT_CALL(reader, Read(_, _)).Times(0);
+  EXPECT_CALL(reader, Skip(_)).Times(0);
+
+  auto value = MakeTestJ<char>(10);
+  status = deserializer.Read(value.get());
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
+}
+
+TEST(Deserializer, StructureFailOnReadNonIntegerUnboundedLogicalBufferPrefix) {
+  MockReader reader;
+  Deserializer<MockReader*> deserializer{&reader};
+  Status<void> status;
+
+  EXPECT_CALL(reader, Ensure(_)).Times(0);
+  EXPECT_CALL(reader, Read(_))
+      .Times(AtLeast(3))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Structure)),
+          Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
+      .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
+  EXPECT_CALL(reader, Read(_, _)).Times(0);
+  EXPECT_CALL(reader, Skip(_)).Times(0);
+
+  auto value = MakeTestJ<std::pair<char, char>>(10);
+  status = deserializer.Read(value.get());
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
+}
+
+TEST(Deserializer, StructureFailOnReadUnboundedLogicalBufferInvalidPrefix) {
+  MockReader reader;
+  Deserializer<MockReader*> deserializer{&reader};
+  Status<void> status;
+
+  EXPECT_CALL(reader, Ensure(_)).Times(0);
+  EXPECT_CALL(reader, Read(_))
+      .Times(AtLeast(3))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Structure)),
+          Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(
+                          static_cast<std::uint8_t>(EncodingByte::ReservedMin)),
+                      Return(Status<void>{})))
+      .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
+  EXPECT_CALL(reader, Read(_, _)).Times(0);
+  EXPECT_CALL(reader, Skip(_)).Times(0);
+
+  auto value = MakeTestJ<char>(10);
+  status = deserializer.Read(value.get());
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::UnexpectedEncodingType, status.error());
+}
+
 TEST(Deserializer, StructureFailOnReadIntegerLogicalBufferLength) {
   MockReader reader;
   Deserializer<MockReader*> deserializer{&reader};
@@ -5546,6 +5835,56 @@ TEST(Deserializer, StructureFailOnReadNonIntegerLogicalBufferLength) {
   EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
 }
 
+TEST(Deserializer, StructureFailOnReadIntegralUnboundedLogicalBufferLength) {
+  MockReader reader;
+  Deserializer<MockReader*> deserializer{&reader};
+  Status<void> status;
+
+  EXPECT_CALL(reader, Ensure(_)).Times(0);
+  EXPECT_CALL(reader, Read(_))
+      .Times(AtLeast(4))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Structure)),
+          Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Binary)),
+          Return(Status<void>{})))
+      .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
+  EXPECT_CALL(reader, Read(_, _)).Times(0);
+  EXPECT_CALL(reader, Skip(_)).Times(0);
+
+  auto value = MakeTestJ<char>(10);
+  status = deserializer.Read(value.get());
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
+}
+
+TEST(Deserializer, StructureFailOnReadNonIntegralUnboundedLogicalBufferLength) {
+  MockReader reader;
+  Deserializer<MockReader*> deserializer{&reader};
+  Status<void> status;
+
+  EXPECT_CALL(reader, Ensure(_)).Times(0);
+  EXPECT_CALL(reader, Read(_))
+      .Times(AtLeast(4))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Structure)),
+          Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Array)),
+          Return(Status<void>{})))
+      .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
+  EXPECT_CALL(reader, Read(_, _)).Times(0);
+  EXPECT_CALL(reader, Skip(_)).Times(0);
+
+  auto value = MakeTestJ<std::pair<char, char>>(10);
+  status = deserializer.Read(value.get());
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
+}
+
 TEST(Deserializer, StructureFailOnReadIntegerLogicalBufferInvalidLength) {
   MockReader reader;
   Deserializer<MockReader*> deserializer{&reader};
@@ -5577,6 +5916,42 @@ TEST(Deserializer, StructureFailOnReadIntegerLogicalBufferInvalidLength) {
 
   TestH value;
   status = deserializer.Read(&value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::InvalidContainerLength, status.error());
+}
+
+TEST(Deserializer,
+     StructureFailOnReadIntegerUnboundedLogicalBufferInvalidLength) {
+  MockReader reader;
+  Deserializer<MockReader*> deserializer{&reader};
+  Status<void> status;
+
+  auto set_element = [](void* begin, void* /*end*/) {
+    std::size_t* size = static_cast<std::size_t*>(begin);
+    *size = 1;
+  };
+
+  EXPECT_CALL(reader, Ensure(_)).Times(0);
+  EXPECT_CALL(reader, Read(_))
+      .Times(AtLeast(4))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Structure)),
+          Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Binary)),
+          Return(Status<void>{})))
+      .WillOnce(
+          DoAll(SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::U8)),
+                Return(Status<void>{})))
+      .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
+  EXPECT_CALL(reader, Read(NotNull(), NotNull()))
+      .Times(1)
+      .WillOnce(DoAll(Invoke(set_element), Return(Status<void>{})));
+  EXPECT_CALL(reader, Skip(_)).Times(0);
+
+  auto value = MakeTestJ<std::uint16_t>(10);
+  status = deserializer.Read(value.get());
   EXPECT_FALSE(status);
   EXPECT_EQ(ErrorStatus::InvalidContainerLength, status.error());
 }
@@ -5660,6 +6035,36 @@ TEST(Deserializer, StructureFailOnReadNonIntegerLogicalBufferElementPrefix) {
 
   TestI value;
   status = deserializer.Read(&value);
+  EXPECT_FALSE(status);
+  EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
+}
+
+TEST(Deserializer,
+     StructureFailOnReadNonIntegerUnboundedLogicalBufferElementPrefix) {
+  MockReader reader;
+  Deserializer<MockReader*> deserializer{&reader};
+  Status<void> status;
+
+  EXPECT_CALL(reader, Ensure(_)).Times(0);
+  EXPECT_CALL(reader, Read(_))
+      .Times(AtLeast(4))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Structure)),
+          Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Array)),
+          Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(5), Return(Status<void>{})))
+      .WillOnce(DoAll(
+          SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Array)),
+          Return(ErrorStatus::ReadLimitReached)))
+      .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
+  EXPECT_CALL(reader, Read(_, _)).Times(0);
+  EXPECT_CALL(reader, Skip(_)).Times(0);
+
+  auto value = MakeTestJ<std::pair<char, char>>(10);
+  status = deserializer.Read(value.get());
   EXPECT_FALSE(status);
   EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
 }
@@ -5790,6 +6195,29 @@ TEST(Serializer, Structure) {
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
+
+  {
+    auto value = MakeTestJ<char>({'a', 'b', 'c', 'd'});
+
+    ASSERT_TRUE(serializer.Write(*value));
+
+    expected = Compose(EncodingByte::Structure, 1, EncodingByte::Binary, 4, 'a',
+                       'b', 'c', 'd');
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    auto value = MakeTestJ<std::pair<char, char>>({{'a', 'b'}, {'c', 'd'}});
+
+    ASSERT_TRUE(serializer.Write(*value));
+
+    expected = Compose(EncodingByte::Structure, 1, EncodingByte::Array, 2,
+                       EncodingByte::Array, 2, 'a', 'b', EncodingByte::Array, 2,
+                       'c', 'd');
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
 }
 
 TEST(Deserializer, Structure) {
@@ -5914,6 +6342,32 @@ TEST(Deserializer, Structure) {
 
     TestI expected{{"abc", "xyzw"}, 2};
     EXPECT_EQ(expected, value);
+  }
+
+  {
+    auto value = MakeTestJ<char>(10);
+
+    reader.Set(Compose(EncodingByte::Structure, 1, EncodingByte::Binary, 4, 'a',
+                       'b', 'c', 'd'));
+    ASSERT_TRUE(deserializer.Read(value.get()));
+
+    const char expected[4] = {'a', 'b', 'c', 'd'};
+    ASSERT_EQ(4u, value->size);
+    EXPECT_EQ(0, std::memcmp(expected, value->data, value->size));
+  }
+
+  {
+    auto value = MakeTestJ<std::pair<char, char>>(10);
+
+    reader.Set(Compose(EncodingByte::Structure, 1, EncodingByte::Array, 2,
+                       EncodingByte::Array, 2, 'a', 'b', EncodingByte::Array, 2,
+                       'c', 'd'));
+    ASSERT_TRUE(deserializer.Read(value.get()));
+
+    const std::pair<char, char> expected[2] = {{'a', 'b'}, {'c', 'd'}};
+    ASSERT_EQ(2u, value->size);
+    EXPECT_EQ(0, std::memcmp(expected, value->data,
+                             value->size * sizeof(expected[0])));
   }
 }
 
@@ -6910,7 +7364,7 @@ TEST(Serializer, Value) {
 
   {
     ValueWrapper<int> value_a{10};
-    ValueWrapper<std::string > value_b{"foo"};
+    ValueWrapper<std::string> value_b{"foo"};
 
     ASSERT_TRUE(serializer.Write(value_a));
     ASSERT_TRUE(serializer.Write(value_b));
@@ -6927,6 +7381,16 @@ TEST(Serializer, Value) {
 
     expected = Compose(EncodingByte::Array, 2, EncodingByte::String, 3, "foo",
                        EncodingByte::String, 3, "bar");
+    EXPECT_EQ(expected, writer.data());
+    writer.clear();
+  }
+
+  {
+    auto value = MakeCDynamicArray<char>({'a', 'b', 'c', 'd'});
+
+    ASSERT_TRUE(serializer.Write(*value));
+
+    expected = Compose(EncodingByte::Binary, 4, 'a', 'b', 'c', 'd');
     EXPECT_EQ(expected, writer.data());
     writer.clear();
   }
@@ -6960,6 +7424,18 @@ TEST(Deserializer, Value) {
     const std::array<std::string, 3> expected{{"foo", "bar"}};
     EXPECT_EQ(expected, value.data);
     EXPECT_EQ(2u, value.size);
+  }
+
+  {
+    auto value = MakeCDynamicArray<char>(10);
+
+    reader.Set(Compose(EncodingByte::Binary, 4, 'a', 'b', 'c', 'd'));
+
+    ASSERT_TRUE(deserializer.Read(value.get()));
+
+    const char expected[4] = {'a', 'b', 'c', 'd'};
+    ASSERT_EQ(4u, value->size);
+    EXPECT_EQ(0, std::memcmp(expected, value->data, value->size));
   }
 }
 

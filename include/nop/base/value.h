@@ -36,6 +36,7 @@ namespace nop {
 
 template <typename T>
 struct Encoding<T, EnableIfIsValueWrapper<T>> : EncodingIO<T> {
+  using MemberList = typename ValueWrapperTraits<T>::MemberList;
   using Pointer = typename ValueWrapperTraits<T>::Pointer;
   using Type = typename Pointer::Type;
 
@@ -54,13 +55,13 @@ struct Encoding<T, EnableIfIsValueWrapper<T>> : EncodingIO<T> {
   template <typename Writer>
   static Status<void> WritePayload(EncodingByte prefix, const T& value,
                                    Writer* writer) {
-    return Pointer::WritePayload(prefix, value, writer);
+    return Pointer::WritePayload(prefix, value, writer, MemberList{});
   }
 
   template <typename Reader>
   static Status<void> ReadPayload(EncodingByte prefix, T* value,
                                   Reader* reader) {
-    return Pointer::ReadPayload(prefix, value, reader);
+    return Pointer::ReadPayload(prefix, value, reader, MemberList{});
   }
 };
 
