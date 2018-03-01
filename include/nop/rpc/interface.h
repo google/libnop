@@ -171,7 +171,7 @@ struct InterfaceMethod {
     // given passthrough arguments. The return value of the handler is then
     // serialized using the given receiver to be returned to the remote caller.
     template <typename Receiver, typename... Passthrough>
-    Status<void> Dispatch(Receiver* receiver, Passthrough&&... passthrough) {
+    Status<void> Dispatch(Receiver* receiver, Passthrough&&... passthrough) const {
       return Helper<typename FunctionTraits<Op>::Signature>::Dispatch(
           receiver, op, std::forward<Passthrough>(passthrough)...);
     }
@@ -199,7 +199,7 @@ struct InterfaceMethod {
     // serialized using the given receiver to be returned to the remote caller.
     template <typename Receiver, typename... Passthrough>
     Status<void> Dispatch(Receiver* receiver, Class* instance,
-                          Passthrough&&... passthrough) {
+                          Passthrough&&... passthrough) const {
       return Helper<typename FunctionTraits<Method>::Signature>::Dispatch(
           receiver, instance, method,
           std::forward<Passthrough>(passthrough)...);
@@ -208,14 +208,14 @@ struct InterfaceMethod {
 
   // Returns an instance of Binding holding the given callable object.
   template <typename Op, typename Enable = EnableIfCompatibleHandler<Op>>
-  static auto Bind(Op&& op) {
+  static constexpr auto Bind(Op&& op) {
     return FunctionBinding<Op>{std::forward<Op>(op)};
   }
 
   // Returns an instance of Binding holding the given const method pointer.
   template <typename Class, typename Return, typename... Args,
             typename Enable = EnableIfCompatibleHandler<Return(Args...)>>
-  static auto Bind(Return (Class::*op)(Args...) const) {
+  static constexpr auto Bind(Return (Class::*op)(Args...) const) {
     return MethodBinding<std::add_const_t<Class>,
                          Return (Class::*)(Args...) const>{op};
   }
@@ -223,7 +223,7 @@ struct InterfaceMethod {
   // Returns an instance of Binding holding the given method pointer.
   template <typename Class, typename Return, typename... Args,
             typename Enable = EnableIfCompatibleHandler<Return(Args...)>>
-  static auto Bind(Return (Class::*op)(Args...)) {
+  static constexpr auto Bind(Return (Class::*op)(Args...)) {
     return MethodBinding<Class, Return (Class::*)(Args...)>{op};
   }
 
@@ -405,7 +405,7 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
 
   // Constructs an instance with the given bindings. Bindings are instances of
   // InterfaceMethod::*Binding returned by the method InterfaceMethod::Bind().
-  InterfaceBindings(Bindings&&... bindings)
+  constexpr InterfaceBindings(Bindings&&... bindings)
       : bindings_{std::forward<Bindings>(bindings)...} {}
 
   // Returns true if the given selector matches one of the interface methods
@@ -418,7 +418,7 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
   // passthrough args. If the selector does not match one of the bound methods
   // in this dispatch table ErrorStatus::InvalidInterfaceMethod is returned.
   template <typename Receiver>
-  Status<void> operator()(Receiver* receiver, Args&&... args) {
+  Status<void> operator()(Receiver* receiver, Args&&... args) const {
     MethodSelector method_selector;
     auto status = receiver->GetMethodSelector(&method_selector);
     if (!status)
@@ -440,14 +440,14 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
   // Terminates recursion when searching for the given method selector. Reaching
   // this function means the selector was not found in this dispatch table.
   template <typename MethodSelector>
-  bool MatchTable(MethodSelector /*method_selector*/, Index<0>) {
+  bool MatchTable(MethodSelector /*method_selector*/, Index<0>) const {
     return false;
   }
 
   // Recurses through the bindings in this dispatch table looking for the given
   // method selector.
   template <typename MethodSelector, std::size_t index>
-  bool MatchTable(MethodSelector method_selector, Index<index>) {
+  bool MatchTable(MethodSelector method_selector, Index<index>) const {
     if (At<index - 1>::Match(method_selector))
       return true;
     else
@@ -459,7 +459,7 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
   template <typename Receiver, typename MethodSelector>
   Status<void> DispatchTable(Receiver* /*receiver*/,
                              MethodSelector /*method_selector*/, Index<0>,
-                             Args&&... /*args*/) {
+                             Args&&... /*args*/) const {
     return ErrorStatus::InvalidInterfaceMethod;
   }
 
@@ -467,7 +467,7 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
   // method selector.
   template <typename Receiver, typename MethodSelector, std::size_t index>
   Status<void> DispatchTable(Receiver* receiver, MethodSelector method_selector,
-                             Index<index>, Args&&... args) {
+                             Index<index>, Args&&... args) const {
     if (At<index - 1>::Match(method_selector)) {
       return std::get<index - 1>(bindings_).Dispatch(
           receiver, std::forward<Args>(args)...);
@@ -482,7 +482,7 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
 // arguments to this function are used to specify the type of passthrough
 // arguments that each binding handler must accept.
 template <typename... Args, typename... Bindings>
-InterfaceBindings<Passthrough<Args...>, Bindings...> BindInterface(
+constexpr InterfaceBindings<Passthrough<Args...>, Bindings...> BindInterface(
     Bindings&&... bindings) {
   return {std::forward<Bindings>(bindings)...};
 }
@@ -520,7 +520,7 @@ inline constexpr MethodSelector ComputeMethodSelector(
 // struct MyInterface {
 //   NOP_INTERFACE("io.github.eieio.example.MyInterface");
 //   NOP_METHOD(Add, float(float a, floa b));
-//   NOP_API(Add);
+//   NOP_INTERFACE_API(Add);
 // };
 //
 #define _NOP_INTERFACE(selector_type, string_name)                          \
