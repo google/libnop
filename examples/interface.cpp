@@ -32,14 +32,16 @@
 #include <nop/structure.h>
 #include <nop/types/result.h>
 #include <nop/types/variant.h>
-#include <nop/utility/stream_reader.h>
-#include <nop/utility/stream_writer.h>
+#include <nop/utility/fd_reader.h>
+#include <nop/utility/fd_writer.h>
 
 #include "stream_utilities.h"
 
 using nop::BindInterface;
 using nop::Deserializer;
 using nop::ErrorStatus;
+using nop::FdReader;
+using nop::FdWriter;
 using nop::Interface;
 using nop::InterfaceBindings;
 using nop::InterfaceDispatcher;
@@ -48,8 +50,6 @@ using nop::MakeSimpleMethodSender;
 using nop::Serializer;
 using nop::SimpleMethodReceiver;
 using nop::Status;
-using nop::StreamReader;
-using nop::StreamWriter;
 using nop::Variant;
 
 //
@@ -221,33 +221,23 @@ struct CustomerInterface : public Interface<CustomerInterface> {
   NOP_INTERFACE_API(Add, Remove, Update, Get);
 };
 
-// This example uses pipes to connect the service and client. Define the reader
-// and writer types to support pipe communication.
-using Reader = StreamReader<FdInputStream>;
-using Writer = StreamWriter<FdOutputStream>;
-using Receiver = SimpleMethodReceiver<Serializer<std::unique_ptr<Writer>>,
-                                      Deserializer<std::unique_ptr<Reader>>>;
+// Convenience type to group the reader and writer pipes into a single entity.
+struct PipePair {
+  Deserializer<FdReader> deserializer;
+  Serializer<FdWriter> serializer;
+};
 
 class CustomerService {
  public:
-  CustomerService(std::unique_ptr<Reader> reader,
-                  std::unique_ptr<Writer> writer)
-      : serializer_{std::move(writer)}, deserializer_{std::move(reader)} {
-    // Build a dispatch table with the handlers for each method.
-    callback_ = BindInterface<CustomerService*>(
-        CustomerInterface::Add::Bind(&CustomerService::OnAdd),
-        CustomerInterface::Remove::Bind(&CustomerService::OnRemove),
-        CustomerInterface::Update::Bind(&CustomerService::OnUpdate),
-        CustomerInterface::Get::Bind(&CustomerService::OnGet));
-  }
-
+  CustomerService() = default;
   ~CustomerService() { Quit(); }
 
-  void HandleMessages() {
-    auto receiver = MakeSimpleMethodReceiver(&serializer_, &deserializer_);
+  void HandleMessages(PipePair pipe_pair) {
+    auto receiver = MakeSimpleMethodReceiver(&pipe_pair.serializer,
+                                             &pipe_pair.deserializer);
 
     while (!quit_) {
-      auto status = callback_(&receiver, this);
+      auto status = kDispatcher(&receiver, this);
       if (!status && !quit_) {
         std::cerr << "Failed to handle message: " << status.GetErrorMessage()
                   << std::endl;
@@ -296,9 +286,13 @@ class CustomerService {
       return search->second;
   }
 
-  Serializer<std::unique_ptr<Writer>> serializer_;
-  Deserializer<std::unique_ptr<Reader>> deserializer_;
-  InterfaceDispatcher<Receiver, CustomerService*> callback_;
+  // Build a dispatch table with the handlers for each method.
+  static constexpr auto kDispatcher = BindInterface<CustomerService*>(
+      CustomerInterface::Add::Bind(&CustomerService::OnAdd),
+      CustomerInterface::Remove::Bind(&CustomerService::OnRemove),
+      CustomerInterface::Update::Bind(&CustomerService::OnUpdate),
+      CustomerInterface::Get::Bind(&CustomerService::OnGet));
+
   std::unordered_map<CustomerId, Customer> customers_;
   CustomerId customer_id_counter_{0};
   std::atomic<bool> quit_{false};
@@ -307,13 +301,15 @@ class CustomerService {
   void operator=(const CustomerService&) = delete;
 };
 
+constexpr decltype(CustomerService::kDispatcher) CustomerService::kDispatcher;
+
 class CustomerClient {
  public:
-  CustomerClient(std::unique_ptr<Reader> reader, std::unique_ptr<Writer> writer)
-      : serializer_{std::move(writer)}, deserializer_{std::move(reader)} {}
+  CustomerClient(PipePair pipe_pair) : pipe_pair_{std::move(pipe_pair)} {}
 
   Result<CustomerId> Add(const Customer& customer) {
-    auto sender = MakeSimpleMethodSender(&serializer_, &deserializer_);
+    auto sender = MakeSimpleMethodSender(&pipe_pair_.serializer,
+                                         &pipe_pair_.deserializer);
     auto status = CustomerInterface::Add::Invoke(&sender, customer);
     if (!status)
       return CustomerError::IoError;
@@ -322,7 +318,8 @@ class CustomerClient {
   }
 
   Result<Customer> Get(CustomerId customer_id) {
-    auto sender = MakeSimpleMethodSender(&serializer_, &deserializer_);
+    auto sender = MakeSimpleMethodSender(&pipe_pair_.serializer,
+                                         &pipe_pair_.deserializer);
     auto status = CustomerInterface::Get::Invoke(&sender, customer_id);
     if (!status)
       return CustomerError::IoError;
@@ -331,52 +328,53 @@ class CustomerClient {
   }
 
  private:
-  Serializer<std::unique_ptr<Writer>> serializer_;
-  Deserializer<std::unique_ptr<Reader>> deserializer_;
+  PipePair pipe_pair_;
 };
 
-// Builds a reader/writer pair connected by a pipe.
-Status<std::pair<std::unique_ptr<Reader>, std::unique_ptr<Writer>>> MakePipe() {
+// Builds two corss-connected reader/writer pairs of pipes to form a
+// bidirectional client/server communication path.
+Status<std::pair<PipePair, PipePair>> MakePipePairs() {
   int pipe_fds[2];
-  const int ret = pipe(pipe_fds);
+  int ret = pipe(pipe_fds);
   if (ret < 0)
     return ErrorStatus::SystemError;
 
-  return {{std::make_unique<Reader>(pipe_fds[0]),
-           std::make_unique<Writer>(pipe_fds[1])}};
+  FdReader service_reader{pipe_fds[0]};
+  FdWriter client_writer{pipe_fds[1]};
+
+  ret = pipe(pipe_fds);
+  if (ret < 0)
+    return ErrorStatus::SystemError;
+
+  FdReader client_reader{pipe_fds[0]};
+  FdWriter service_writer{pipe_fds[1]};
+
+  return {{PipePair{std::move(client_reader), std::move(client_writer)},
+           PipePair{std::move(service_reader), std::move(service_writer)}}};
 }
 
 }  // anonymous namespace
 
 int main(int /*argc*/, char** /*argv*/) {
   // Build the client-to-service streams connected by a pipe.
-  auto pipe_status = MakePipe();
+  auto pipe_status = MakePipePairs();
   if (!pipe_status) {
     std::cerr << "Failed to build pipe: " << pipe_status.GetErrorMessage()
               << std::endl;
     return -1;
   }
-  std::unique_ptr<Reader> service_reader;
-  std::unique_ptr<Writer> client_writer;
-  std::tie(service_reader, client_writer) = pipe_status.take();
 
-  // Build the service-to-client streams connected by a pipe.
-  pipe_status = MakePipe();
-  if (!pipe_status) {
-    std::cerr << "Failed to build pipe: " << pipe_status.GetErrorMessage()
-              << std::endl;
-    return -1;
-  }
-  std::unique_ptr<Reader> client_reader;
-  std::unique_ptr<Writer> service_writer;
-  std::tie(client_reader, service_writer) = pipe_status.take();
+  PipePair client_pipes;
+  PipePair service_pipes;
+  std::tie(client_pipes, service_pipes) = pipe_status.take();
 
   // Build the service and client with the connecting pipes.
-  CustomerService service{std::move(service_reader), std::move(service_writer)};
-  CustomerClient client{std::move(client_reader), std::move(client_writer)};
+  CustomerService service{};
+  CustomerClient client{std::move(client_pipes)};
 
   // Start the service message handler in a thread.
-  std::thread service_thread{&CustomerService::HandleMessages, &service};
+  std::thread service_thread{&CustomerService::HandleMessages, &service,
+                             std::move(service_pipes)};
   service_thread.detach();
 
   // Exercise the customer API.
