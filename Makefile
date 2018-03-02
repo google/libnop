@@ -108,6 +108,13 @@ M_OBJS := \
 
 include build/host-executable.mk
 
+M_NAME := shared_protocol.so
+M_LDFLAGS := --shared
+M_OBJS := \
+	examples/shared.o
+
+include build/host-executable.mk
+
 clean::
 	@echo clean
 	@rm -rf $(OUT)
