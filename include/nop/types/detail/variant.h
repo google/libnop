@@ -295,15 +295,15 @@ union Union<First, Rest...> {
 
   template <typename T>
   T& get(TypeTag<T>) {
-    return rest_.template get(TypeTag<T>{});
+    return rest_.get(TypeTag<T>{});
   }
   template <typename T>
   const T& get(TypeTag<T>) const {
-    return rest_.template get(TypeTag<T>{});
+    return rest_.get(TypeTag<T>{});
   }
   template <typename T>
   constexpr std::int32_t index(TypeTag<T>) const {
-    return 1 + rest_.template index(TypeTag<T>{});
+    return 1 + rest_.index(TypeTag<T>{});
   }
 
   template <typename... Args>
@@ -314,7 +314,7 @@ union Union<First, Rest...> {
   template <typename T, typename... Args>
   std::int32_t Construct(TypeTag<T>, Args&&... args) {
     return 1 +
-           rest_.template Construct(TypeTag<T>{}, std::forward<Args>(args)...);
+           rest_.Construct(TypeTag<T>{}, std::forward<Args>(args)...);
   }
 
   template <typename... Args>
@@ -326,7 +326,7 @@ union Union<First, Rest...> {
   template <typename... Args>
   EnableIfNotConstructible<std::int32_t, First, Args...> Construct(
       Args&&... args) {
-    return 1 + rest_.template Construct(std::forward<Args>(args)...);
+    return 1 + rest_.Construct(std::forward<Args>(args)...);
   }
 
   void Destruct(std::int32_t target_index) {
