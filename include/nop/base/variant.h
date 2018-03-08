@@ -59,14 +59,16 @@ struct Encoding<EmptyVariant> : EncodingIO<EmptyVariant> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/,
-                                   EmptyVariant /*value*/, Writer* /*writer*/) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             EmptyVariant /*value*/,
+                                             Writer* /*writer*/) {
     return {};
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                  EmptyVariant* /*value*/, Reader* /*reader*/) {
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            EmptyVariant* /*value*/,
+                                            Reader* /*reader*/) {
     return {};
   }
 };
@@ -93,8 +95,9 @@ struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
     auto status = Encoding<std::int32_t>::Write(value.index(), writer);
     if (!status)
       return status;
@@ -106,9 +109,9 @@ struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
-    std::int32_t type;
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
+    std::int32_t type = 0;
     auto status = Encoding<std::int32_t>::Read(&type, reader);
     if (!status) {
       return status;

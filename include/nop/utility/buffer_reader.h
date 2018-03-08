@@ -29,21 +29,21 @@ namespace nop {
 
 class BufferReader {
  public:
-  BufferReader() = default;
-  BufferReader(const BufferReader&) = default;
-  BufferReader(const void* buffer, std::size_t size)
+  constexpr BufferReader() = default;
+  constexpr BufferReader(const BufferReader&) = default;
+  constexpr BufferReader(const void* buffer, std::size_t size)
       : buffer_{static_cast<const std::uint8_t*>(buffer)}, size_{size} {}
 
-  BufferReader& operator=(const BufferReader&) = default;
+  constexpr BufferReader& operator=(const BufferReader&) = default;
 
-  Status<void> Ensure(std::size_t size) {
+  constexpr Status<void> Ensure(std::size_t size) {
     if (size_ - index_ < size)
       return ErrorStatus::ReadLimitReached;
     else
       return {};
   }
 
-  Status<void> Read(std::uint8_t* byte) {
+  constexpr Status<void> Read(std::uint8_t* byte) {
     if (index_ < size_) {
       *byte = buffer_[index_];
       index_ += 1;
@@ -53,22 +53,23 @@ class BufferReader {
     }
   }
 
-  Status<void> Read(void* begin, void* end) {
+  constexpr Status<void> Read(void* begin, void* end) {
     using Byte = std::uint8_t;
     Byte* begin_byte = static_cast<Byte*>(begin);
     Byte* end_byte = static_cast<Byte*>(end);
 
-    const std::size_t length_bytes = std::distance(begin_byte, end_byte);
+    const std::size_t length_bytes = end_byte - begin_byte;
     if (length_bytes > (size_ - index_))
       return ErrorStatus::ReadLimitReached;
 
-    std::copy(&buffer_[index_], &buffer_[index_ + length_bytes], begin_byte);
+    for (std::size_t i=0; i < length_bytes; i++)
+    	begin_byte[i] = buffer_[index_ + i];
 
     index_ += length_bytes;
     return {};
   }
 
-  Status<void> Skip(std::size_t padding_bytes) {
+  constexpr Status<void> Skip(std::size_t padding_bytes) {
     if (padding_bytes > (size_ - index_))
       return ErrorStatus::ReadLimitReached;
 
@@ -76,10 +77,10 @@ class BufferReader {
     return {};
   }
 
-  bool empty() const { return index_ == size_; }
+  constexpr bool empty() const { return index_ == size_; }
 
-  std::size_t remaining() const { return size_ - index_; }
-  std::size_t capacity() const { return size_; }
+  constexpr std::size_t remaining() const { return size_ - index_; }
+  constexpr std::size_t capacity() const { return size_; }
 
  private:
   const std::uint8_t* buffer_{nullptr};

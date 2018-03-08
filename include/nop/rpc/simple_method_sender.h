@@ -29,12 +29,14 @@ namespace nop {
 template <typename Serializer, typename Deserializer>
 class SimpleMethodSender {
  public:
-  SimpleMethodSender(Serializer* serializer, Deserializer* deserializer)
+  constexpr SimpleMethodSender(Serializer* serializer,
+                               Deserializer* deserializer)
       : serializer_{serializer}, deserializer_{deserializer} {}
 
   template <typename MethodSelector, typename Return, typename... Args>
-  void SendMethod(MethodSelector method_selector, Status<Return>* return_value,
-                  const std::tuple<Args...>& args) {
+  constexpr void SendMethod(MethodSelector method_selector,
+                            Status<Return>* return_value,
+                            const std::tuple<Args...>& args) {
     auto status = serializer_->Write(method_selector);
     if (!status) {
       *return_value = status.error();
@@ -50,14 +52,14 @@ class SimpleMethodSender {
     GetReturn(return_value);
   }
 
-  const Serializer& serializer() const { return *serializer_; }
-  Serializer& serializer() { return *serializer_; }
-  const Deserializer& deserializer() const { return *deserializer_; }
-  Deserializer& deserializer() { return *deserializer_; }
+  constexpr const Serializer& serializer() const { return *serializer_; }
+  constexpr Serializer& serializer() { return *serializer_; }
+  constexpr const Deserializer& deserializer() const { return *deserializer_; }
+  constexpr Deserializer& deserializer() { return *deserializer_; }
 
  private:
   template <typename Return>
-  void GetReturn(Status<Return>* return_status) {
+  constexpr void GetReturn(Status<Return>* return_status) {
     Return return_value;
     auto status = deserializer_->Read(&return_value);
     if (!status)
@@ -66,7 +68,7 @@ class SimpleMethodSender {
       *return_status = std::move(return_value);
   }
 
-  void GetReturn(Status<void>* return_status) { *return_status = {}; }
+  constexpr void GetReturn(Status<void>* return_status) { *return_status = {}; }
 
   Serializer* serializer_;
   Deserializer* deserializer_;

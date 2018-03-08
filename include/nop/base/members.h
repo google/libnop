@@ -50,8 +50,8 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const T& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const T& value, Writer* writer) {
     auto status = Encoding<SizeType>::Write(Count, writer);
     if (!status)
       return status;
@@ -60,8 +60,8 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, T* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/, T* value,
+                                            Reader* reader) {
     SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
@@ -88,14 +88,14 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
   template <typename Writer>
-  static Status<void> WriteMembers(const T& /*value*/, Writer* /*writer*/,
-                                   Index<0>) {
+  static constexpr Status<void> WriteMembers(const T& /*value*/,
+                                             Writer* /*writer*/, Index<0>) {
     return {};
   }
 
   template <std::size_t index, typename Writer>
-  static Status<void> WriteMembers(const T& value, Writer* writer,
-                                   Index<index>) {
+  static constexpr Status<void> WriteMembers(const T& value, Writer* writer,
+                                             Index<index>) {
     auto status = WriteMembers(value, writer, Index<index - 1>{});
     if (!status)
       return status;
@@ -104,12 +104,14 @@ struct Encoding<T, EnableIfHasMemberList<T>> : EncodingIO<T> {
   }
 
   template <typename Reader>
-  static Status<void> ReadMembers(T* /*value*/, Reader* /*reader*/, Index<0>) {
+  static constexpr Status<void> ReadMembers(T* /*value*/, Reader* /*reader*/,
+                                            Index<0>) {
     return {};
   }
 
   template <std::size_t index, typename Reader>
-  static Status<void> ReadMembers(T* value, Reader* reader, Index<index>) {
+  static constexpr Status<void> ReadMembers(T* value, Reader* reader,
+                                            Index<index>) {
     auto status = ReadMembers(value, reader, Index<index - 1>{});
     if (!status)
       return status;

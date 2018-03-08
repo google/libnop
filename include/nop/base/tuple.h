@@ -53,7 +53,7 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
                                    Writer* writer) {
     auto status = Encoding<SizeType>::Write(sizeof...(Types), writer);
     if (!status)
@@ -63,9 +63,9 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
                                   Reader* reader) {
-    SizeType size;
+    SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
@@ -94,14 +94,14 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
 
   // Terminates template recursion.
   template <typename Writer>
-  static Status<void> WriteElements(const Type& /*value*/, Writer* /*writer*/,
+  static constexpr Status<void> WriteElements(const Type& /*value*/, Writer* /*writer*/,
                                     Index<0>) {
     return {};
   }
 
   // Recursively writes tuple elements to the writer.
   template <std::size_t index, typename Writer>
-  static Status<void> WriteElements(const Type& value, Writer* writer,
+  static constexpr Status<void> WriteElements(const Type& value, Writer* writer,
                                     Index<index>) {
     auto status = WriteElements(value, writer, Index<index - 1>{});
     if (!status)
@@ -112,13 +112,13 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadElements(Type* /*value*/, Reader* /*reader*/,
+  static constexpr Status<void> ReadElements(Type* /*value*/, Reader* /*reader*/,
                                    Index<0>) {
     return {};
   }
 
   template <std::size_t index, typename Reader>
-  static Status<void> ReadElements(Type* value, Reader* reader, Index<index>) {
+  static constexpr Status<void> ReadElements(Type* value, Reader* reader, Index<index>) {
     auto status = ReadElements(value, reader, Index<index - 1>{});
     if (!status)
       return status;

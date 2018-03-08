@@ -43,14 +43,15 @@ struct Encoding<std::reference_wrapper<T>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte prefix,
+                                             const Type& value,
+                                             Writer* writer) {
     return Encoding<T>::WritePayload(prefix, value, writer);
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type* value,
+                                            Reader* reader) {
     return Encoding<T>::ReadPayload(prefix, &value->get(), reader);
   }
 };

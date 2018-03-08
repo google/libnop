@@ -30,21 +30,21 @@ namespace nop {
 
 class BufferWriter {
  public:
-  BufferWriter() = default;
-  BufferWriter(const BufferWriter&) = default;
-  BufferWriter(void* buffer, std::size_t size)
+  constexpr BufferWriter() = default;
+  constexpr BufferWriter(const BufferWriter&) = default;
+  constexpr BufferWriter(void* buffer, std::size_t size)
       : buffer_{static_cast<std::uint8_t*>(buffer)}, size_{size} {}
 
-  BufferWriter& operator=(const BufferWriter&) = default;
+  constexpr BufferWriter& operator=(const BufferWriter&) = default;
 
-  Status<void> Prepare(std::size_t size) {
+  constexpr Status<void> Prepare(std::size_t size) {
     if (index_ + size > size_)
       return ErrorStatus::WriteLimitReached;
     else
       return {};
   }
 
-  Status<void> Write(std::uint8_t byte) {
+  constexpr Status<void> Write(std::uint8_t byte) {
     if (index_ < size_) {
       buffer_[index_++] = byte;
       return {};
@@ -53,23 +53,24 @@ class BufferWriter {
     }
   }
 
-  Status<void> Write(const void* begin, const void* end) {
+  constexpr Status<void> Write(const void* begin, const void* end) {
     using Byte = std::uint8_t;
     const Byte* begin_byte = static_cast<const Byte*>(begin);
     const Byte* end_byte = static_cast<const Byte*>(end);
 
-    const std::size_t length_bytes = std::distance(begin_byte, end_byte);
+    const std::size_t length_bytes = end_byte - begin_byte;
     if (length_bytes > (size_ - index_))
       return ErrorStatus::WriteLimitReached;
 
-    std::copy(begin_byte, end_byte, &buffer_[index_]);
+    for (std::size_t i = 0; i < length_bytes; i++)
+      buffer_[index_ + i] = begin_byte[i];
 
     index_ += length_bytes;
     return {};
   }
 
-  Status<void> Skip(std::size_t padding_bytes,
-                    std::uint8_t padding_value = 0x00) {
+  constexpr Status<void> Skip(std::size_t padding_bytes,
+                              std::uint8_t padding_value = 0x00) {
     auto status = Prepare(padding_bytes);
     if (!status)
       return status;
@@ -82,8 +83,8 @@ class BufferWriter {
     return {};
   }
 
-  std::size_t size() const { return index_; }
-  std::size_t capacity() const { return size_; }
+  constexpr std::size_t size() const { return index_; }
+  constexpr std::size_t capacity() const { return size_; }
 
  private:
   std::uint8_t* buffer_{nullptr};

@@ -53,8 +53,9 @@ struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
     auto status = Encoding<SizeType>::Write(2u, writer);
     if (!status)
       return status;
@@ -67,9 +68,9 @@ struct Encoding<std::pair<T, U>> : EncodingIO<std::pair<T, U>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
-    SizeType size;
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
+    SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;

@@ -51,7 +51,7 @@ namespace nop {
 // Implementation of Write method common to all Serializer specializations.
 struct SerializerCommon {
   template <typename T, typename Writer>
-  static Status<void> Write(const T& value, Writer* writer) {
+  static constexpr Status<void> Write(const T& value, Writer* writer) {
     // Determine how much space to prepare the writer for.
     const std::size_t size_bytes = Encoding<T>::Size(value);
 
@@ -70,27 +70,27 @@ template <typename Writer>
 class Serializer {
  public:
   template <typename... Args>
-  Serializer(Args&&... args) : writer_{std::forward<Args>(args)...} {}
+  constexpr Serializer(Args&&... args) : writer_{std::forward<Args>(args)...} {}
 
-  Serializer(Serializer&&) = default;
-  Serializer& operator=(Serializer&&) = default;
+  constexpr Serializer(Serializer&&) = default;
+  constexpr Serializer& operator=(Serializer&&) = default;
 
   // Returns the encoded size of |value| in bytes. This may be an over estimate
   // but must never be an under esitmate.
   template <typename T>
-  std::size_t GetSize(const T& value) {
+  constexpr std::size_t GetSize(const T& value) {
     return Encoding<T>::Size(value);
   }
 
   // Serializes |value| to the Writer.
   template <typename T>
-  Status<void> Write(const T& value) {
+  constexpr Status<void> Write(const T& value) {
     return SerializerCommon::Write(value, &writer_);
   }
 
-  const Writer& writer() const { return writer_; }
-  Writer& writer() { return writer_; }
-  Writer&& take() { return std::move(writer_); }
+  constexpr const Writer& writer() const { return writer_; }
+  constexpr Writer& writer() { return writer_; }
+  constexpr Writer&& take() { return std::move(writer_); }
 
  private:
   Writer writer_;
@@ -103,26 +103,26 @@ class Serializer {
 template <typename Writer>
 class Serializer<Writer*> {
  public:
-  Serializer() : writer_{nullptr} {}
-  Serializer(Writer* writer) : writer_{writer} {}
-  Serializer(const Serializer&) = default;
-  Serializer& operator=(const Serializer&) = default;
+  constexpr Serializer() : writer_{nullptr} {}
+  constexpr Serializer(Writer* writer) : writer_{writer} {}
+  constexpr Serializer(const Serializer&) = default;
+  constexpr Serializer& operator=(const Serializer&) = default;
 
   // Returns the encoded size of |value| in bytes. This may be an over estimate
   // but must never be an under esitmate.
   template <typename T>
-  std::size_t GetSize(const T& value) {
+  constexpr std::size_t GetSize(const T& value) {
     return Encoding<T>::Size(value);
   }
 
   // Serializes |value| to the Writer.
   template <typename T>
-  Status<void> Write(const T& value) {
+  constexpr Status<void> Write(const T& value) {
     return SerializerCommon::Write(value, writer_);
   }
 
-  const Writer& writer() const { return *writer_; }
-  Writer& writer() { return *writer_; }
+  constexpr const Writer& writer() const { return *writer_; }
+  constexpr Writer& writer() { return *writer_; }
 
  private:
   Writer* writer_;
@@ -132,26 +132,27 @@ class Serializer<Writer*> {
 template <typename Writer>
 class Serializer<std::unique_ptr<Writer>> {
  public:
-  Serializer() = default;
-  Serializer(std::unique_ptr<Writer> writer) : writer_{std::move(writer)} {}
-  Serializer(Serializer&&) = default;
-  Serializer& operator=(Serializer&&) = default;
+  constexpr Serializer() = default;
+  constexpr Serializer(std::unique_ptr<Writer> writer)
+      : writer_{std::move(writer)} {}
+  constexpr Serializer(Serializer&&) = default;
+  constexpr Serializer& operator=(Serializer&&) = default;
 
   // Returns the encoded size of |value| in bytes. This may be an over estimate
   // but must never be an under esitmate.
   template <typename T>
-  std::size_t GetSize(const T& value) {
+  constexpr std::size_t GetSize(const T& value) {
     return Encoding<T>::Size(value);
   }
 
   // Serializes |value| to the Writer.
   template <typename T>
-  Status<void> Write(const T& value) {
+  constexpr Status<void> Write(const T& value) {
     return SerializerCommon::Write(value, writer_.get());
   }
 
-  const Writer& writer() const { return *writer_; }
-  Writer& writer() { return *writer_; }
+  constexpr const Writer& writer() const { return *writer_; }
+  constexpr Writer& writer() { return *writer_; }
 
  private:
   std::unique_ptr<Writer> writer_;
@@ -165,20 +166,21 @@ template <typename Reader>
 class Deserializer {
  public:
   template <typename... Args>
-  Deserializer(Args&&... args) : reader_{std::forward<Args>(args)...} {}
+  constexpr Deserializer(Args&&... args)
+      : reader_{std::forward<Args>(args)...} {}
 
-  Deserializer(Deserializer&&) = default;
-  Deserializer& operator=(Deserializer&&) = default;
+  constexpr Deserializer(Deserializer&&) = default;
+  constexpr Deserializer& operator=(Deserializer&&) = default;
 
   // Deserializes the data from the reader.
   template <typename T>
-  Status<void> Read(T* value) {
+  constexpr Status<void> Read(T* value) {
     return Encoding<T>::Read(value, &reader_);
   }
 
-  const Reader& reader() const { return reader_; }
-  Reader& reader() { return reader_; }
-  Reader&& take() { return std::move(reader_); }
+  constexpr const Reader& reader() const { return reader_; }
+  constexpr Reader& reader() { return reader_; }
+  constexpr Reader&& take() { return std::move(reader_); }
 
  private:
   Reader reader_;
@@ -191,19 +193,19 @@ class Deserializer {
 template <typename Reader>
 class Deserializer<Reader*> {
  public:
-  Deserializer() : reader_{nullptr} {}
-  Deserializer(Reader* reader) : reader_{reader} {}
-  Deserializer(const Deserializer&) = default;
-  Deserializer& operator=(const Deserializer&) = default;
+  constexpr Deserializer() : reader_{nullptr} {}
+  constexpr Deserializer(Reader* reader) : reader_{reader} {}
+  constexpr Deserializer(const Deserializer&) = default;
+  constexpr Deserializer& operator=(const Deserializer&) = default;
 
   // Deserializes the data from the reader.
   template <typename T>
-  Status<void> Read(T* value) {
+  constexpr Status<void> Read(T* value) {
     return Encoding<T>::Read(value, reader_);
   }
 
-  const Reader& reader() const { return *reader_; }
-  Reader& reader() { return *reader_; }
+  constexpr const Reader& reader() const { return *reader_; }
+  constexpr Reader& reader() { return *reader_; }
 
  private:
   Reader* reader_;
@@ -213,19 +215,20 @@ class Deserializer<Reader*> {
 template <typename Reader>
 class Deserializer<std::unique_ptr<Reader>> {
  public:
-  Deserializer() = default;
-  Deserializer(std::unique_ptr<Reader> reader) : reader_{std::move(reader)} {}
-  Deserializer(Deserializer&&) = default;
-  Deserializer& operator=(Deserializer&&) = default;
+  constexpr Deserializer() = default;
+  constexpr Deserializer(std::unique_ptr<Reader> reader)
+      : reader_{std::move(reader)} {}
+  constexpr Deserializer(Deserializer&&) = default;
+  constexpr Deserializer& operator=(Deserializer&&) = default;
 
   // Deserializes the data from the reader.
   template <typename T>
-  Status<void> Read(T* value) {
+  constexpr Status<void> Read(T* value) {
     return Encoding<T>::Read(value, reader_.get());
   }
 
-  const Reader& reader() const { return *reader_; }
-  Reader& reader() { return *reader_; }
+  constexpr const Reader& reader() const { return *reader_; }
+  constexpr Reader& reader() { return *reader_; }
 
  private:
   std::unique_ptr<Reader> reader_;

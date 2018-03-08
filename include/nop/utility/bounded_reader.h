@@ -36,21 +36,21 @@ namespace nop {
 template <typename Reader>
 class BoundedReader {
  public:
-  BoundedReader() = default;
-  BoundedReader(const BoundedReader&) = default;
-  BoundedReader(Reader* reader, std::size_t size)
+  constexpr BoundedReader() = default;
+  constexpr BoundedReader(const BoundedReader&) = default;
+  constexpr BoundedReader(Reader* reader, std::size_t size)
       : reader_{reader}, size_{size} {}
 
-  BoundedReader& operator=(const BoundedReader&) = default;
+  constexpr BoundedReader& operator=(const BoundedReader&) = default;
 
-  Status<void> Ensure(std::size_t size) {
+  constexpr Status<void> Ensure(std::size_t size) {
     if (size_ - index_ < size)
       return ErrorStatus::ReadLimitReached;
     else
       return reader_->Ensure(size);
   }
 
-  Status<void> Read(std::uint8_t* byte) {
+  constexpr Status<void> Read(std::uint8_t* byte) {
     if (index_ < size_) {
       auto status = reader_->Read(byte);
       if (!status)
@@ -63,7 +63,7 @@ class BoundedReader {
     }
   }
 
-  Status<void> Read(void* begin, void* end) {
+  constexpr Status<void> Read(void* begin, void* end) {
     using Byte = std::uint8_t;
     Byte* begin_byte = static_cast<Byte*>(begin);
     Byte* end_byte = static_cast<Byte*>(end);
@@ -80,7 +80,7 @@ class BoundedReader {
     return {};
   }
 
-  Status<void> Skip(std::size_t padding_bytes) {
+  constexpr Status<void> Skip(std::size_t padding_bytes) {
     if (padding_bytes > (size_ - index_))
       return ErrorStatus::ReadLimitReached;
 
@@ -93,7 +93,7 @@ class BoundedReader {
   }
 
   // Skips any bytes remaining in the limit set at construction.
-  Status<void> ReadPadding() {
+  constexpr Status<void> ReadPadding() {
     const std::size_t padding_bytes = size_ - index_;
     auto status = reader_->Skip(padding_bytes);
     if (!status)
@@ -104,14 +104,14 @@ class BoundedReader {
   }
 
   template <typename HandleType>
-  Status<HandleType> GetHandle(HandleReference handle_reference) {
+  constexpr Status<HandleType> GetHandle(HandleReference handle_reference) {
     return reader_->GetHandle(handle_reference);
   }
 
-  bool empty() const { return index_ == size_; }
+  constexpr bool empty() const { return index_ == size_; }
 
-  std::size_t size() const { return index_; }
-  std::size_t capacity() const { return size_; }
+  constexpr std::size_t size() const { return index_; }
+  constexpr std::size_t capacity() const { return size_; }
 
  private:
   Reader* reader_{nullptr};

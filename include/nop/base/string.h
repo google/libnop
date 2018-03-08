@@ -52,8 +52,9 @@ struct Encoding<std::basic_string<CharType, Traits, Allocator>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
     const std::size_t length = value.length();
     const std::size_t length_bytes = length * CharSize;
     auto status = Encoding<SizeType>::Write(length_bytes, writer);
@@ -64,9 +65,9 @@ struct Encoding<std::basic_string<CharType, Traits, Allocator>>
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
-    SizeType length_bytes;
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
+    SizeType length_bytes = 0;
     auto status = Encoding<SizeType>::Read(&length_bytes, reader);
     if (!status)
       return status;

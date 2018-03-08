@@ -64,7 +64,7 @@ struct Encoding<Result<ErrorEnum, T>> : EncodingIO<Result<ErrorEnum, T>> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static constexpr Status<void> WritePayload(EncodingByte prefix, const Type& value,
                                    Writer* writer) {
     if (value.has_value())
       return Encoding<T>::WritePayload(prefix, value.get(), writer);
@@ -73,10 +73,10 @@ struct Encoding<Result<ErrorEnum, T>> : EncodingIO<Result<ErrorEnum, T>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::Error) {
-      ErrorEnum error_value;
+      ErrorEnum error_value = ErrorEnum::None;
       auto status = Encoding<ErrorEnum>::Read(&error_value, reader);
       if (!status)
         return status;

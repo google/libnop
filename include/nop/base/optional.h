@@ -58,7 +58,7 @@ struct Encoding<Optional<T>> : EncodingIO<Optional<T>> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const Type& value,
+  static constexpr Status<void> WritePayload(EncodingByte prefix, const Type& value,
                                    Writer* writer) {
     if (value)
       return Encoding<T>::WritePayload(prefix, value.get(), writer);
@@ -67,7 +67,7 @@ struct Encoding<Optional<T>> : EncodingIO<Optional<T>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, Type* value,
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type* value,
                                   Reader* reader) {
     if (prefix == EncodingByte::Nil) {
       value->clear();

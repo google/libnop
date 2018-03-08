@@ -53,8 +53,9 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
     auto status = Encoding<HandleType>::Write(Policy::HandleType(), writer);
     if (!status)
       return status;
@@ -67,8 +68,8 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
     HandleType handle_type;
     auto status = Encoding<HandleType>::Read(&handle_type, reader);
     if (!status)
@@ -76,7 +77,7 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
     else if (handle_type != Policy::HandleType())
       return ErrorStatus::UnexpectedHandleType;
 
-    HandleReference handle_reference;
+    HandleReference handle_reference = kEmptyHandleReference;
     status = Encoding<HandleReference>::Read(&handle_reference, reader);
     if (!status)
       return status;

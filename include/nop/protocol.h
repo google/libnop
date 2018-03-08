@@ -30,13 +30,13 @@ template <typename ProtocolType>
 struct Protocol {
   template <typename Serializer, typename T,
             typename Enable = EnableIfFungible<ProtocolType, T>>
-  static Status<void> Write(Serializer* serializer, const T& value) {
+  static constexpr Status<void> Write(Serializer* serializer, const T& value) {
     return serializer->Write(value);
   }
 
   template <typename Deserializer, typename T,
             typename Enable = EnableIfFungible<ProtocolType, T>>
-  static Status<void> Read(Deserializer* deserializer, T* value) {
+  static constexpr Status<void> Read(Deserializer* deserializer, T* value) {
     return deserializer->Read(value);
   }
 };

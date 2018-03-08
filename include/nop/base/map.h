@@ -59,8 +59,9 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
     auto status = Encoding<SizeType>::Write(value.size(), writer);
     if (!status)
       return status;
@@ -79,9 +80,9 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
-    SizeType size;
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
+    SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
@@ -130,8 +131,9 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
     auto status = Encoding<SizeType>::Write(value.size(), writer);
     if (!status)
       return status;
@@ -150,9 +152,9 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
-    SizeType size;
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
+    SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;

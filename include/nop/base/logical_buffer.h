@@ -84,7 +84,7 @@ namespace nop {
 template <typename T>
 struct LogicalBufferCommon {
   template <typename Writer>
-  static Status<void> WriteUnbounded(const T& value, Writer* writer) {
+  static constexpr Status<void> WriteUnbounded(const T& value, Writer* writer) {
     EncodingByte prefix = Encoding<T>::Prefix(value);
     auto status = writer->Write(static_cast<std::uint8_t>(prefix));
     if (!status)
@@ -94,8 +94,8 @@ struct LogicalBufferCommon {
   }
 
   template <typename Reader>
-  static Status<void> ReadUnbounded(T* value, Reader* reader) {
-    std::uint8_t prefix_byte;
+  static constexpr Status<void> ReadUnbounded(T* value, Reader* reader) {
+    std::uint8_t prefix_byte = 0;
     auto status = reader->Read(&prefix_byte);
     if (!status)
       return status;
@@ -141,8 +141,9 @@ struct Encoding<
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
     const SizeType size = static_cast<SizeType>(value.size());
     if (size > Length)
       return ErrorStatus::InvalidContainerLength;
@@ -161,8 +162,9 @@ struct Encoding<
   }
 
   template <typename Writer>
-  static Status<void> WriteUnboundedPayload(EncodingByte /*prefix*/,
-                                            const Type& value, Writer* writer) {
+  static constexpr Status<void> WriteUnboundedPayload(EncodingByte /*prefix*/,
+                                                      const Type& value,
+                                                      Writer* writer) {
     const SizeType size = static_cast<SizeType>(value.size());
     auto status = Encoding<SizeType>::Write(size, writer);
     if (!status)
@@ -178,8 +180,8 @@ struct Encoding<
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
     SizeType size;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
@@ -198,8 +200,9 @@ struct Encoding<
   }
 
   template <typename Reader>
-  static Status<void> ReadUnboundedPayload(EncodingByte /*prefix*/, Type* value,
-                                           Reader* reader) {
+  static constexpr Status<void> ReadUnboundedPayload(EncodingByte /*prefix*/,
+                                                     Type* value,
+                                                     Reader* reader) {
     SizeType size;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
@@ -244,8 +247,9 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
     const SizeType size = value.size();
     if (size > Length)
       return ErrorStatus::InvalidContainerLength;
@@ -258,8 +262,9 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   }
 
   template <typename Writer>
-  static Status<void> WriteUnboundedPayload(EncodingByte /*prefix*/,
-                                            const Type& value, Writer* writer) {
+  static constexpr Status<void> WriteUnboundedPayload(EncodingByte /*prefix*/,
+                                                      const Type& value,
+                                                      Writer* writer) {
     const SizeType size = value.size();
     auto status = Encoding<SizeType>::Write(size * sizeof(ValueType), writer);
     if (!status)
@@ -269,9 +274,9 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
-    SizeType size_bytes;
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
+    SizeType size_bytes = 0;
     auto status = Encoding<SizeType>::Read(&size_bytes, reader);
     if (!status) {
       return status;
@@ -286,9 +291,10 @@ struct Encoding<LogicalBuffer<BufferType, SizeType>,
   }
 
   template <typename Reader>
-  static Status<void> ReadUnboundedPayload(EncodingByte /*prefix*/, Type* value,
-                                           Reader* reader) {
-    SizeType size_bytes;
+  static constexpr Status<void> ReadUnboundedPayload(EncodingByte /*prefix*/,
+                                                     Type* value,
+                                                     Reader* reader) {
+    SizeType size_bytes = 0;
     auto status = Encoding<SizeType>::Read(&size_bytes, reader);
     if (!status)
       return status;

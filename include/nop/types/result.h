@@ -193,20 +193,20 @@ class Result<ErrorEnum, void> {
                 "ErrorEnum must be an enum class.");
 
  public:
-  Result() : error_{ErrorEnum::None} {}
-  Result(ErrorEnum error) : error_{error} {}
-  Result(const Result& other) { *this = other; }
-  Result(Result&& other) { *this = std::move(other); }
+  constexpr Result() : error_{ErrorEnum::None} {}
+  constexpr Result(ErrorEnum error) : error_{error} {}
+  constexpr Result(const Result& other) { *this = other; }
+  constexpr Result(Result&& other) { *this = std::move(other); }
 
-  ~Result() {}
+  ~Result() = default;
 
-  Result& operator=(const Result& other) {
+  constexpr Result& operator=(const Result& other) {
     if (this != &other) {
       error_ = other.error_;
     }
     return *this;
   }
-  Result& operator=(Result&& other) {
+  constexpr Result& operator=(Result&& other) {
     if (this != &other) {
       error_ = other.error_;
       other.clear();
@@ -214,12 +214,12 @@ class Result<ErrorEnum, void> {
     return *this;
   }
 
-  bool has_error() const { return error_ != ErrorEnum::None; }
-  explicit operator bool() const { return !has_error(); }
+  constexpr bool has_error() const { return error_ != ErrorEnum::None; }
+  constexpr explicit operator bool() const { return !has_error(); }
 
-  ErrorEnum error() const { return error_; }
+  constexpr ErrorEnum error() const { return error_; }
 
-  void clear() { error_ = ErrorEnum::None; }
+  constexpr void clear() { error_ = ErrorEnum::None; }
 
  private:
   ErrorEnum error_;

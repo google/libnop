@@ -29,28 +29,29 @@ namespace nop {
 template <typename Serializer, typename Deserializer>
 class SimpleMethodReceiver {
  public:
-  SimpleMethodReceiver(Serializer* serializer, Deserializer* deserializer)
+  constexpr SimpleMethodReceiver(Serializer* serializer,
+                                 Deserializer* deserializer)
       : serializer_{serializer}, deserializer_{deserializer} {}
 
   template <typename MethodSelector>
-  Status<void> GetMethodSelector(MethodSelector* method_selector) {
+  constexpr Status<void> GetMethodSelector(MethodSelector* method_selector) {
     return deserializer_->Read(method_selector);
   }
 
   template <typename... Args>
-  Status<void> GetArgs(std::tuple<Args...>* args) {
+  constexpr Status<void> GetArgs(std::tuple<Args...>* args) {
     return deserializer_->Read(args);
   }
 
   template <typename Return>
-  Status<void> SendReturn(const Return& return_value) {
+  constexpr Status<void> SendReturn(const Return& return_value) {
     return serializer_->Write(return_value);
   }
 
-  const Serializer& serializer() const { return *serializer_; }
-  Serializer& serializer() { return *serializer_; }
-  const Deserializer& deserializer() const { return *deserializer_; }
-  Deserializer& deserializer() { return *deserializer_; }
+  constexpr const Serializer& serializer() const { return *serializer_; }
+  constexpr Serializer& serializer() { return *serializer_; }
+  constexpr const Deserializer& deserializer() const { return *deserializer_; }
+  constexpr Deserializer& deserializer() { return *deserializer_; }
 
  private:
   Serializer* serializer_;

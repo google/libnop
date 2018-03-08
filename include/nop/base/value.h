@@ -53,14 +53,14 @@ struct Encoding<T, EnableIfIsValueWrapper<T>> : EncodingIO<T> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const T& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte prefix,
+                                             const T& value, Writer* writer) {
     return Pointer::WritePayload(prefix, value, writer, MemberList{});
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, T* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, T* value,
+                                            Reader* reader) {
     return Pointer::ReadPayload(prefix, value, reader, MemberList{});
   }
 };

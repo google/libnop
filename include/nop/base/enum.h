@@ -48,15 +48,15 @@ struct Encoding<T, EnableIfEnum<T>> : EncodingIO<T> {
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte prefix, const T& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte prefix,
+                                             const T& value, Writer* writer) {
     return Encoding<IntegerType>::WritePayload(
         prefix, reinterpret_cast<const IntegerType&>(value), writer);
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte prefix, T* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, T* value,
+                                            Reader* reader) {
     return Encoding<IntegerType>::ReadPayload(
         prefix, reinterpret_cast<IntegerType*>(value), reader);
   }

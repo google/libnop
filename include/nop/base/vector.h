@@ -58,7 +58,7 @@ struct Encoding<std::vector<T, Allocator>, EnableIfNotIntegral<T>>
 
   static constexpr std::size_t Size(const Type& value) {
     return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(value.size()) +
+           Encoding<SizeType>::Size(value.size()) +
            std::accumulate(value.cbegin(), value.cend(), 0U,
                            [](const std::size_t& sum, const T& element) {
                              return sum + Encoding<T>::Size(element);
@@ -70,9 +70,10 @@ struct Encoding<std::vector<T, Allocator>, EnableIfNotIntegral<T>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
-    auto status = Encoding<std::uint64_t>::Write(value.size(), writer);
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
+    auto status = Encoding<SizeType>::Write(value.size(), writer);
     if (!status)
       return status;
 
@@ -86,10 +87,10 @@ struct Encoding<std::vector<T, Allocator>, EnableIfNotIntegral<T>>
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
-    std::uint64_t size;
-    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
+    SizeType size = 0;
+    auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
 
@@ -99,7 +100,7 @@ struct Encoding<std::vector<T, Allocator>, EnableIfNotIntegral<T>>
     // bytes remaining in the reader provide a natural upper limit to the number
     // of allocations.
     value->clear();
-    for (std::uint64_t i = 0; i < size; i++) {
+    for (SizeType i = 0; i < size; i++) {
       T element;
       status = Encoding<T>::Read(&element, reader);
       if (!status)
@@ -123,9 +124,9 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
   }
 
   static constexpr std::size_t Size(const Type& value) {
-    const std::size_t size = value.size() * sizeof(T);
-    return BaseEncodingSize(Prefix(value)) +
-           Encoding<std::uint64_t>::Size(size) + size;
+    const SizeType size = value.size() * sizeof(T);
+    return BaseEncodingSize(Prefix(value)) + Encoding<SizeType>::Size(size) +
+           size;
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -133,11 +134,12 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
   }
 
   template <typename Writer>
-  static Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
-    const std::size_t length = value.size();
-    const std::size_t length_bytes = length * sizeof(T);
-    auto status = Encoding<std::uint64_t>::Write(length_bytes, writer);
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type& value,
+                                             Writer* writer) {
+    const SizeType length = value.size();
+    const SizeType length_bytes = length * sizeof(T);
+    auto status = Encoding<SizeType>::Write(length_bytes, writer);
     if (!status)
       return status;
 
@@ -145,17 +147,17 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
   }
 
   template <typename Reader>
-  static Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
-    std::uint64_t size;
-    auto status = Encoding<std::uint64_t>::Read(&size, reader);
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type* value, Reader* reader) {
+    SizeType size = 0;
+    auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
 
     if (size % sizeof(T) != 0)
       return ErrorStatus::InvalidContainerLength;
 
-    const std::uint64_t length = size / sizeof(T);
+    const SizeType length = size / sizeof(T);
 
     // Make sure the reader has enough data to fulfill the requested size as a
     // defense against abusive or erroneous vector sizes.

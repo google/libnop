@@ -35,21 +35,21 @@ namespace nop {
 template <typename Writer>
 class BoundedWriter {
  public:
-  BoundedWriter() = default;
-  BoundedWriter(const BoundedWriter&) = default;
-  BoundedWriter(Writer* writer, std::size_t size)
+  constexpr BoundedWriter() = default;
+  constexpr BoundedWriter(const BoundedWriter&) = default;
+  constexpr BoundedWriter(Writer* writer, std::size_t size)
       : writer_{writer}, size_{size} {}
 
-  BoundedWriter& operator=(const BoundedWriter&) = default;
+  constexpr BoundedWriter& operator=(const BoundedWriter&) = default;
 
-  Status<void> Prepare(std::size_t size) {
+  constexpr Status<void> Prepare(std::size_t size) {
     if (index_ + size > size_)
       return ErrorStatus::WriteLimitReached;
     else
       return writer_->Prepare(size);
   }
 
-  Status<void> Write(std::uint8_t byte) {
+  constexpr Status<void> Write(std::uint8_t byte) {
     if (index_ < size_) {
       auto status = writer_->Write(byte);
       if (!status)
@@ -62,7 +62,7 @@ class BoundedWriter {
     }
   }
 
-  Status<void> Write(const void* begin, const void* end) {
+  constexpr Status<void> Write(const void* begin, const void* end) {
     using Byte = std::uint8_t;
     const Byte* begin_byte = static_cast<const Byte*>(begin);
     const Byte* end_byte = static_cast<const Byte*>(end);
@@ -79,8 +79,8 @@ class BoundedWriter {
     return {};
   }
 
-  Status<void> Skip(std::size_t padding_bytes,
-                    std::uint8_t padding_value = 0x00) {
+  constexpr Status<void> Skip(std::size_t padding_bytes,
+                              std::uint8_t padding_value = 0x00) {
     if (padding_bytes > (size_ - index_))
       return ErrorStatus::WriteLimitReached;
 
@@ -93,7 +93,7 @@ class BoundedWriter {
   }
 
   // Fills out any remaining bytes with the given padding value.
-  Status<void> WritePadding(std::uint8_t padding_value = 0x00) {
+  constexpr Status<void> WritePadding(std::uint8_t padding_value = 0x00) {
     const std::size_t padding_bytes = size_ - index_;
     auto status = writer_->Skip(padding_bytes, padding_value);
     if (!status)
@@ -104,12 +104,12 @@ class BoundedWriter {
   }
 
   template <typename HandleType>
-  Status<HandleType> PushHandle(const HandleType& handle) {
+  constexpr Status<HandleType> PushHandle(const HandleType& handle) {
     return writer_->PushHandle(handle);
   }
 
-  std::size_t size() const { return index_; }
-  std::size_t capacity() const { return size_; }
+  constexpr std::size_t size() const { return index_; }
+  constexpr std::size_t capacity() const { return size_; }
 
  private:
   Writer* writer_{nullptr};
