@@ -83,7 +83,10 @@ using EnableIfEnumFlags = typename std::enable_if<IsEnumFlags<T>::value>::type;
     static_assert(std::is_enum<type>::value,                                  \
                   "Only enum types may be used for enum flags: type=" #type); \
   };                                                                          \
-  NOP__ENUM_FLAGS_TRAITS<type> NOP__GetEnumFlagsTraits[[gnu::used]](type*)
+  inline NOP__ENUM_FLAGS_TRAITS<type> NOP__GetEnumFlagsTraits                 \
+      [[gnu::used]] (type*) {                                                 \
+    return {};                                                                \
+  }
 
 }  // namespace nop
 

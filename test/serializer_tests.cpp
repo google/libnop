@@ -378,7 +378,7 @@ TEST(Serializer, IntegerVectorFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -396,7 +396,7 @@ TEST(Serializer, NonIntegerVectorFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -414,7 +414,7 @@ TEST(Serializer, IntegerVectorFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -435,7 +435,7 @@ TEST(Serializer, NonIntegerVectorFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -456,7 +456,7 @@ TEST(Serializer, IntegerVectorFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -480,7 +480,7 @@ TEST(Serializer, NonIntegerVectorFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -506,7 +506,7 @@ TEST(Serializer, IntegerVectorFailOnWritePayload) {
 
   // Writer::Prepare() indicates write possible and write prefix succeeds but
   // encoding length fails.
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -532,7 +532,7 @@ TEST(Serializer, NonIntegerVectorFailOnWritePayload) {
 
   // Writer::Prepare() indicates write possible and write prefix succeeds but
   // encoding length fails.
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -837,7 +837,7 @@ TEST(Serializer, IntegerStdArrayFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -855,7 +855,7 @@ TEST(Serializer, IntegerCArrayFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -873,7 +873,7 @@ TEST(Serializer, NonIntegerStdArrayFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -892,7 +892,7 @@ TEST(Serializer, NonIntegerCArrayFailOnPrepare) {
   Status<void> status;
 
   // Writer::Prepare() immediately indicates no writes possible.
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -910,7 +910,7 @@ TEST(Serializer, IntegerStdArrayFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -931,7 +931,7 @@ TEST(Serializer, IntegerCArrayFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -952,7 +952,7 @@ TEST(Serializer, NonIntegerStdArrayFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -973,7 +973,7 @@ TEST(Serializer, NonIntegerCArrayFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -994,7 +994,7 @@ TEST(Serializer, IntegerStdArrayFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -1018,7 +1018,7 @@ TEST(Serializer, IntegerCArrayFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -1042,7 +1042,7 @@ TEST(Serializer, NonIntegerStdArrayFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -1066,7 +1066,7 @@ TEST(Serializer, NonIntegerCArrayFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -1092,7 +1092,7 @@ TEST(Serializer, IntegerStdArrayFailOnWritePayload) {
 
   // Writer::Prepare() indicates write possible and write prefix succeeds but
   // encoding length fails.
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -1118,7 +1118,7 @@ TEST(Serializer, IntegerCArrayFailOnWritePayload) {
 
   // Writer::Prepare() indicates write possible and write prefix succeeds but
   // encoding payload fails.
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -1144,7 +1144,7 @@ TEST(Serializer, NonIntegerStdArrayFailOnWritePayload) {
 
   // Writer::Prepare() indicates write possible and write prefix succeeds but
   // encoding length fails.
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -1170,7 +1170,7 @@ TEST(Serializer, NonIntegerCArrayFailOnWritePayload) {
 
   // Writer::Prepare() indicates write possible and write prefix succeeds but
   // encoding payload fails.
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3189,7 +3189,7 @@ TEST(Serializer, StringFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -3207,7 +3207,7 @@ TEST(Serializer, StringFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3228,7 +3228,7 @@ TEST(Serializer, StringFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3254,7 +3254,7 @@ TEST(Serializer, StringFailOnWritePayload) {
 
   // Writer::Prepare() indicates write possible and write prefix succeeds but
   // encoding length fails.
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3346,7 +3346,7 @@ TEST(Deserializer, StringFailOnEnsure) {
           Return(Status<void>{})))
       .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
       .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
-  EXPECT_CALL(reader, Ensure(Eq(1)))
+  EXPECT_CALL(reader, Ensure(Eq(1U)))
       .Times(1)
       .WillOnce(Return(ErrorStatus::ReadLimitReached));
   EXPECT_CALL(reader, Read(_, _)).Times(0);
@@ -3370,7 +3370,7 @@ TEST(Deserializer, StringFailOnReadPayload) {
           Return(Status<void>{})))
       .WillOnce(DoAll(SetArgPointee<0>(1), Return(Status<void>{})))
       .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
-  EXPECT_CALL(reader, Ensure(Eq(1))).Times(1).WillOnce(Return(Status<void>{}));
+  EXPECT_CALL(reader, Ensure(Eq(1U))).Times(1).WillOnce(Return(Status<void>{}));
   EXPECT_CALL(reader, Read(NotNull(), NotNull()))
       .Times(1)
       .WillOnce(Return(ErrorStatus::ReadLimitReached));
@@ -3504,7 +3504,7 @@ TEST(Serializer, TupleFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -3522,7 +3522,7 @@ TEST(Serializer, TupleFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3543,7 +3543,7 @@ TEST(Serializer, TupleFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3567,7 +3567,7 @@ TEST(Serializer, TupleFailOnWriteElementPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3842,7 +3842,7 @@ TEST(Serializer, PairFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -3860,7 +3860,7 @@ TEST(Serializer, PairFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3881,7 +3881,7 @@ TEST(Serializer, PairFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -3905,7 +3905,7 @@ TEST(Serializer, PairFailOnWriteElementPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4157,7 +4157,7 @@ TEST(Serializer, MapFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -4175,7 +4175,7 @@ TEST(Serializer, MapFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4196,7 +4196,7 @@ TEST(Serializer, MapFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4220,7 +4220,7 @@ TEST(Serializer, MapFailOnWriteKeyPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4245,7 +4245,7 @@ TEST(Serializer, MapFailOnWriteValuePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4271,7 +4271,7 @@ TEST(Serializer, MapFailOnWriteValueLength) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4300,7 +4300,7 @@ TEST(Serializer, MapFailOnWriteValuePayload) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4534,7 +4534,7 @@ TEST(Serializer, UnorderedMapFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -4552,7 +4552,7 @@ TEST(Serializer, UnorderedMapFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4573,7 +4573,7 @@ TEST(Serializer, UnorderedMapFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4597,7 +4597,7 @@ TEST(Serializer, UnorderedMapFailOnWriteKeyPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4622,7 +4622,7 @@ TEST(Serializer, UnorderedMapFailOnWriteValuePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4648,7 +4648,7 @@ TEST(Serializer, UnorderedMapFailOnWriteValueLength) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -4677,7 +4677,7 @@ TEST(Serializer, UnorderedMapFailOnWriteValuePayload) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5017,7 +5017,7 @@ TEST(Serializer, StructureFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -5035,7 +5035,7 @@ TEST(Serializer, StructureFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5056,7 +5056,7 @@ TEST(Serializer, StructureFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5080,7 +5080,7 @@ TEST(Serializer, StructureFailOnWriteMemberPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5105,7 +5105,7 @@ TEST(Serializer, StructureFailOnWriteIntegerLogicalBufferMemberPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5130,7 +5130,7 @@ TEST(Serializer, StructureFailOnWriteNonIntegerLogicalBufferMemberPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5156,7 +5156,7 @@ TEST(Serializer,
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5182,7 +5182,7 @@ TEST(Serializer,
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5207,7 +5207,7 @@ TEST(Serializer, StructureFailOnWriteIntegerLogicalBufferMemberInvalidLength) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5233,7 +5233,7 @@ TEST(Serializer,
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5258,7 +5258,7 @@ TEST(Serializer, StructureFailOnWriteIntegerLogicalBufferMemberLength) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5286,7 +5286,7 @@ TEST(Serializer, StructureFailOnWriteNonIntegerLogicalBufferMemberLength) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5315,7 +5315,7 @@ TEST(Serializer,
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5344,7 +5344,7 @@ TEST(Serializer,
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5372,7 +5372,7 @@ TEST(Serializer, StructureFailOnWriteIntegerLogicalBufferMemberPayload) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5401,7 +5401,7 @@ TEST(Serializer,
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5431,7 +5431,7 @@ TEST(Serializer,
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5460,7 +5460,7 @@ TEST(Serializer,
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -5927,8 +5927,8 @@ TEST(Deserializer,
   Status<void> status;
 
   auto set_element = [](void* begin, void* /*end*/) {
-    std::size_t* size = static_cast<std::size_t*>(begin);
-    *size = 1;
+    const std::size_t value = 1;
+    std::copy(&value, &value + 1, static_cast<std::uint8_t*>(begin));
   };
 
   EXPECT_CALL(reader, Ensure(_)).Times(0);
@@ -6376,7 +6376,7 @@ TEST(Serializer, TableFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -6394,7 +6394,7 @@ TEST(Serializer, TableFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -6415,7 +6415,7 @@ TEST(Serializer, TableFailOnWriteHash) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -6439,7 +6439,7 @@ TEST(Serializer, TableFailOnWriteLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -6464,7 +6464,7 @@ TEST(Serializer, TableFailOnWriteEntryIdPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -6490,7 +6490,7 @@ TEST(Serializer, TableFailOnWriteEntryLengthPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -6517,7 +6517,7 @@ TEST(Serializer, TableFailOnWriteEntryPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -6545,7 +6545,7 @@ TEST(Serializer, TableFailOnWriteEntryStringLength) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -6576,7 +6576,7 @@ TEST(Serializer, TableFailOnWriteEntryStringPayload) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -6607,7 +6607,7 @@ TEST(Serializer, TableA2FailOnWriteEntryStringPayload) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -7072,7 +7072,7 @@ TEST(Serializer, VariantFailOnPrepare) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -7090,7 +7090,7 @@ TEST(Serializer, VariantFailOnWritePrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -7111,7 +7111,7 @@ TEST(Serializer, TupleFailOnWriteIdPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -7135,7 +7135,7 @@ TEST(Serializer, VariantFailOnWriteElementPrefix) {
   Serializer<MockWriter*> serializer{&writer};
   Status<void> status;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -7447,7 +7447,7 @@ TEST(Serializer, HandleFailOnPrepare) {
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
   using IntHandle = Handle<IntHandlePolicy>;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
   EXPECT_CALL(writer, Write(_)).Times(0);
@@ -7468,7 +7468,7 @@ TEST(Serializer, HandleFailOnWritePrefix) {
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
   using IntHandle = Handle<IntHandlePolicy>;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -7492,7 +7492,7 @@ TEST(Serializer, HandleFailOnWriteTypePrefix) {
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
   using IntHandle = Handle<IntHandlePolicy>;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -7519,7 +7519,7 @@ TEST(Serializer, HandleFailOnPushHandle) {
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
   using IntHandle = Handle<IntHandlePolicy>;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));
@@ -7547,7 +7547,7 @@ TEST(Serializer, HandleFailOnWriteHandleReference) {
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
   using IntHandle = Handle<IntHandlePolicy>;
 
-  EXPECT_CALL(writer, Prepare(Gt(0)))
+  EXPECT_CALL(writer, Prepare(Gt(0U)))
       .Times(AtLeast(1))
       .WillOnce(Return(Status<void>{}))
       .WillRepeatedly(Return(ErrorStatus::WriteLimitReached));

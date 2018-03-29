@@ -20,6 +20,8 @@
 #include <array>
 #include <cstdint>
 
+#include <nop/utility/compiler.h>
+
 // A direct port of the SipHash C reference implementation.
 //
 // https://131002.net/siphash/siphash24.c
@@ -98,18 +100,25 @@ struct SipHash {
     switch (kLeftOver) {
       case 7:
         b |= static_cast<std::uint64_t>(buffer[kEndOffset + 6]) << 48;
+        NOP_FALLTHROUGH;
       case 6:
         b |= static_cast<std::uint64_t>(buffer[kEndOffset + 5]) << 40;
+        NOP_FALLTHROUGH;
       case 5:
         b |= static_cast<std::uint64_t>(buffer[kEndOffset + 4]) << 32;
+        NOP_FALLTHROUGH;
       case 4:
         b |= static_cast<std::uint64_t>(buffer[kEndOffset + 3]) << 24;
+        NOP_FALLTHROUGH;
       case 3:
         b |= static_cast<std::uint64_t>(buffer[kEndOffset + 2]) << 16;
+        NOP_FALLTHROUGH;
       case 2:
         b |= static_cast<std::uint64_t>(buffer[kEndOffset + 1]) << 8;
+        NOP_FALLTHROUGH;
       case 1:
         b |= static_cast<std::uint64_t>(buffer[kEndOffset + 0]) << 0;
+        NOP_FALLTHROUGH;
       case 0:
         break;
     }

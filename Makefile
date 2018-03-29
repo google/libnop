@@ -15,6 +15,10 @@ HOST_CFLAGS := -g -O2 -Wall -Werror -Wextra -Iinclude
 HOST_CXXFLAGS := -std=c++14
 HOST_LDFLAGS :=
 
+ifeq ($(HOST_OS),Linux)
+HOST_LDFLAGS := -lpthread
+endif
+
 OUT := out
 OUT_HOST_OBJ := $(OUT)/host-obj
 
@@ -109,6 +113,7 @@ M_OBJS := \
 include build/host-executable.mk
 
 M_NAME := shared_protocol.so
+M_CFLAGS := -fPIC
 M_LDFLAGS := --shared
 M_OBJS := \
 	examples/shared.o

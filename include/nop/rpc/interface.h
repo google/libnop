@@ -171,7 +171,8 @@ struct InterfaceMethod {
     // given passthrough arguments. The return value of the handler is then
     // serialized using the given receiver to be returned to the remote caller.
     template <typename Receiver, typename... Passthrough>
-    Status<void> Dispatch(Receiver* receiver, Passthrough&&... passthrough) const {
+    Status<void> Dispatch(Receiver* receiver,
+                          Passthrough&&... passthrough) const {
       return Helper<typename FunctionTraits<Op>::Signature>::Dispatch(
           receiver, op, std::forward<Passthrough>(passthrough)...);
     }
@@ -355,15 +356,22 @@ struct Interface {
   using BASE = Interface<T>;
 
   // Returns the hash of the interface type T.
-  static std::uint64_t GetInterfaceHash() { return InterfaceType<T>::Hash; }
+  static std::uint64_t GetInterfaceHash() {
+    using InterfaceType = typename T::NOP__INTERFACE;
+    return InterfaceType::Hash;
+  }
 
   // Returns the name of the interface type T.
-  static std::string GetInterfaceName() { return InterfaceType<T>::GetName(); }
+  static std::string GetInterfaceName() {
+    using InterfaceType = typename T::NOP__INTERFACE;
+    return InterfaceType::GetName();
+  }
 
   // Looks up the selector for a method in the interface by numeric index.
   template <std::size_t Index>
   static constexpr auto GetMethodSelector() {
-    return InterfaceApiType<T>::template Method<Index>::Selector;
+    using InterfaceApiType = typename T::NOP__INTERFACE_API;
+    return InterfaceApiType::template Method<Index>::Selector;
   }
 };
 

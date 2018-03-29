@@ -224,7 +224,7 @@ class Optional {
     // Constructs the value type, making it active.
     template <typename... Args>
     constexpr Storage(Args&&... args) noexcept
-        : value{std::forward<Args>(args)...} {}
+        : value(std::forward<Args>(args)...) {}
 
     // Non-trivial destructor. This doesn't do anything useful except enable to
     // compiler to catch attempts to use this type in a non-trivial context.
@@ -250,7 +250,7 @@ class Optional {
     // Constructs the value type, making it active.
     template <typename... Args>
     constexpr Storage(Args&&... args) noexcept
-        : value{std::forward<Args>(args)...} {}
+        : value(std::forward<Args>(args)...) {}
 
     // Trivial destructor.
     ~Storage() = default;
