@@ -48,7 +48,7 @@ class TestWriter {
 
     const std::size_t length_bytes = std::distance(begin_byte, end_byte);
 
-    // Extend the buffer to accomodate the data.
+    // Extend the buffer to accommodate the data.
     const std::size_t start_offset = data_.size();
     data_.resize(start_offset + length_bytes);
 
