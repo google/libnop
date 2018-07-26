@@ -51,7 +51,7 @@ class LogicalBuffer {
 };
 
 // Performs static asserts to ensure that SizeType is integral and that it can
-// accomodate the range required by Length.
+// accommodate the range required by Length.
 template <typename BufferType, typename SizeType>
 struct LogicalBufferStaticConstraints {
   static_assert(
