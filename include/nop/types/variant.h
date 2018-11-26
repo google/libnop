@@ -182,7 +182,7 @@ class Variant {
   template <typename T>
   constexpr std::int32_t index_of() const {
     static_assert(HasType<T>::value, "T is not an element type of Variant.");
-    return value_.template index(DecayedTypeTag<T>{});
+    return value_.index(DecayedTypeTag<T>{});
   }
 
   // Returns the index of the active type. If the Variant is empty -1 is
@@ -204,28 +204,28 @@ class Variant {
   template <typename T>
   T* get() {
     if (is<T>())
-      return &value_.template get(DecayedTypeTag<T>{});
+      return &value_.get(DecayedTypeTag<T>{});
     else
       return nullptr;
   }
   template <typename T>
   const T* get() const {
     if (is<T>())
-      return &value_.template get(DecayedTypeTag<T>{});
+      return &value_.get(DecayedTypeTag<T>{});
     else
       return nullptr;
   }
   template <std::size_t I>
   TypeForIndex<I>* get() {
     if (is<TypeForIndex<I>>())
-      return &value_.template get(TypeTagForIndex<I>{});
+      return &value_.get(TypeTagForIndex<I>{});
     else
       return nullptr;
   }
   template <std::size_t I>
   const TypeForIndex<I>* get() const {
     if (is<TypeForIndex<I>>())
-      return &value_.template get(TypeTagForIndex<I>{});
+      return &value_.get(TypeTagForIndex<I>{});
     else
       return nullptr;
   }
