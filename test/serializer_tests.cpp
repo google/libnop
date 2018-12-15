@@ -7298,7 +7298,6 @@ TEST(Serializer, Variant) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
   Serializer<TestWriter*> serializer{&writer};
-  Status<void> status;
 
   {
     Variant<int, std::string> value_a{10};
@@ -7360,7 +7359,6 @@ TEST(Serializer, Value) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
   Serializer<TestWriter*> serializer{&writer};
-  Status<void> status;
 
   {
     ValueWrapper<int> value_a{10};
@@ -7697,7 +7695,6 @@ TEST(Serializer, Handle) {
   std::vector<int> expected_handles;
   TestWriter writer;
   Serializer<TestWriter*> serializer{&writer};
-  Status<void> status;
 
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
   using IntHandle = Handle<IntHandlePolicy>;
@@ -7740,7 +7737,6 @@ TEST(Serializer, Handle) {
 TEST(Deserializer, Handle) {
   TestReader reader;
   Deserializer<TestReader*> deserializer{&reader};
-  Status<void> status;
 
   using IntHandlePolicy = DefaultHandlePolicy<int, -1>;
   using IntHandle = Handle<IntHandlePolicy>;
@@ -7782,7 +7778,6 @@ TEST(Serializer, reference_wrapper) {
   std::vector<std::uint8_t> expected;
   TestWriter writer;
   Serializer<TestWriter*> serializer{&writer};
-  Status<void> status;
 
   {
     TestA value{10, "foo"};

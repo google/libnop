@@ -90,11 +90,11 @@ class Variant {
   // must be convertible to an element of Types.
   template <typename... OtherTypes>
   explicit Variant(const Variant<OtherTypes...>& other) {
-    other.Visit([this](const auto& value) { Construct(value); });
+    other.Visit([this](const auto& value) { this->Construct(value); });
   }
   template <typename... OtherTypes>
   explicit Variant(Variant<OtherTypes...>&& other) {
-    other.Visit([this](auto&& value) { Construct(std::move(value)); });
+    other.Visit([this](auto&& value) { this->Construct(std::move(value)); });
   }
 
   Variant& operator=(const Variant& other) {
