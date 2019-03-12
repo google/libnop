@@ -138,10 +138,13 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
 
   template <typename T, std::uint64_t Id>
   static constexpr std::size_t Size(const Entry<T, Id, ActiveEntry>& entry) {
-    if (entry)
-      return Encoding<std::uint64_t>::Size(Id) + Encoding<T>::Size(entry.get());
-    else
+    if (entry) {
+      const std::size_t size = Encoding<T>::Size(entry.get());
+      return Encoding<std::uint64_t>::Size(Id) +
+             Encoding<std::uint64_t>::Size(size) + size;
+    } else {
       return 0;
+    }
   }
 
   template <typename T, std::uint64_t Id>
