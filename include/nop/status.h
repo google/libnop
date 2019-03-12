@@ -55,7 +55,7 @@ template <typename T>
 struct Status : Result<ErrorStatus, T> {
   using Result<ErrorStatus, T>::Result;
 
-  std::string GetErrorMessage() const {
+  const char* GetErrorMessage() const {
     switch (this->error()) {
       case ErrorStatus::None:
         return "No Error";
