@@ -18,6 +18,7 @@
 #define LIBNOP_INCLUDE_NOP_BASE_MAP_H_
 
 #include <map>
+#include <numeric>
 #include <unordered_map>
 
 #include <nop/base/encoding.h>

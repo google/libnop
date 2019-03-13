@@ -87,21 +87,21 @@ class Optional {
   template <typename U, typename... Args,
             typename Enabled = std::enable_if_t<
                 std::is_constructible<T, std::initializer_list<U>>::value>>
-  Optional(InPlace, std::initializer_list<U> il, Args&&... args)
+  constexpr Optional(InPlace, std::initializer_list<U> il, Args&&... args)
       : state_{InPlace{}, il, std::forward<Args>(args)...} {}
 
   // Constructs a non-empty Optional from a compatible initializer list.
   template <typename U,
             typename Enabled = std::enable_if_t<
                 std::is_constructible<T, std::initializer_list<U>>::value>>
-  Optional(std::initializer_list<U> il) : state_{InPlace{}, il} {}
+  constexpr Optional(std::initializer_list<U> il) : state_{InPlace{}, il} {}
 
   // Default destructs the Optional. State and Storage nested types below handle
   // destruction for trivial and non-trivial types.
   ~Optional() = default;
 
   // Copy assignment operator.
-  Optional& operator=(const Optional& other) {
+  constexpr Optional& operator=(const Optional& other) {
     if (this != &other) {
       if (!other.empty()) {
         Assign(other.state_.storage.value);
@@ -113,7 +113,7 @@ class Optional {
   }
 
   // Move assignment operator.
-  Optional& operator=(Optional&& other) noexcept(
+  constexpr Optional& operator=(Optional&& other) noexcept(
       std::is_nothrow_move_assignable<T>::value&&
           std::is_nothrow_move_constructible<T>::value) {
     if (this != &other) {
@@ -129,7 +129,7 @@ class Optional {
 
   // Copy assignment from a different Optional type.
   template <typename U>
-  std::enable_if_t<std::is_constructible<T, const U&>::value, Optional&>
+  constexpr std::enable_if_t<std::is_constructible<T, const U&>::value, Optional&>
   operator=(const Optional<U>& other) {
     if (!other.empty()) {
       Assign(other.get());
@@ -141,7 +141,7 @@ class Optional {
 
   // Move assignment from a different Optional type.
   template <typename U>
-  std::enable_if_t<std::is_constructible<T, U&&>::value, Optional&> operator=(
+  constexpr std::enable_if_t<std::is_constructible<T, U&&>::value, Optional&> operator=(
       Optional<U>&& other) {
     if (!other.empty()) {
       Assign(other.take());
@@ -179,7 +179,7 @@ class Optional {
  private:
   // Handles assignment/construction for assignment operators.
   template <typename U>
-  void Assign(U&& value) {
+  constexpr void Assign(U&& value) {
     if (empty()) {
       ::new (&state_.storage.value) T(std::forward<U>(value));
       state_.empty = false;
@@ -189,7 +189,7 @@ class Optional {
   }
 
   // Destroys the stored value if non-empty.
-  void Destruct() noexcept {
+  constexpr void Destruct() noexcept {
     if (!empty()) {
       state_.storage.value.T::~T();
       state_.empty = true;

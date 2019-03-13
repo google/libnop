@@ -18,7 +18,6 @@
 #define LIBNOP_INCLUDE_NOP_BASE_ARRAY_H_
 
 #include <array>
-#include <numeric>
 
 #include <nop/base/encoding.h>
 #include <nop/base/utility.h>
@@ -56,11 +55,12 @@ struct Encoding<std::array<T, Length>, EnableIfNotIntegral<T>>
   }
 
   static constexpr std::size_t Size(const Type& value) {
+    std::size_t element_size_sum = 0;
+    for (std::size_t i=0; i < Length; i++)
+      element_size_sum += Encoding<T>::Size(value[i]);
+
     return BaseEncodingSize(Prefix(value)) + Encoding<SizeType>::Size(Length) +
-           std::accumulate(value.cbegin(), value.cend(), 0U,
-                           [](const std::size_t& sum, const T& element) {
-                             return sum + Encoding<T>::Size(element);
-                           });
+           element_size_sum;
   }
 
   static constexpr bool Match(EncodingByte prefix) {
@@ -75,8 +75,8 @@ struct Encoding<std::array<T, Length>, EnableIfNotIntegral<T>>
     if (!status)
       return status;
 
-    for (const T& element : value) {
-      status = Encoding<T>::Write(element, writer);
+    for (SizeType i = 0; i < Length; i++) {
+      status = Encoding<T>::Write(value[i], writer);
       if (!status)
         return status;
     }
@@ -113,11 +113,12 @@ struct Encoding<T[Length], EnableIfNotIntegral<T>> : EncodingIO<T[Length]> {
   }
 
   static constexpr std::size_t Size(const Type& value) {
+    std::size_t element_size_sum = 0;
+    for (std::size_t i=0; i < Length; i++)
+      element_size_sum += Encoding<T>::Size(value[i]);
+
     return BaseEncodingSize(Prefix(value)) + Encoding<SizeType>::Size(Length) +
-           std::accumulate(std::begin(value), std::end(value), 0U,
-                           [](const std::size_t& sum, const T& element) {
-                             return sum + Encoding<T>::Size(element);
-                           });
+           element_size_sum;
   }
 
   static constexpr bool Match(EncodingByte prefix) {

@@ -95,6 +95,7 @@ template <typename T, std::uint64_t Id_>
 struct Entry<T, Id_, ActiveEntry> : Optional<T> {
   enum : std::uint64_t { Id = Id_ };
   using Optional<T>::Optional;
+  using Optional<T>::operator=;
 };
 
 // Specialization of Entry for deleted/deprecated entries. These entries are
