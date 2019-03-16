@@ -63,12 +63,12 @@ class BoundedReader {
     }
   }
 
-  constexpr Status<void> Read(void* begin, void* end) {
-    using Byte = std::uint8_t;
-    Byte* begin_byte = static_cast<Byte*>(begin);
-    Byte* end_byte = static_cast<Byte*>(end);
+  template <typename T, typename Enable = EnableIfArithmetic<T>>
+  constexpr Status<void> Read(T* begin, T* end) {
+    const std::size_t element_size = sizeof(T);
+    const std::size_t length = end - begin;
+    const std::size_t length_bytes = length * element_size;
 
-    const std::size_t length_bytes = std::distance(begin_byte, end_byte);
     if (length_bytes > (size_ - index_))
       return ErrorStatus::ReadLimitReached;
 

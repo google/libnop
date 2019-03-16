@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 The Native Object Protocols Authors
+ * Copyright 2019 The Native Object Protocols Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef LIBNOP_INCLUDE_NOP_UTILITY_BUFFER_READER_H_
-#define LIBNOP_INCLUDE_NOP_UTILITY_BUFFER_READER_H_
+#ifndef LIBNOP_INCLUDE_NOP_UTILITY_PEDANTIC_BUFFER_READER_H_
+#define LIBNOP_INCLUDE_NOP_UTILITY_PEDANTIC_BUFFER_READER_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -26,25 +26,23 @@
 
 namespace nop {
 
-// An efficient reader type that supports runtime serialization from a byte
-// buffer. This reader improves efficiency by only performing bounds checks in
-// the Ensure() method. This type is safe for use with the library-provided
-// Deserializer types, which predicate serialization on the result of Ensure().
-// Use PedanticBufferReader if your use case interacts with the reader directly
-// and you need bounds checking in the Read() and Skip() methods.
-class BufferReader {
+// A reader type that supports runtime seralization from a byte buffer. This
+// type is similar to BufferReader, with additional bounds checks in the Read()
+// and Skip() methods. Use this type if your use case requires direct
+// interaction with the reader outside of the library-provided Deserializer.
+class PedanticBufferReader {
  public:
-  BufferReader() = default;
-  BufferReader(const BufferReader&) = default;
+  PedanticBufferReader() = default;
+  PedanticBufferReader(const PedanticBufferReader&) = default;
   template <std::size_t Size>
-  BufferReader(const std::uint8_t (&buffer)[Size])
+  PedanticBufferReader(const std::uint8_t (&buffer)[Size])
       : buffer_{buffer}, size_{Size} {}
-  BufferReader(const std::uint8_t* buffer, std::size_t size)
+  PedanticBufferReader(const std::uint8_t* buffer, std::size_t size)
       : buffer_{buffer}, size_{size} {}
-  BufferReader(const void* buffer, std::size_t size)
+  PedanticBufferReader(const void* buffer, std::size_t size)
       : buffer_{static_cast<const std::uint8_t*>(buffer)}, size_{size} {}
 
-  BufferReader& operator=(const BufferReader&) = default;
+  PedanticBufferReader& operator=(const PedanticBufferReader&) = default;
 
   Status<void> Ensure(std::size_t size) {
     if (size_ - index_ < size)
@@ -61,12 +59,18 @@ class BufferReader {
     const std::size_t length = end - begin;
     const std::size_t length_bytes = length * element_size;
 
+    if (length_bytes > (size_ - index_))
+      return ErrorStatus::ReadLimitReached;
+
     std::memcpy(begin, &buffer_[index_], length_bytes);
     index_ += length_bytes;
     return {};
   }
 
   Status<void> Skip(std::size_t padding_bytes) {
+    if (padding_bytes > (size_ - index_))
+      return ErrorStatus::ReadLimitReached;
+
     index_ += padding_bytes;
     return {};
   }
@@ -84,4 +88,4 @@ class BufferReader {
 
 }  // namespace nop
 
-#endif  // LIBNOP_INCLUDE_NOP_UTILITY_BUFFER_READER_H_
+#endif  // LIBNOP_INCLUDE_NOP_UTILITY_PEDANTIC_BUFFER_READER_H_
