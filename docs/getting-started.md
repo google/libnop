@@ -350,7 +350,7 @@ There are two ways to annotate externally-defined template types:
     template type. This method can handle both type and non-type template
     arguments, but is less flexible because you must decide which arguments to
     use at annotation time.
-  * Use `NOP_EXTERNAL_TEMPLATE()` to annotate the base template type name. This
+  * Use `NOP_EXTERNAL_STRUCTURE()` to annotate the base template type name. This
     method is more flexible in that the external template type may be annotated
     once and then any instantiation is automatically recognized by the
     serializer at the site of use. The down side is that non-type template
@@ -397,10 +397,8 @@ namespace foo {
 NOP_EXTERNAL_STRUCTURE(SimpleType<std::uint32_t>, data);
 NOP_EXTERNAL_STRUCTURE(SimpleType<std::string>, data);
 
-// OR
-
 // Example of annotating the base template type name:
-NOP_EXTERNAL_TEMPLATE(SimpleType, data);
+NOP_EXTERNAL_STRUCTURE(SimpleType, data);
 
 // ... code to read and write SimpleType ...
 
@@ -578,7 +576,7 @@ The following are examples of value wrappers:
 
 // Simple template type that stores floating point values as fixed point
 // integer with the specified number of fractional bits. This type has
-the same wire format as Integer.
+// the same wire format as Integer.
 template <typename Integer, std::size_t FractionalBits_>
 class Fixed {
  public:

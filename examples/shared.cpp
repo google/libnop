@@ -74,6 +74,7 @@ struct CPolyhedron {
   size_t size;
   Triangle triangles[1];
   NOP_VALUE(CPolyhedron, (triangles, size));
+  NOP_UNBOUNDED_BUFFER(CPolyhedron);
 };
 
 // Assert that Polyhedron and CPolyhedron have compatible wire formats.

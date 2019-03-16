@@ -17,6 +17,8 @@
 #ifndef LIBNOP_INCLUDE_NOP_STRUCTURE_H_
 #define LIBNOP_INCLUDE_NOP_STRUCTURE_H_
 
+#include <type_traits>
+
 #include <nop/base/macros.h>
 #include <nop/types/detail/member_pointer.h>
 
@@ -28,7 +30,6 @@ namespace nop {
 // Annotation is performed by invoking one of the following three macros:
 //  * NOP_STRUCTURE in the body of the struct, class, or template.
 //  * NOP_EXTERNAL_STRUCTURE at namespace scope matching the type.
-//  * NOP_EXTERNAL_TEMPLATE at namespace scope matching the template.
 //
 // Example:
 //
@@ -63,36 +64,73 @@ namespace nop {
 // Defines the set of members belonging to a type that should be
 // serialized/deserialized without changing the type itself. This is useful for
 // making external library types with public data serializable.
-#define NOP_EXTERNAL_STRUCTURE(type, ... /*members*/)                          \
-  template <typename>                                                          \
-  struct NOP__MEMBER_TRAITS;                                                   \
-  template <>                                                                  \
-  struct NOP__MEMBER_TRAITS<type> {                                            \
-    using MemberList = ::nop::MemberList<_NOP_MEMBER_LIST(type, __VA_ARGS__)>; \
-  };                                                                           \
-  inline NOP__MEMBER_TRAITS<type> NOP__GetExternalMemberTraits                 \
-      [[gnu::used]] (type*) {                                                  \
-    return {};                                                                 \
+#define NOP_EXTERNAL_STRUCTURE(type, ... /*members*/)                         \
+  template <typename, typename>                                               \
+  struct NOP__MEMBER_TRAITS;                                                  \
+  template <typename T>                                                       \
+  struct NOP__MEMBER_TRAITS<T, _NOP_ENABLE_IF_TYPE_MATCH(T, type)> {          \
+    using MemberList = ::nop::MemberList<_NOP_MEMBER_LIST(T, __VA_ARGS__)>;   \
+  };                                                                          \
+  template <template <typename...> class TT, typename... Ts>                  \
+  struct NOP__MEMBER_TRAITS<TT<Ts...>,                                        \
+                            _NOP_ENABLE_IF_TEMPLATE_MATCH(TT, type, Ts...)> { \
+    using MemberList =                                                        \
+        ::nop::MemberList<_NOP_MEMBER_LIST(TT<Ts...>, __VA_ARGS__)>;          \
+  };                                                                          \
+  template <typename T>                                                       \
+  inline _NOP_ENABLE_IF_TYPE_MATCH(T, type, NOP__MEMBER_TRAITS<T, void>)      \
+      NOP__GetExternalMemberTraits [[gnu::used]] (T*) {                       \
+    return {};                                                                \
+  }                                                                           \
+  template <template <typename...> class TT, typename... Ts>                  \
+  inline _NOP_ENABLE_IF_TEMPLATE_MATCH(TT, type, Ts...,                       \
+                                       NOP__MEMBER_TRAITS<TT<Ts...>, void>)   \
+      NOP__GetExternalMemberTraits [[gnu::used]] (TT<Ts...>*) {               \
+    return {};                                                                \
   }
 
-// Similar to NOP_EXTERNAL_STRUCTURE but for template types.
-#define NOP_EXTERNAL_TEMPLATE(type, ... /*members*/)                   \
-  template <typename>                                                  \
-  struct NOP__MEMBER_TRAITS;                                           \
-  template <typename... Ts>                                            \
-  struct NOP__MEMBER_TRAITS<type<Ts...>> {                             \
-    using MemberList =                                                 \
-        ::nop::MemberList<_NOP_MEMBER_LIST(type<Ts...>, __VA_ARGS__)>; \
-  };                                                                   \
-  template <typename... Ts>                                            \
-  inline NOP__MEMBER_TRAITS<type<Ts...>> NOP__GetExternalMemberTraits  \
-      [[gnu::used]] (type<Ts...>*) {                                   \
-    return {};                                                         \
+// Deprecated. NOP_EXTERNAL_STRUCTURE can handle both type and template
+// arguments now. Aliases NOP_EXTERNAL_STRUCTURE for legacy code.
+#define NOP_EXTERNAL_TEMPLATE NOP_EXTERNAL_STRUCTURE
+
+// Tags the given type as an unbounded buffer. This macro must be invoked once
+// within the struct/class definition, preferrably in the private section next
+// to NOP_STRUCTURE.
+#define NOP_UNBOUNDED_BUFFER(type) using NOP__UNBOUNDED_BUFFER = type
+
+// Tags the given type as an unbounded buffer without changing the type itself.
+#define NOP_EXTERNAL_UNBOUNDED_BUFFER(type)                                    \
+  template <typename, typename>                                                \
+  struct NOP__UNBOUNDED_BUFFER;                                                \
+  template <typename T>                                                        \
+  struct NOP__UNBOUNDED_BUFFER<T, _NOP_ENABLE_IF_TYPE_MATCH(T, type)> {};      \
+  template <template <typename...> class TT, typename... Ts>                   \
+  struct NOP__UNBOUNDED_BUFFER<TT<Ts...>, _NOP_ENABLE_IF_TEMPLATE_MATCH(       \
+                                              TT, type, Ts...)> {};            \
+  template <typename T>                                                        \
+  inline _NOP_ENABLE_IF_TYPE_MATCH(T, type, NOP__UNBOUNDED_BUFFER<T, void>)    \
+      NOP__GetUnboundedBuffer [[gnu::used]] (T*) {                             \
+    return {};                                                                 \
+  }                                                                            \
+  template <template <typename...> class TT, typename... Ts>                   \
+  inline _NOP_ENABLE_IF_TEMPLATE_MATCH(TT, type, Ts...,                        \
+                                       NOP__UNBOUNDED_BUFFER<TT<Ts...>, void>) \
+      NOP__GetUnboundedBuffer [[gnu::used]] (TT<Ts...>*) {                     \
+    return {};                                                                 \
   }
 
 //
 // Utility macros used by the macros above.
 //
+
+// Enable if |type| is a type or elaborated template type matching type T.
+#define _NOP_ENABLE_IF_TYPE_MATCH(T, type, ... /*Return*/) \
+  std::enable_if_t<decltype(::nop::MatchType<T, type>())::value, ##__VA_ARGS__>
+
+// Enable if |type| is an un-elaborated template type matching type TT.
+#define _NOP_ENABLE_IF_TEMPLATE_MATCH(TT, type, Ts, ... /*Return*/)       \
+  std::enable_if_t<decltype(::nop::MatchTemplate<TT, type, Ts>())::value, \
+                   ##__VA_ARGS__>
 
 // Generates a pair of template arguments (member pointer type and value) to be
 // passed to MemberPointer<MemberPointerType, MemberPointerValue, ...> from the
@@ -113,7 +151,7 @@ namespace nop {
 #define _NOP_MEMBER_POINTER_NEXT(type, ...)                 \
   _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__))                  \
   (, _NOP_MEMBER_POINTER(type, _NOP_FIRST_ARG(__VA_ARGS__)) \
-         _NOP_DEFER2(__NOP_MEMBER_POINTER_NEXT)()(          \
+         _NOP_DEFER3(__NOP_MEMBER_POINTER_NEXT)()(          \
              type, _NOP_REST_ARG(__VA_ARGS__)))(/*done*/)
 
 // Indirection to enable recursive macro expansion of _NOP_MEMBER_POINTER_NEXT.

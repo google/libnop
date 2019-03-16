@@ -89,27 +89,31 @@ using First = typename FirstType<Ts...>::Type;
 
 // Determines the value type and extent of C/C++ array types.
 template <typename T>
-struct ArrayTraits {
-  static_assert(sizeof(T) != sizeof(T), "Unsupported array type.");
-};
+struct ArrayTraits : std::false_type {};
+
 template <typename T, std::size_t Length_>
-struct ArrayTraits<T[Length_]> {
+struct ArrayTraits<T[Length_]> : std::true_type {
   enum : std::size_t { Length = Length_ };
   using ElementType = T;
   using Type = T[Length];
 };
 template <typename T, std::size_t Length_>
-struct ArrayTraits<std::array<T, Length_>> {
+struct ArrayTraits<std::array<T, Length_>> : std::true_type {
   enum : std::size_t { Length = Length_ };
   using ElementType = T;
   using Type = std::array<T, Length>;
 };
 template <typename T, std::size_t Length_>
-struct ArrayTraits<const std::array<T, Length_>> {
+struct ArrayTraits<const std::array<T, Length_>> : std::true_type {
   enum : std::size_t { Length = Length_ };
   using ElementType = T;
   using Type = const std::array<T, Length>;
 };
+
+// Enable if T is an array type.
+template <typename T, typename Return = void>
+using EnableIfArray =
+    typename std::enable_if<ArrayTraits<T>::value, Return>::type;
 
 // Logical AND over template parameter pack.
 template <typename... T>
@@ -174,6 +178,15 @@ struct IsSame<Same, T> : std::true_type {};
 template <template <typename, typename> class Same, typename First,
           typename... Rest>
 struct IsSame<Same, First, Rest...> : And<Same<First, Rest>...> {};
+
+// Utility types for SFINAE expression matching either regular or template
+// types.
+template <typename T, typename U>
+std::is_same<T, U> MatchType();
+
+template <template <typename...> class TT, template <typename...> class UU,
+          typename... Ts>
+std::is_same<TT<Ts...>, UU<Ts...>> MatchTemplate();
 
 }  // namespace nop
 

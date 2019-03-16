@@ -22,6 +22,7 @@
 
 #include <nop/base/encoding.h>
 #include <nop/base/utility.h>
+#include <nop/traits/is_detected.h>
 #include <nop/types/detail/logical_buffer.h>
 
 namespace nop {
@@ -36,9 +37,6 @@ struct MemberPointer<T Class::*, Pointer> {
   // Type of the memebr pointed to by this pointer.
   using Type = T;
 
-  // Type of the member pointer this type represents.
-  using PointerType = Type Class::*;
-
   // Resolves a pointer to member with the given instance, yielding a pointer or
   // reference to the member in that instnace.
   static constexpr Type* Resolve(Class* instance) {
@@ -48,42 +46,51 @@ struct MemberPointer<T Class::*, Pointer> {
     return (instance.*Pointer);
   }
 
-  // Returns true if the given member pointer is greater or equal to this member
-  // pointer. This creates a total order of member pointers within a type.
-  template <typename U>
-  static constexpr bool GreaterEqual(const Class& instance, U Class::*member) {
-    return std::greater_equal<>{}(
-        static_cast<const void*>(&(instance.*member)),
-        static_cast<const void*>(&(instance.*Pointer)));
-  }
-
-  static std::size_t Size(const Class& instance) {
-    return Encoding<T>::Size(Resolve(instance));
+  static constexpr std::size_t Size(const Class& instance) {
+    return Encoding<Type>::Size(Resolve(instance));
   }
 
   template <typename Writer, typename MemberList>
-  static Status<void> Write(const Class& instance, Writer* writer,
-                            MemberList /*member_list*/) {
-    return Encoding<T>::Write(Resolve(instance), writer);
+  static constexpr Status<void> Write(const Class& instance, Writer* writer,
+                                      MemberList /*member_list*/) {
+    return Encoding<Type>::Write(Resolve(instance), writer);
   }
 
   template <typename Writer, typename MemberList>
-  static Status<void> WritePayload(EncodingByte prefix, const Class& instance,
-                                   Writer* writer, MemberList /*member_list*/) {
-    return Encoding<T>::WritePayload(prefix, Resolve(instance), writer);
+  static constexpr Status<void> WritePayload(EncodingByte prefix,
+                                             const Class& instance,
+                                             Writer* writer,
+                                             MemberList /*member_list*/) {
+    return Encoding<Type>::WritePayload(prefix, Resolve(instance), writer);
   }
 
   template <typename Reader, typename MemberList>
-  static Status<void> Read(Class* instance, Reader* reader,
-                           MemberList /*member_list*/) {
-    return Encoding<T>::Read(Resolve(instance), reader);
+  static constexpr Status<void> Read(Class* instance, Reader* reader,
+                                     MemberList /*member_list*/) {
+    return Encoding<Type>::Read(Resolve(instance), reader);
   }
 
   template <typename Reader, typename MemberList>
-  static Status<void> ReadPayload(EncodingByte prefix, Class* instance,
-                                  Reader* reader, MemberList /*member_list*/) {
-    return Encoding<T>::ReadPayload(prefix, Resolve(instance), reader);
+  static constexpr Status<void> ReadPayload(EncodingByte prefix,
+                                            Class* instance, Reader* reader,
+                                            MemberList /*member_list*/) {
+    return Encoding<Type>::ReadPayload(prefix, Resolve(instance), reader);
   }
+};
+
+// Test expression for the external unbounded logical buffer tag.
+template <typename Class>
+using ExternalUnboundedBufferTest =
+    decltype(NOP__GetUnboundedBuffer(std::declval<Class*>()));
+
+// Test expression for the internal unbounded logical buffer tag.
+template <typename Class>
+using InternalUnboundedBufferTest = typename Class::NOP__UNBOUNDED_BUFFER;
+
+// Evaluates to true if Class is tagged as an unbounded logical buffer.
+template <typename Class>
+struct IsUnboundedBuffer : Or<IsDetected<ExternalUnboundedBufferTest, Class>,
+                              IsDetected<InternalUnboundedBufferTest, Class>> {
 };
 
 // Member pointer type for logical buffers formed by an array and size member
@@ -92,82 +99,51 @@ template <typename Class, typename First, typename Second,
           First Class::*FirstPointer, Second Class::*SecondPointer>
 struct MemberPointer<First Class::*, FirstPointer, Second Class::*,
                      SecondPointer, EnableIfLogicalBufferPair<First, Second>> {
-  using Type = LogicalBuffer<First, Second>;
-  enum : std::size_t { Length = ArrayTraits<First>::Length };
-  enum : bool {
-    IsTriviallyDestructible =
-        std::is_trivially_destructible<typename Type::ValueType>::value
-  };
+  using Type = LogicalBuffer<First, Second, IsUnboundedBuffer<Class>::value>;
 
-  static const Type Resolve(const Class& instance) {
+  static constexpr const Type Resolve(const Class& instance) {
     return {const_cast<First&>(instance.*FirstPointer),
             const_cast<Second&>(instance.*SecondPointer)};
   }
 
-  static Type Resolve(Class* instance) {
+  static constexpr Type Resolve(Class* instance) {
     return {instance->*FirstPointer, instance->*SecondPointer};
   }
 
-  // Returns true if the given member pointer is greater or equal to this member
-  // pointer. This creates a total order of member pointers within a structure
-  // or class.
-  template <typename U>
-  static constexpr bool GreaterEqual(const Class& instance, U Class::*member) {
-    return std::greater_equal<>{}(
-               static_cast<const void*>(&(instance.*member)),
-               static_cast<const void*>(&(instance.*FirstPointer))) &&
-           std::greater_equal<>{}(
-               static_cast<const void*>(&(instance.*member)),
-               static_cast<const void*>(&(instance.*SecondPointer)));
-  }
-
-  static std::size_t Size(const Class& instance) {
+  static constexpr std::size_t Size(const Class& instance) {
     const Type pair = Resolve(instance);
     return Encoding<Type>::Size(pair);
   }
 
   template <typename Writer, typename MemberList>
-  static Status<void> Write(const Class& instance, Writer* writer,
-                            MemberList /*member_list*/) {
-    const bool last_member = MemberList::IsLastMember(instance, FirstPointer);
+  static constexpr Status<void> Write(const Class& instance, Writer* writer,
+                                      MemberList /*member_list*/) {
     const Type pair = Resolve(instance);
-    if (last_member && Length == 1 && IsTriviallyDestructible)
-      return Encoding<Type>::WriteUnbounded(pair, writer);
-    else
-      return Encoding<Type>::Write(pair, writer);
+    return Encoding<Type>::Write(pair, writer);
   }
 
   template <typename Writer, typename MemberList>
-  static Status<void> WritePayload(EncodingByte prefix, const Class& instance,
-                                   Writer* writer, MemberList /*member_list*/) {
-    const bool last_member = MemberList::IsLastMember(instance, FirstPointer);
+  static constexpr Status<void> WritePayload(EncodingByte prefix,
+                                             const Class& instance,
+                                             Writer* writer,
+                                             MemberList /*member_list*/) {
     const Type pair = Resolve(instance);
-    if (last_member && Length == 1 && IsTriviallyDestructible)
-      return Encoding<Type>::WriteUnboundedPayload(prefix, pair, writer);
-    else
-      return Encoding<Type>::WritePayload(prefix, pair, writer);
+    return Encoding<Type>::WritePayload(prefix, pair, writer);
   }
 
   template <typename Reader, typename MemberList>
-  static Status<void> Read(Class* instance, Reader* reader,
-                           MemberList /*member_list*/) {
-    const bool last_member = MemberList::IsLastMember(*instance, FirstPointer);
+  static constexpr Status<void> Read(Class* instance, Reader* reader,
+                                     MemberList /*member_list*/) {
     Type pair = Resolve(instance);
-    if (last_member && Length == 1 && IsTriviallyDestructible)
-      return Encoding<Type>::ReadUnbounded(&pair, reader);
-    else
-      return Encoding<Type>::Read(&pair, reader);
+    return Encoding<Type>::Read(&pair, reader);
   }
 
   template <typename Reader, typename MemberList>
-  static Status<void> ReadPayload(EncodingByte prefix, Class* instance,
-                                  Reader* reader, MemberList /*member_list*/) {
-    const bool last_member = MemberList::IsLastMember(*instance, FirstPointer);
+  static constexpr Status<void> ReadPayload(EncodingByte prefix,
+                                            Class* instance, Reader* reader,
+                                            MemberList /*member_list*/) {
     Type pair = Resolve(instance);
-    if (last_member && Length == 1 && IsTriviallyDestructible)
-      return Encoding<Type>::ReadUnboundedPayload(prefix, &pair, reader);
-    else
-      return Encoding<Type>::ReadPayload(prefix, &pair, reader);
+    return Encoding<Type>::ReadPayload(prefix, &pair, reader);
   }
 };
 
@@ -180,25 +156,6 @@ struct MemberList {
 
   template <std::size_t Index>
   using At = typename std::tuple_element<Index, Members>::type;
-
-  template <typename Class, typename T>
-  static constexpr bool IsLastMember(const Class& instance, T Class::*member) {
-    return IsLastMember(instance, member, Index<Count>{});
-  }
-
- private:
-  template <typename Class, typename T>
-  static constexpr bool IsLastMember(const Class& /*instance*/,
-                                     T Class::* /*member*/, Index<0>) {
-    return true;
-  }
-
-  template <typename Class, typename T, std::size_t index>
-  static constexpr bool IsLastMember(const Class& instance, T Class::*member,
-                                     Index<index>) {
-    const bool after = At<index - 1>::GreaterEqual(instance, member);
-    return after && IsLastMember(instance, member, Index<index - 1>{});
-  }
 };
 
 // Utility to retrieve a traits type that defines a MemberList for type T using

@@ -6,6 +6,8 @@ TOOLCHAIN ?=
 
 HOST_OS := $(shell uname -s)
 
+WITH_COVERAGE ?= false
+
 # Location of gtest in case it's not installed in a default path for the compiler.
 GTEST_INSTALL ?= /opt/local
 GTEST_LIB ?= $(GTEST_INSTALL)/lib
@@ -42,7 +44,7 @@ else
 
 # Build tests if gtest is found.
 M_NAME := test
-M_CFLAGS := -I$(GTEST_INCLUDE) --coverage -O0 -g
+M_CFLAGS := -I$(GTEST_INCLUDE) -O0 -g
 M_LDFLAGS := -L$(GTEST_LIB) -lgtest -lgmock
 M_OBJS := \
 	test/nop_tests.o \
@@ -59,9 +61,15 @@ M_OBJS := \
 	test/optional_tests.o \
 	test/result_tests.o \
 	test/endian_tests.o \
+	test/constexpr_tests.o \
+
+ifeq ($(WITH_COVERAGE),true)
+M_CFLAGS += --coverage
+endif
 
 include build/host-executable.mk
 
+ifeq ($(WITH_COVERAGE),true)
 # Generate coverage report with lcov and genhtml. A bit hacky but works okay.
 $(OUT)/coverage.info: $(OUT)/test
 	$(QUIET)find $(OUT) -name "*.gcda" -exec rm {} \+
@@ -71,6 +79,7 @@ $(OUT)/coverage.info: $(OUT)/test
 	genhtml -o $(OUT)/coverage $@
 
 coverage:: $(OUT)/coverage.info
+endif
 
 endif
 

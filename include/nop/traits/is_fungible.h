@@ -229,16 +229,23 @@ struct IsFungible<Variant<A...>, Variant<B...>,
     : std::false_type {};
 
 // Compares two LogicalBuffers to see if they are fungible.
-template <typename A, typename B, typename SizeTypeA, typename SizeTypeB>
-struct IsFungible<LogicalBuffer<A, SizeTypeA>, LogicalBuffer<B, SizeTypeB>>
+template <typename A, typename B, typename SizeTypeA, typename SizeTypeB,
+          bool IsUnboundedA, bool IsUnboundedB, typename EnabledA,
+          typename EnabledB>
+struct IsFungible<LogicalBuffer<A, SizeTypeA, IsUnboundedA, EnabledA>,
+                  LogicalBuffer<B, SizeTypeB, IsUnboundedB, EnabledB>>
     : IsFungible<A, B> {};
 
 // Compares a std::vector and a LogicalBuffer to see if they are fungible.
-template <typename A, typename B, typename AllocatorA, typename SizeTypeB>
-struct IsFungible<std::vector<A, AllocatorA>, LogicalBuffer<B, SizeTypeB>>
+template <typename A, typename B, typename AllocatorA, typename SizeTypeB,
+          bool IsUnboundedB, typename EnabledB>
+struct IsFungible<std::vector<A, AllocatorA>,
+                  LogicalBuffer<B, SizeTypeB, IsUnboundedB, EnabledB>>
     : IsFungible<std::vector<A, AllocatorA>, B> {};
-template <typename A, typename B, typename SizeTypeA, typename AllocatorB>
-struct IsFungible<LogicalBuffer<A, SizeTypeA>, std::vector<B, AllocatorB>>
+template <typename A, typename B, typename SizeTypeA, bool IsUnboundedA,
+          typename EnabledA, typename AllocatorB>
+struct IsFungible<LogicalBuffer<A, SizeTypeA, IsUnboundedA, EnabledA>,
+                  std::vector<B, AllocatorB>>
     : IsFungible<A, std::vector<B, AllocatorB>> {};
 
 // Compares MemberList<A...> and MemberList<B...> to see if every

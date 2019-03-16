@@ -125,7 +125,7 @@ struct TestE {
     return a == other.a && b == other.b;
   }
 };
-NOP_EXTERNAL_TEMPLATE(TestE, a, b);
+NOP_EXTERNAL_STRUCTURE(TestE, a, b);
 
 template <typename T, typename U>
 struct TestF {
@@ -136,7 +136,7 @@ struct TestF {
     return a == other.a && b == other.b;
   }
 };
-NOP_EXTERNAL_TEMPLATE(TestF, a, b);
+NOP_EXTERNAL_STRUCTURE(TestF, a, b);
 
 struct TestG {
   int a;
@@ -188,7 +188,8 @@ struct TestJ {
   size_t size;
   T data[1];
 };
-NOP_EXTERNAL_TEMPLATE(TestJ, (data, size));
+NOP_EXTERNAL_STRUCTURE(TestJ, (data, size));
+NOP_EXTERNAL_UNBOUNDED_BUFFER(TestJ);
 
 template <typename T>
 std::unique_ptr<TestJ<T>, decltype(&std::free)> MakeTestJ(
@@ -258,7 +259,9 @@ template <typename T>
 struct CDynamicArray {
   std::size_t size;
   T data[1];
+
   NOP_VALUE(CDynamicArray, (data, size));
+  NOP_UNBOUNDED_BUFFER(CDynamicArray);
 };
 
 template <typename T>
@@ -1788,19 +1791,19 @@ TEST(Deserializer, char) {
   reader.Set(Compose(EncodingByte::PositiveFixIntMin));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(0U, value);
+  EXPECT_EQ(static_cast<char>(0), value);
 
   // Max FIXINT.
   reader.Set(Compose(EncodingByte::PositiveFixIntMax));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(127U, value);
+  EXPECT_EQ(static_cast<char>(127), value);
 
   // Min U8.
   reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0)));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(0U, value);
+  EXPECT_EQ(static_cast<char>(0), value);
 
   // Max U8.
   reader.Set(Compose(EncodingByte::U8, Integer<std::uint8_t>(0xff)));
