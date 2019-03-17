@@ -40,9 +40,14 @@ using SizeType =
 
 // Returns the size of the base encodings excluding extension payloads.
 inline constexpr std::size_t BaseEncodingSize(EncodingByte prefix) {
+  if ((prefix >= EncodingByte::PositiveFixIntMin &&
+       prefix <= EncodingByte::PositiveFixIntMax) ||
+      (prefix >= EncodingByte::NegativeFixIntMin &&
+       prefix <= EncodingByte::NegativeFixIntMax)) {
+    return 1U;
+  }
+
   switch (prefix) {
-    case EncodingByte::PositiveFixIntMin... EncodingByte::PositiveFixIntMax:
-    case EncodingByte::NegativeFixIntMin... EncodingByte::NegativeFixIntMax:
     /* case EncodingByte::False ... EncodingByte::True: */
     case EncodingByte::Table:
     case EncodingByte::Error:
@@ -75,7 +80,8 @@ inline constexpr std::size_t BaseEncodingSize(EncodingByte prefix) {
     case EncodingByte::F64:
       return 9U;
 
-    case EncodingByte::ReservedMin... EncodingByte::ReservedMax:
+    /* case EncodingByte::ReservedMin ... EncodingByte::ReservedMax: */
+    default:
       return 0U;
   }
 }
