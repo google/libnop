@@ -15,7 +15,7 @@ libnop has the following goals:
     types, formats, and protocols: perform these tasks naturally within the C++
     language.
   * Avoid additional runtime support requirements for serialization.
-  * Provide contemporary features such as bidirectional binary compatability,
+  * Provide contemporary features such as bidirectional binary compatibility,
     data validation, type safety, and type fungibility.
   * Handle intrinsic types, common STL types and containers, and user-defined
     types with a minimum of effort.
