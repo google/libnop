@@ -161,7 +161,7 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
 
     // Make sure the reader has enough data to fulfill the requested size as a
     // defense against abusive or erroneous vector sizes.
-    status = reader->Ensure(length);
+    status = reader->Ensure(size);
     if (!status)
       return status;
 

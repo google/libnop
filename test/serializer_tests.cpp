@@ -659,7 +659,9 @@ TEST(Deserializer, IntegerVectorFailOnEnsure) {
   Deserializer<MockReader*> deserializer{&reader};
   Status<void> status;
 
-  EXPECT_CALL(reader, Ensure(2))
+  std::size_t length_bytes = 2 * sizeof(std::uint16_t);
+
+  EXPECT_CALL(reader, Ensure(length_bytes))
       .Times(1)
       .WillOnce(Return(ErrorStatus::ReadLimitReached));
   EXPECT_CALL(reader, Read(_))
@@ -667,12 +669,12 @@ TEST(Deserializer, IntegerVectorFailOnEnsure) {
       .WillOnce(DoAll(
           SetArgPointee<0>(static_cast<std::uint8_t>(EncodingByte::Binary)),
           Return(Status<void>{})))
-      .WillOnce(DoAll(SetArgPointee<0>(2), Return(Status<void>{})))
+      .WillOnce(DoAll(SetArgPointee<0>(length_bytes), Return(Status<void>{})))
       .WillRepeatedly(Return(ErrorStatus::ReadLimitReached));
   EXPECT_CALL(reader, Read(_, _)).Times(0);
   EXPECT_CALL(reader, Skip(_)).Times(0);
 
-  std::vector<std::uint8_t> value;
+  std::vector<std::uint16_t> value;
   status = deserializer.Read(&value);
   EXPECT_FALSE(status);
   EXPECT_EQ(ErrorStatus::ReadLimitReached, status.error());
