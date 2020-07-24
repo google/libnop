@@ -17,11 +17,11 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_VECTOR_H_
 #define LIBNOP_INCLUDE_NOP_BASE_VECTOR_H_
 
-#include <numeric>
-#include <vector>
-
 #include <nop/base/encoding.h>
 #include <nop/base/utility.h>
+
+#include <numeric>
+#include <vector>
 
 namespace nop {
 
@@ -143,7 +143,7 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
     if (!status)
       return status;
 
-    return writer->Write(&value[0], &value[length]);
+    return writer->Write(value.data(), value.data() + length);
   }
 
   template <typename Reader>
@@ -166,7 +166,7 @@ struct Encoding<std::vector<T, Allocator>, EnableIfIntegral<T>>
       return status;
 
     value->resize(length);
-    return reader->Read(&(*value)[0], &(*value)[length]);
+    return reader->Read(value->data(), value->data() + length);
   }
 };
 
