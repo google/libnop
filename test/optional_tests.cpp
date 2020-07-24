@@ -197,16 +197,6 @@ TEST(Optional, Basic) {
   }
 
   {
-    Optional<std::initializer_list<int>> value{
-        InPlace{}, std::initializer_list<int>{10, 20}};
-    ASSERT_FALSE(value.empty());
-
-    const auto expected = {10, 20};
-    EXPECT_TRUE(
-        std::equal(expected.begin(), expected.end(), value.get().begin()));
-  }
-
-  {
     using Pair = std::pair<std::string, std::string>;
     Optional<Pair> value{InPlace{}, "foo", "bar"};
     ASSERT_FALSE(value.empty());
