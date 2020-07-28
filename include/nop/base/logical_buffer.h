@@ -132,7 +132,7 @@ struct Encoding<
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
                                             Type* value, Reader* reader) {
-    SizeType size;
+    SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
       return status;
