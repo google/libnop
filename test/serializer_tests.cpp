@@ -2965,24 +2965,24 @@ TEST(Serializer, size_t) {
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
-  if (sizeof(std::size_t) == sizeof(std::uint64_t)) {
-    // Min U64.
-    value = (1LLU << 32);
-    status = serializer.Write(value);
-    ASSERT_TRUE(status);
-    expected = Compose(EncodingByte::U64, Integer<std::uint64_t>(1LLU << 32));
-    EXPECT_EQ(expected, writer.data());
-    writer.clear();
+#if SIZE_MAX == UINT64_MAX
+  // Min U64.
+  value = (1LLU << 32);
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected = Compose(EncodingByte::U64, Integer<std::uint64_t>(1LLU << 32));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
 
-    // Max U64.
-    value = 0xffffffffffffffffLLU;
-    status = serializer.Write(value);
-    ASSERT_TRUE(status);
-    expected = Compose(EncodingByte::U64,
-                       Integer<std::uint64_t>(0xffffffffffffffffLLU));
-    EXPECT_EQ(expected, writer.data());
-    writer.clear();
-  }
+  // Max U64.
+  value = 0xffffffffffffffffLLU;
+  status = serializer.Write(value);
+  ASSERT_TRUE(status);
+  expected =
+      Compose(EncodingByte::U64, Integer<std::uint64_t>(0xffffffffffffffffLLU));
+  EXPECT_EQ(expected, writer.data());
+  writer.clear();
+#endif
 }
 
 TEST(Deserializer, size_t) {
@@ -3039,20 +3039,20 @@ TEST(Deserializer, size_t) {
   ASSERT_TRUE(status);
   EXPECT_EQ(0xffffffffU, value);
 
-  if (sizeof(std::size_t) == sizeof(std::uint64_t)) {
-    // Min U64.
-    reader.Set(Compose(EncodingByte::U64, Integer<std::uint64_t>(0)));
-    status = deserializer.Read(&value);
-    ASSERT_TRUE(status);
-    EXPECT_EQ(0U, value);
+#if SIZE_MAX == UINT64_MAX
+  // Min U64.
+  reader.Set(Compose(EncodingByte::U64, Integer<std::uint64_t>(0)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0U, value);
 
-    // Max U64.
-    reader.Set(Compose(EncodingByte::U64,
-                       Integer<std::uint64_t>(0xffffffffffffffffLLU)));
-    status = deserializer.Read(&value);
-    ASSERT_TRUE(status);
-    EXPECT_EQ(0xffffffffffffffffLLU, value);
-  }
+  // Max U64.
+  reader.Set(Compose(EncodingByte::U64,
+                     Integer<std::uint64_t>(0xffffffffffffffffLLU)));
+  status = deserializer.Read(&value);
+  ASSERT_TRUE(status);
+  EXPECT_EQ(0xffffffffffffffffLLU, value);
+#endif
 
   // Test short payload.
   reader.Set(Compose(EncodingByte::U32));
