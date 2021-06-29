@@ -21,6 +21,11 @@ from ctypes import *
 import sys
 import os
 
+# Path to shared_protocol.so
+ProtocolLibraryPath = 'out/shared_protocol.so'
+if len(sys.argv) > 1:
+  ProtocolLibraryPath = sys.argv[1]
+
 # Define ctypes structures that mirror the basic protocol types.
 
 # Three component vector of floats.
@@ -81,7 +86,7 @@ def LoadProtocolLibrary():
   global DeserializePolyhedron
 
   # Load the shared library.
-  ProtocolLibrary = cdll.LoadLibrary('out/shared_protocol.so')
+  ProtocolLibrary = cdll.LoadLibrary(ProtocolLibraryPath)
 
   # Load the exported API and setup the function pointer types.
   GetSerializedPolyhedron = ProtocolLibrary.GetSerializedPolyhedron

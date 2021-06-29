@@ -22,6 +22,23 @@ command line:
 $ g++ -std=c++14 -Iinclude -o out/simple_protocol_example examples/simple_protocol.cpp
 ```
 
+## Building With CMake
+
+Adding **libnop** to your project using CMake can be done either using `add_subdirectory` or installing and using `find_package` command.
+
+```
+add_subdirectory(libnop)
+target_link_libraries(my_target libnop)
+```
+
+or
+
+```
+find_package(libnop CONFIG REQUIRED)
+target_link_libraries(my_target libnop)
+```
+
+
 ## Basic Usage
 
 `nop::Serializer` and `nop::Deserializer` are the top-level types for reading
