@@ -67,7 +67,7 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
     if (!status)
       return status;
 
-    for (const std::pair<Key, T>& element : value) {
+    for (const auto& element : value) {
       status = Encoding<Key>::Write(element.first, writer);
       if (!status)
         return status;
@@ -139,7 +139,7 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
     if (!status)
       return status;
 
-    for (const std::pair<Key, T>& element : value) {
+    for (const auto& element : value) {
       status = Encoding<Key>::Write(element.first, writer);
       if (!status)
         return status;
