@@ -2459,18 +2459,18 @@ TEST(Serializer, int16_t) {
   writer.clear();
 
   // Min I16.
-  value = -32768;
+  value = std::numeric_limits<int16_t>::min();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(-32768));
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::min()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Max I16.
-  value = 32767;
+  value = std::numeric_limits<int16_t>::max();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(32767));
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::max()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 }
@@ -2518,16 +2518,16 @@ TEST(Deserializer, int16_t) {
   EXPECT_EQ(127, value);
 
   // Min I16.
-  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(-32768)));
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::min())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(-32768, value);
+  EXPECT_EQ(std::numeric_limits<int16_t>::min(), value);
 
   // Max I16.
-  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(32767)));
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::max())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(32767, value);
+  EXPECT_EQ(std::numeric_limits<int16_t>::max(), value);
 
   // TODO(eieio): Test rejection of all other encoding prefix bytes.
   reader.Set(Compose(EncodingByte::Nil));
@@ -2592,34 +2592,34 @@ TEST(Serializer, int32_t) {
   writer.clear();
 
   // Min I16.
-  value = -32768;
+  value = std::numeric_limits<int16_t>::min();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(-32768));
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::min()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Max I16.
-  value = 32767;
+  value = std::numeric_limits<int16_t>::max();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(32767));
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::max()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Min I32.
-  value = -2147483648;
+  value = std::numeric_limits<int32_t>::min();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(-2147483648));
+  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(std::numeric_limits<int32_t>::min()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Max I32.
-  value = 2147483647;
+  value = std::numeric_limits<int32_t>::max();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(2147483647));
+  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(std::numeric_limits<int32_t>::max()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 }
@@ -2667,28 +2667,28 @@ TEST(Deserializer, int32_t) {
   EXPECT_EQ(127, value);
 
   // Min I16.
-  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(-32768)));
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::min())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(-32768, value);
+  EXPECT_EQ(std::numeric_limits<int16_t>::min(), value);
 
   // Max I16.
-  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(32767)));
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::max())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(32767, value);
+  EXPECT_EQ(std::numeric_limits<int16_t>::max(), value);
 
   // Min I32.
-  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(-2147483648)));
+  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(std::numeric_limits<int32_t>::min())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(-2147483648, value);
+  EXPECT_EQ(std::numeric_limits<int32_t>::min(), value);
 
   // Max I32.
-  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(2147483647)));
+  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(std::numeric_limits<int32_t>::max())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(2147483647, value);
+  EXPECT_EQ(std::numeric_limits<int32_t>::max(), value);
 
   // TODO(eieio): Test rejection of all other encoding prefix bytes.
   reader.Set(Compose(EncodingByte::Nil));
@@ -2753,54 +2753,54 @@ TEST(Serializer, int64_t) {
   writer.clear();
 
   // Min I16.
-  value = -32768;
+  value = std::numeric_limits<int16_t>::min();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(-32768));
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::min()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Max I16.
-  value = 32767;
+  value = std::numeric_limits<int16_t>::max();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(32767));
+  expected = Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::max()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Min I32.
-  value = -2147483648;
+  value = std::numeric_limits<int32_t>::min();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(-2147483648));
+  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(std::numeric_limits<int32_t>::min()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Max I32.
-  value = 2147483647;
+  value = std::numeric_limits<int32_t>::max();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
-  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(2147483647));
+  expected = Compose(EncodingByte::I32, Integer<std::int32_t>(std::numeric_limits<int32_t>::max()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Min I64.
-  value = -9223372036854775807LL - 1;
+  value = std::numeric_limits<int64_t>::min(); //std::numeric_limits<int64_t>::min();
   // Believe it or not, this is actually the correct way to specify the most
   // negative signed long long.
   status = serializer.Write(value);
   ASSERT_TRUE(status);
   expected = Compose(EncodingByte::I64,
-                     Integer<std::int64_t>(-9223372036854775807LL - 1));
+                     Integer<std::int64_t>(std::numeric_limits<int64_t>::min()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 
   // Max I64.
-  value = 9223372036854775807LL;
+  value = std::numeric_limits<int64_t>::max();
   status = serializer.Write(value);
   ASSERT_TRUE(status);
   expected =
-      Compose(EncodingByte::I64, Integer<std::int64_t>(9223372036854775807LL));
+      Compose(EncodingByte::I64, Integer<std::int64_t>(std::numeric_limits<int64_t>::max()));
   EXPECT_EQ(expected, writer.data());
   writer.clear();
 }
@@ -2848,44 +2848,44 @@ TEST(Deserializer, int64_t) {
   EXPECT_EQ(127, value);
 
   // Min I16.
-  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(-32768)));
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::min())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(-32768, value);
+  EXPECT_EQ(std::numeric_limits<int16_t>::min(), value);
 
   // Max I16.
-  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(32767)));
+  reader.Set(Compose(EncodingByte::I16, Integer<std::int16_t>(std::numeric_limits<int16_t>::max())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(32767, value);
+  EXPECT_EQ(std::numeric_limits<int16_t>::max(), value);
 
   // Min I32.
-  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(-2147483648)));
+  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(std::numeric_limits<int32_t>::min())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(-2147483648, value);
+  EXPECT_EQ(std::numeric_limits<int32_t>::min(), value);
 
   // Max I32.
-  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(2147483647)));
+  reader.Set(Compose(EncodingByte::I32, Integer<std::int32_t>(std::numeric_limits<int32_t>::max())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(2147483647, value);
+  EXPECT_EQ(std::numeric_limits<int32_t>::max(), value);
 
   // Min I64.
   reader.Set(Compose(EncodingByte::I64,
-                     Integer<std::int64_t>(-9223372036854775807LL - 1)));
+                     Integer<std::int64_t>(std::numeric_limits<int64_t>::min())));
   // Believe it or not, this is actually the correct way to specify the most
   // negative signed long long.
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(-9223372036854775807LL - 1, value);
+  EXPECT_EQ(std::numeric_limits<int64_t>::min(), value);
 
   // Max I64.
   reader.Set(
-      Compose(EncodingByte::I64, Integer<std::int64_t>(9223372036854775807LL)));
+      Compose(EncodingByte::I64, Integer<std::int64_t>(std::numeric_limits<int64_t>::max())));
   status = deserializer.Read(&value);
   ASSERT_TRUE(status);
-  EXPECT_EQ(9223372036854775807LL, value);
+  EXPECT_EQ(std::numeric_limits<int64_t>::max(), value);
 
   // TODO(eieio): Test rejection of all other encoding prefix bytes.
   reader.Set(Compose(EncodingByte::Nil));

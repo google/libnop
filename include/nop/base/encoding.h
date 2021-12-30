@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -471,7 +472,7 @@ struct Encoding<std::int16_t> : EncodingIO<std::int16_t> {
   static constexpr EncodingByte Prefix(std::int16_t value) {
     if (value >= -64 && value <= 127)
       return static_cast<EncodingByte>(value);
-    else if (value >= -128 && value <= 127)
+    else if (value >= std::numeric_limits<int8_t>::min() && value <= std::numeric_limits<int8_t>::max())
       return EncodingByte::I8;
     else
       return EncodingByte::I16;
@@ -614,9 +615,9 @@ struct Encoding<std::int32_t> : EncodingIO<std::int32_t> {
   static constexpr EncodingByte Prefix(std::int32_t value) {
     if (value >= -64 && value <= 127)
       return static_cast<EncodingByte>(value);
-    else if (value >= -128 && value <= 127)
+    else if (value >= std::numeric_limits<int8_t>::min() && value <= std::numeric_limits<int8_t>::max())
       return EncodingByte::I8;
-    else if (value >= -32768 && value <= 32767)
+    else if (value >= std::numeric_limits<int16_t>::min() && value <= std::numeric_limits<int16_t>::max())
       return EncodingByte::I16;
     else
       return EncodingByte::I32;
@@ -777,11 +778,11 @@ struct Encoding<std::int64_t> : EncodingIO<std::int64_t> {
   static constexpr EncodingByte Prefix(std::int64_t value) {
     if (value >= -64 && value <= 127)
       return static_cast<EncodingByte>(value);
-    else if (value >= -128 && value <= 127)  // Effectively [-128, -64).
+    else if (value >= std::numeric_limits<int8_t>::min() && value <= std::numeric_limits<int8_t>::max())  // Effectively [-128, -64).
       return EncodingByte::I8;
-    else if (value >= -32768 && value <= 32767)
+    else if (value >= std::numeric_limits<int16_t>::min() && value <= std::numeric_limits<int16_t>::max())
       return EncodingByte::I16;
-    else if (value >= -2147483648 && value <= 2147483647)
+    else if (value >= std::numeric_limits<int32_t>::min() && value <= std::numeric_limits<int32_t>::max())
       return EncodingByte::I32;
     else
       return EncodingByte::I64;
