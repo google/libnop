@@ -8,10 +8,10 @@ macro(nop_add_example example_name example_src)
 endmacro()
 
 # Examples
-nop_add_example(stream_example interface.cpp)
-nop_add_example(simple_protocol_example pipe.cpp)
-nop_add_example(interface_example simple_protocol.cpp)
-nop_add_example(pipe_example stream.cpp)
+nop_add_example(stream_example stream.cpp)
+nop_add_example(simple_protocol_example simple_protocol.cpp)
+nop_add_example(interface_example interface.cpp)
+nop_add_example(pipe_example pipe.cpp)
 nop_add_example(table_example table.cpp)
 nop_add_example(variant_example variant.cpp)
 
