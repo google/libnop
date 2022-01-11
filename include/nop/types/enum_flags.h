@@ -20,6 +20,7 @@
 #include <type_traits>
 
 #include <nop/base/utility.h>
+#include <nop/utility/compiler.h>
 
 namespace nop {
 
@@ -84,7 +85,7 @@ using EnableIfEnumFlags = typename std::enable_if<IsEnumFlags<T>::value>::type;
                   "Only enum types may be used for enum flags: type=" #type); \
   };                                                                          \
   inline NOP__ENUM_FLAGS_TRAITS<type> NOP__GetEnumFlagsTraits                 \
-      [[gnu::used]] (type*) {                                                 \
+      NOP_GNU_USED (type*) {                                                 \
     return {};                                                                \
   }
 
