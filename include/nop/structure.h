@@ -21,6 +21,7 @@
 
 #include <nop/base/macros.h>
 #include <nop/types/detail/member_pointer.h>
+#include <nop/utility/compiler.h>
 
 namespace nop {
 
@@ -79,13 +80,13 @@ namespace nop {
   };                                                                          \
   template <typename T>                                                       \
   inline _NOP_ENABLE_IF_TYPE_MATCH(T, type, NOP__MEMBER_TRAITS<T, void>)      \
-      NOP__GetExternalMemberTraits [[gnu::used]] (T*) {                       \
+      NOP__GetExternalMemberTraits NOP_GNU_USED (T*) {                       \
     return {};                                                                \
   }                                                                           \
   template <template <typename...> class TT, typename... Ts>                  \
   inline _NOP_ENABLE_IF_TEMPLATE_MATCH(TT, type, Ts...,                       \
                                        NOP__MEMBER_TRAITS<TT<Ts...>, void>)   \
-      NOP__GetExternalMemberTraits [[gnu::used]] (TT<Ts...>*) {               \
+      NOP__GetExternalMemberTraits NOP_GNU_USED (TT<Ts...>*) {               \
     return {};                                                                \
   }
 
@@ -109,13 +110,13 @@ namespace nop {
                                               TT, type, Ts...)> {};            \
   template <typename T>                                                        \
   inline _NOP_ENABLE_IF_TYPE_MATCH(T, type, NOP__UNBOUNDED_BUFFER<T, void>)    \
-      NOP__GetUnboundedBuffer [[gnu::used]] (T*) {                             \
+      NOP__GetUnboundedBuffer NOP_GNU_USED (T*) {                             \
     return {};                                                                 \
   }                                                                            \
   template <template <typename...> class TT, typename... Ts>                   \
   inline _NOP_ENABLE_IF_TEMPLATE_MATCH(TT, type, Ts...,                        \
                                        NOP__UNBOUNDED_BUFFER<TT<Ts...>, void>) \
-      NOP__GetUnboundedBuffer [[gnu::used]] (TT<Ts...>*) {                     \
+      NOP__GetUnboundedBuffer NOP_GNU_USED (TT<Ts...>*) {                     \
     return {};                                                                 \
   }
 
