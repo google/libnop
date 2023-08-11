@@ -18,6 +18,7 @@
 #define LIBNOP_INCLUDE_NOP_SERIALIZER_H_
 
 #include <nop/base/array.h>
+#include <nop/base/deque.h>
 #include <nop/base/encoding.h>
 #include <nop/base/enum.h>
 #include <nop/base/handle.h>
@@ -28,6 +29,7 @@
 #include <nop/base/reference_wrapper.h>
 #include <nop/base/result.h>
 #include <nop/base/serializer.h>
+#include <nop/base/set.h>
 #include <nop/base/string.h>
 #include <nop/base/table.h>
 #include <nop/base/tuple.h>
