@@ -56,9 +56,10 @@ This interface supports the following types:
   * enum and enum classes.
   * std::string.
   * C-style arrays with elements of any supported type.
-  * std::array, std::pair, std::tuple, and std::vector with elements of any
+  * std::array, std::pair, std::tuple, std::vector, and std::deque with elements of any
     supported type.
   * std::map and std::unordered_map with keys and values of any supported type.
+  * std::set and std::unordered_set with keys of any supported type.
   * std::reference_wrapper<T> with T of any supported type.
   * nop::Optional<T> with T of any supported type.
   * nop::Result<ErrorEnum, T> with T of any supported type.
