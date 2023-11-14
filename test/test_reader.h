@@ -57,7 +57,7 @@ class TestReader {
     if (length_bytes > (data_.size() - index_))
       return ErrorStatus::ReadLimitReached;
 
-    std::copy(&data_[index_], &data_[index_ + length_bytes], begin_byte);
+    std::copy(&data_[index_], &data_[index_] + length_bytes, begin_byte);
     index_ += length_bytes;
     return {};
   }
