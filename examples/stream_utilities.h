@@ -17,7 +17,13 @@
 #ifndef LIBNOP_EXAMPLES_STREAM_UTILITIES_H_
 #define LIBNOP_EXAMPLES_STREAM_UTILITIES_H_
 
+#ifdef _WIN32
+#include <io.h>
+#define access _access
+
+#else
 #include <unistd.h>
+#endif
 
 #include <array>
 #include <cstdio>
